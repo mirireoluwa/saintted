@@ -36,6 +36,9 @@ export function TrackDetailPage() {
   const nextTrack = track && tracks.length
     ? tracks.find((t) => t.order === track.order + 1)
     : null;
+  const prevTrack = track && tracks.length
+    ? tracks.find((t) => t.order === track.order - 1)
+    : null;
 
   if (loading) {
     return (
@@ -57,7 +60,9 @@ export function TrackDetailPage() {
         <div className="track-detail">
           <div className="track-detail__inner">
             <p className="track-detail__loading">Track not found.</p>
-            <Link to="/" className="track-detail__nav-btn">← back to home</Link>
+            <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+              home
+            </Link>
           </div>
         </div>
       </>
@@ -75,9 +80,24 @@ export function TrackDetailPage() {
       <div className="track-detail">
         <div className="track-detail__inner">
         <nav className="track-detail__nav" aria-label="Track navigation">
-          <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--prev">
-            ← back to home
+          <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+            home
           </Link>
+          {prevTrack ? (
+            <Link
+              to={`/music/${prevTrack.slug}`}
+              className="track-detail__nav-btn track-detail__nav-btn--prev"
+            >
+              previous
+            </Link>
+          ) : (
+            <span
+              className="track-detail__nav-btn track-detail__nav-btn--prev track-detail__nav-btn--inactive"
+              aria-disabled="true"
+            >
+              previous
+            </span>
+          )}
           <span className="track-detail__breadcrumb">
             <Link to="/#music-section">My Music</Link>
             <span className="track-detail__breadcrumb-sep">→</span>
@@ -88,10 +108,15 @@ export function TrackDetailPage() {
               to={`/music/${nextTrack.slug}`}
               className="track-detail__nav-btn track-detail__nav-btn--next"
             >
-              next →
+              next
             </Link>
           ) : (
-            <span className="track-detail__nav-spacer" />
+            <span
+              className="track-detail__nav-btn track-detail__nav-btn--next track-detail__nav-btn--inactive"
+              aria-disabled="true"
+            >
+              next
+            </span>
           )}
         </nav>
 
