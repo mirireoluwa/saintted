@@ -73,6 +73,23 @@ saintted/
 └── README.md
 ```
 
+## Deploy on Vercel (frontend)
+
+The **frontend** is a static Vite build. The **Django API** must be hosted separately (e.g. Railway, Render, Fly.io, or any VPS) and reachable over HTTPS.
+
+1. In [Vercel](https://vercel.com) → **Add New…** → **Project** → import **`mirireoluwa/saintted`** (or your fork).
+2. Under **Configure Project**:
+   - **Root Directory:** `frontend` (click *Edit* and set to `frontend`).
+   - Framework should auto-detect **Vite**. Build: `npm run build`, Output: `dist`.
+3. **Environment Variables** (Production — required at **build** time for Vite):
+   - `VITE_API_URL` = your public API base, **no trailing slash**, e.g. `https://your-api.example.com/api`
+4. Deploy. Then assign your domain (e.g. `saintted.com`) in **Project → Settings → Domains**.
+5. **Backend CORS:** set `CORS_ORIGINS` on Django to include your Vercel URL(s), e.g. `https://saintted.com,https://www.saintted.com,https://admin.saintted.com` (and `https://*.vercel.app` while testing).
+
+`frontend/vercel.json` adds SPA **rewrites** so React Router paths like `/music/:slug` and `/admin` work on refresh.
+
+Optional second Vercel project with the same repo + root `frontend` + domain **`admin.saintted.com`** if you want the admin subdomain isolated; or use one project and add **`admin.saintted.com`** as an additional domain (same build).
+
 ## Fonts and styling
 
 Visual language is aligned with **mirireoluwa.com**: dark radial page background, **Space Grotesk** + **Manrope** for UI, **DM Mono** for labels and meta, and portfolio-style section headers (`.my music`, `.videos`). **Saintted Regular** stays the display font for the hero wordmark and track titles. Light/dark toggle still flips tokens for readability.
