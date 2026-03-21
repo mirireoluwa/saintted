@@ -2,7 +2,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 
 from .cover_art import resolve_external_cover_url
-from .models import FeaturedVideo, Track
+from .models import FeaturedVideo, ReleaseCountdown, Track
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -54,3 +54,19 @@ class FeaturedVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeaturedVideo
         fields = ["id", "title", "youtube_id", "order"]
+
+
+class ReleaseCountdownSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReleaseCountdown
+        fields = ["id", "enabled", "song_title", "release_at", "presave_url"]
+
+    def validate(self, attrs):
+        instance = getattr(self, "instance", None)
+        enabled = attrs.get("enabled", getattr(instance, "enabled", False) if instance else False)
+        release_at = attrs.get("release_at", getattr(instance, "release_at", None) if instance else None)
+        if enabled and not release_at:
+            raise serializers.ValidationError(
+                {"release_at": "Set a drop date when the countdown is enabled."}
+            )
+        return attrs

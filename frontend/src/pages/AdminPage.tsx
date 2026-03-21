@@ -2,17 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
   createFeaturedVideo,
   createTrack,
   deleteFeaturedVideo,
   deleteTrack,
   fetchFeaturedVideosAuth,
+  fetchReleaseCountdownAuth,
   fetchTracksAuth,
   getStoredToken,
   login,
   setStoredToken,
   updateFeaturedVideo,
+  updateReleaseCountdown,
   updateTrack,
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
@@ -56,6 +59,27 @@ function parseYear(v: string | number): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function isoToDatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function emptyCountdownForm() {
+  return { enabled: false, song_title: "", release_at_local: "", presave_url: "" };
+}
+
+function countdownFormFromApi(c: ReleaseCountdown) {
+  return {
+    enabled: c.enabled,
+    song_title: c.song_title || "",
+    release_at_local: isoToDatetimeLocal(c.release_at),
+    presave_url: c.presave_url || "",
+  };
+}
+
 export function AdminPage() {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
   const [loginUser, setLoginUser] = useState("");
@@ -73,16 +97,20 @@ export function AdminPage() {
   const [videoForm, setVideoForm] = useState({ title: "", youtube_id: "", order: 0 });
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
 
+  const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
+
   const loadData = useCallback(async (t: string) => {
     setLoading(true);
     setMessage(null);
     try {
-      const [tr, fv] = await Promise.all([
+      const [tr, fv, cd] = await Promise.all([
         fetchTracksAuth(t),
         fetchFeaturedVideosAuth(t),
+        fetchReleaseCountdownAuth(t),
       ]);
       setTracks(tr);
       setVideos(fv);
+      setCountdownForm(countdownFormFromApi(cd));
     } catch (e) {
       setMessage({ type: "error", text: String(e) });
       setStoredToken(null);
@@ -117,6 +145,28 @@ export function AdminPage() {
     setTrackForm(emptyTrackForm());
     setEditingSlug(null);
     setEditingVideoId(null);
+    setCountdownForm(emptyCountdownForm());
+  }
+
+  async function saveReleaseCountdown(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setMessage(null);
+    try {
+      const release_at = countdownForm.release_at_local.trim()
+        ? new Date(countdownForm.release_at_local).toISOString()
+        : null;
+      const updated = await updateReleaseCountdown(token, {
+        enabled: countdownForm.enabled,
+        song_title: countdownForm.song_title.trim(),
+        release_at,
+        presave_url: countdownForm.presave_url.trim(),
+      });
+      setCountdownForm(countdownFormFromApi(updated));
+      setMessage({ type: "ok", text: "Release countdown saved." });
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
   }
 
   function startNewTrack() {
@@ -314,6 +364,68 @@ export function AdminPage() {
         <div className={`admin-msg admin-msg--${message.type}`}>{message.text}</div>
       )}
       {loading && <p className="admin-page__loading">Loading…</p>}
+
+      <div className="admin-card">
+        <h2 className="admin-card__title">Release countdown</h2>
+        <p className="admin-card__lead">
+          Show a timer on the public home page until the drop. Optional <strong>pre-save</strong> link
+          (Spotify, Apple Music, Linkfire, etc.).
+        </p>
+        <form className="admin-form" onSubmit={saveReleaseCountdown}>
+          <div className="admin-form__row">
+            <label className="admin-form__check">
+              <input
+                type="checkbox"
+                checked={countdownForm.enabled}
+                onChange={(e) =>
+                  setCountdownForm((f) => ({ ...f, enabled: e.target.checked }))
+                }
+              />
+              <span>Show countdown on saintted.com</span>
+            </label>
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="cd-title">Song / release title (optional)</label>
+            <input
+              id="cd-title"
+              placeholder="e.g. hyperphoria II"
+              value={countdownForm.song_title}
+              onChange={(e) =>
+                setCountdownForm((f) => ({ ...f, song_title: e.target.value }))
+              }
+            />
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="cd-when">Drop date &amp; time *</label>
+            <input
+              id="cd-when"
+              type="datetime-local"
+              value={countdownForm.release_at_local}
+              onChange={(e) =>
+                setCountdownForm((f) => ({ ...f, release_at_local: e.target.value }))
+              }
+            />
+            <p className="admin-form__hint">Uses your current time zone; stored in UTC on the server.</p>
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="cd-presave">Pre-save / pre-add URL (optional)</label>
+            <input
+              id="cd-presave"
+              type="url"
+              placeholder="https://…"
+              value={countdownForm.presave_url}
+              onChange={(e) =>
+                setCountdownForm((f) => ({ ...f, presave_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="admin-page__actions">
+            <button type="submit" className="admin-btn admin-btn--primary">
+              Save countdown
+            </button>
+          </div>
+        </form>
+      </div>
 
       <div className="admin-card">
         <h2 className="admin-card__title">{editingSlug ? "Edit track" : "Add track"}</h2>

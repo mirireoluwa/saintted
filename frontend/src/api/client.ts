@@ -1,5 +1,6 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { ReleaseCountdown } from "../types/releaseCountdown";
 
 const API_BASE =
   import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -23,4 +24,10 @@ export async function fetchFeaturedVideos(): Promise<FeaturedVideo[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return data;
+}
+
+export async function fetchReleaseCountdown(): Promise<ReleaseCountdown | null> {
+  const res = await fetch(`${API_BASE}/release-countdown/`);
+  if (!res.ok) return null;
+  return res.json();
 }

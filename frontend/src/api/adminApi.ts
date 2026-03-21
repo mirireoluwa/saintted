@@ -1,5 +1,6 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { ReleaseCountdown } from "../types/releaseCountdown";
 
 const API_BASE =
   import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -137,4 +138,28 @@ export async function deleteFeaturedVideo(token: string, id: number): Promise<vo
     headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error("Delete failed");
+}
+
+export async function fetchReleaseCountdownAuth(token: string): Promise<ReleaseCountdown> {
+  const res = await fetch(`${API_BASE}/release-countdown/`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error("Failed to load release countdown");
+  return res.json();
+}
+
+export async function updateReleaseCountdown(
+  token: string,
+  body: Partial<Pick<ReleaseCountdown, "enabled" | "song_title" | "release_at" | "presave_url">>
+): Promise<ReleaseCountdown> {
+  const res = await fetch(`${API_BASE}/release-countdown/`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
 }

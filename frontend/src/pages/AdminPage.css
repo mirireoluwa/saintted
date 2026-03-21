@@ -115,6 +115,32 @@
   }
 }
 
+.admin-form__check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-form__check input {
+  width: auto;
+  accent-color: var(--accent-green);
+}
+
+.admin-form__hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0;
+}
+
 .admin-form label {
   font-family: var(--font-mono);
   font-size: 10px;

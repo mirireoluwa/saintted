@@ -1,8 +1,12 @@
-from rest_framework import viewsets
+from rest_framework import generics, viewsets
 
-from .models import Track, FeaturedVideo
+from .models import FeaturedVideo, ReleaseCountdown, Track
 from .permissions import ReadOnlyOrAuthenticated
-from .serializers import TrackSerializer, FeaturedVideoSerializer
+from .serializers import (
+    FeaturedVideoSerializer,
+    ReleaseCountdownSerializer,
+    TrackSerializer,
+)
 
 
 class TrackViewSet(viewsets.ModelViewSet):
@@ -22,3 +26,24 @@ class FeaturedVideoViewSet(viewsets.ModelViewSet):
     queryset = FeaturedVideo.objects.all()
     serializer_class = FeaturedVideoSerializer
     permission_classes = [ReadOnlyOrAuthenticated]
+
+
+class ReleaseCountdownDetailView(generics.RetrieveUpdateAPIView):
+    """
+    Singleton settings for home-page release countdown + pre-save link.
+    GET is public; PATCH/PUT require authentication.
+    """
+    serializer_class = ReleaseCountdownSerializer
+    permission_classes = [ReadOnlyOrAuthenticated]
+
+    def get_object(self):
+        obj, _ = ReleaseCountdown.objects.get_or_create(
+            pk=1,
+            defaults={
+                "enabled": False,
+                "song_title": "",
+                "release_at": None,
+                "presave_url": "",
+            },
+        )
+        return obj

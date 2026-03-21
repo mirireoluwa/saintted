@@ -143,9 +143,8 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 5.5rem 1.5rem 4rem;
+  align-items: stretch;
+  padding: 5.5rem 1.5rem 1.75rem;
   text-align: center;
   position: relative;
   background-image: url("/hero-bg.png");
@@ -165,8 +164,32 @@ a {
 .hero-inner {
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
   position: relative;
   z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 5.5rem - 1.75rem);
+}
+
+.hero-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-countdown-slot {
+  flex-shrink: 0;
+  width: 100%;
+  padding-top: 1.25rem;
+}
+
+.hero-countdown-slot:empty {
+  display: none;
+  padding: 0;
 }
 
 .hero-tags {
@@ -664,7 +687,11 @@ a {
 /* Breakpoints */
 @media (min-width: 1200px) {
   .hero-section {
-    padding: 5.5rem 2rem 5rem;
+    padding: 5.5rem 2rem 2rem;
+  }
+
+  .hero-inner {
+    min-height: calc(100svh - 5.5rem - 2rem);
   }
 
   .music-grid {

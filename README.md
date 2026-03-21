@@ -6,7 +6,7 @@ Full-stack replica of [saintted.framer.website](https://saintted.framer.website)
 
 - **Frontend:** React 18, TypeScript, Vite
 - **Backend:** Django 5, Django REST Framework
-- **API:** REST `GET /api/tracks/` (list) and `GET /api/tracks/<slug>/` (detail); **writes** (`POST`/`PATCH`/`DELETE`) require a DRF auth token. SPA admin UI at **`/admin`** (use **`admin.saintted.com`** in production — see below).
+- **API:** REST `GET /api/tracks/` (list) and `GET /api/tracks/<slug>/` (detail); `GET/PATCH /api/release-countdown/` (singleton: home-page countdown + pre-save link; PATCH needs token). **Writes** (`POST`/`PATCH`/`DELETE`) on other resources require a DRF auth token. SPA admin UI at **`/admin`** (use **`admin.saintted.com`** in production — see below).
 
 ## Quick start
 
@@ -48,7 +48,9 @@ Set **`VITE_SITE_URL`** in `.env` to your live origin (no trailing slash), e.g. 
 
 **Navigation:** From the home page, click any track in **My Music** to open its detail page at `/music/<slug>` (e.g. `/music/hyperphoria`). Detail pages include “About the song”, release year, and links to YouTube, Apple Music, and Spotify.
 
-**Custom admin (same theme as the site):** Open **`http://localhost:5173/admin`** after signing in with your Django user. The app stores an API token in the browser and lets you add/edit tracks (titles, slug, meta, order, art URL, general link, description, year, Spotify / YouTube / Apple Music URLs) and manage featured YouTube videos.
+**Custom admin (same theme as the site):** Open **`http://localhost:5173/admin`** after signing in with your Django user. The app stores an API token in the browser and lets you add/edit tracks (titles, slug, meta, order, art URL, general link, description, year, Spotify / YouTube / Apple Music URLs), manage featured YouTube videos, and configure a **release countdown** (drop date/time + optional pre-save URL) shown on the public home page below the header.
+
+**Release countdown:** Migrations **`0008`** / **`0009`** add `ReleaseCountdown` and seed the singleton row (`id=1`). Configure it in the SPA admin or Django admin. When **enabled**, the site shows a live timer until `release_at`; after the drop it shows **Out now** and still uses the pre-save URL as **Listen / save** if set. Turn off **Show countdown** when you no longer want the banner.
 
 **Production subdomain `admin.saintted.com`:** Point DNS at the same host as the main site and serve the **same** frontend build. The app redirects the root path `/` to `/admin` when the hostname is `admin.saintted.com` (or `admin.localhost` for local testing with `/etc/hosts`). Set backend env, for example:
 

@@ -34,3 +34,32 @@ class FeaturedVideo(models.Model):
 
     def __str__(self) -> str:
         return self.title or self.youtube_id
+
+
+class ReleaseCountdown(models.Model):
+    """
+    Singleton row (pk=1): optional home-page countdown + pre-save link.
+    Managed via SPA admin or Django admin.
+    """
+    enabled = models.BooleanField(default=False, help_text="Show countdown on the public site")
+    song_title = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="e.g. Single name shown above the timer",
+    )
+    release_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the song drops (stored in UTC; use admin timezone awareness)",
+    )
+    presave_url = models.URLField(
+        blank=True,
+        help_text="Pre-save / pre-add link (Spotify, Apple, Linkfire, etc.)",
+    )
+
+    class Meta:
+        verbose_name = "Release countdown"
+        verbose_name_plural = "Release countdown"
+
+    def __str__(self) -> str:
+        return self.song_title.strip() or "Release countdown"

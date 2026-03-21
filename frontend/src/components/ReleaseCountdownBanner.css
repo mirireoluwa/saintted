@@ -1,0 +1,252 @@
+/* Standalone (not used on home currently — kept for reuse) */
+.release-countdown {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 140, 255, 0.08) 0%,
+    transparent 100%
+  );
+}
+
+[data-theme="light"] .release-countdown:not(.release-countdown--hero) {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 140, 255, 0.06) 0%,
+    transparent 100%
+  );
+}
+
+/* Hero: over background image, below title / tags / scroll */
+.release-countdown--hero {
+  padding: 0.75rem 0.5rem 0;
+  border: none;
+  background: transparent;
+}
+
+.release-countdown--hero .release-countdown__inner {
+  padding: 0.85rem 1rem 1.35rem;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .release-countdown--hero .release-countdown__inner {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.release-countdown--hero .release-countdown__grid {
+  gap: 0.55rem 0.75rem;
+}
+
+.release-countdown--hero .release-countdown__kicker {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.release-countdown--hero .release-countdown__title {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.release-countdown--hero .release-countdown__unit {
+  min-width: 3.2rem;
+  max-width: 4.75rem;
+  padding: 0.5rem 0.45rem;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.release-countdown--hero .release-countdown__num {
+  color: #fff;
+}
+
+.release-countdown--hero .release-countdown__label {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.release-countdown--hero .release-countdown__live {
+  color: var(--accent-green);
+  text-shadow: 0 0 12px rgba(0, 255, 119, 0.25);
+}
+
+.release-countdown--hero .release-countdown__cta {
+  margin-top: 0.15rem;
+  color: #fff;
+  background: #09090b;
+  border: 1px solid #71717a;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.release-countdown--hero .release-countdown__cta:hover {
+  color: #09090b;
+  background: #fff;
+  border-color: #a1a1aa;
+  text-decoration: none;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* Mobile: one horizontal row — smaller units so all four fit */
+@media (max-width: 639px) {
+  .release-countdown--hero .release-countdown__inner {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .release-countdown--hero .release-countdown__title {
+    font-size: clamp(1.05rem, 4.5vw, 1.35rem);
+    margin-bottom: 0.65rem;
+  }
+
+  .release-countdown--hero .release-countdown__grid {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .release-countdown--hero .release-countdown__unit {
+    flex: 0 1 auto;
+    min-width: 2.35rem;
+    max-width: 3.35rem;
+    padding: 0.38rem 0.18rem;
+  }
+
+  .release-countdown--hero .release-countdown__num {
+    font-size: clamp(0.78rem, 3.8vw, 0.95rem);
+  }
+
+  .release-countdown--hero .release-countdown__label {
+    font-size: 6px;
+    letter-spacing: 0.08em;
+    margin-top: 0.12rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .release-countdown--hero .release-countdown__grid {
+    gap: 0.2rem;
+  }
+
+  .release-countdown--hero .release-countdown__unit {
+    min-width: 2.1rem;
+    max-width: 3rem;
+    padding: 0.32rem 0.1rem;
+  }
+
+  .release-countdown--hero .release-countdown__num {
+    font-size: clamp(0.7rem, 3.2vw, 0.82rem);
+  }
+
+  .release-countdown--hero .release-countdown__label {
+    font-size: 5px;
+  }
+}
+
+.release-countdown__inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.release-countdown__kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.35rem;
+}
+
+.release-countdown__title {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  text-transform: lowercase;
+  color: var(--text);
+}
+
+.release-countdown__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.release-countdown__unit {
+  min-width: 3.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.release-countdown__num {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.release-countdown__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.release-countdown__live {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin: 0 0 1rem;
+}
+
+.release-countdown__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--bg);
+  background: var(--text);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--text);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.release-countdown__cta:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: var(--bg);
+}
+
+[data-theme="light"] .release-countdown__cta {
+  color: #fafafa;
+}
