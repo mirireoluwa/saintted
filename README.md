@@ -60,6 +60,8 @@ Set **`VITE_SITE_URL`** in `.env` to your live origin (no trailing slash), e.g. 
 
 **Streaming links:** Migration `0006` fills empty per-track `youtube_url`, `apple_music_url`, and `spotify_url` with **platform search URLs** for `Saintted` + the track title (public catalog IDs weren’t reliably discoverable). The SPA uses the same logic when a field is blank. Replace with **direct track/album URLs** in Django admin or the SPA admin when you have them.
 
+**Featured videos:** Migration `0007` seeds two **FeaturedVideo** rows (YouTube IDs `CZ5orlyaDd8`, `zB1PkrtOBGU`). It is idempotent (`get_or_create` by `youtube_id`). Manage more clips in Django admin, the SPA admin, or the API.
+
 **Cover art fallback:** If `art_url` is empty, the API merges in artwork from the **iTunes Search API** (Apple Music catalog, no API key). Optionally set **`SPOTIFY_CLIENT_ID`** and **`SPOTIFY_CLIENT_SECRET`** on the server to use **Spotify Web API** when iTunes returns nothing. Results are cached per track (default **24h**, override with **`COVER_ART_CACHE_TTL`** seconds).
 
 **Artist name for catalog search:** Set **`COVER_ART_ARTIST`** (e.g. another spelling or store listing) if your releases appear under a different name than `Saintted`. Used for iTunes/Spotify cover lookups and included in the cache key so changing it refetches art.
