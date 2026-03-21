@@ -17,9 +17,12 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+cp .env.example .env        # optional: then edit .env for COVER_ART_ARTIST, Spotify keys, etc.
 python manage.py migrate
 python manage.py runserver
 ```
+
+**Local env vars:** Django loads **`backend/.env`** automatically (via `python-dotenv`). Uncomment or add lines there, e.g. `COVER_ART_ARTIST=Your Store Name`. You can instead run **`export COVER_ART_ARTIST="…"`** in the same terminal before `runserver` if you prefer not to use a file.
 
 API: **http://localhost:8000/api/tracks/**  
 Admin: **http://localhost:8000/admin/** (create a superuser with `python manage.py createsuperuser` to manage tracks.)
@@ -29,11 +32,19 @@ Admin: **http://localhost:8000/admin/** (create a superuser with `python manage.
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # optional: edit VITE_API_URL if needed
+cp .env.example .env   # optional: edit VITE_API_URL, VITE_SITE_URL if needed
 npm run dev
 ```
 
 App: **http://localhost:5173**
+
+**Link previews (Open Graph / Twitter):** The build injects **`VITE_SITE_URL`** into `index.html` so `og:image` and `twitter:image` point at **`{origin}/og-image.jpg`**. That JPEG is the hero background (`public/hero-bg.png`) with the same dark scrim as the site and **`love-saintted.png`** centered on top (1200×630). Regenerate after changing those assets:
+
+```bash
+npm run generate:og
+```
+
+Set **`VITE_SITE_URL`** in `.env` to your live origin (no trailing slash), e.g. `https://saintted.com`, before production builds so crawlers get a valid absolute image URL.
 
 **Navigation:** From the home page, click any track in **My Music** to open its detail page at `/music/<slug>` (e.g. `/music/hyperphoria`). Detail pages include “About the song”, release year, and links to YouTube, Apple Music, and Spotify.
 
@@ -46,6 +57,12 @@ App: **http://localhost:5173**
 - `VITE_API_URL` on the frontend build should point at your public API (e.g. `https://api.saintted.com/api`).
 
 **API auth:** `POST /api/auth/token/` with JSON `{"username":"…","password":"…"}` returns `{"token":"…"}`. Send `Authorization: Token <token>` for mutating requests.
+
+**Streaming links:** Migration `0006` fills empty per-track `youtube_url`, `apple_music_url`, and `spotify_url` with **platform search URLs** for `Saintted` + the track title (public catalog IDs weren’t reliably discoverable). The SPA uses the same logic when a field is blank. Replace with **direct track/album URLs** in Django admin or the SPA admin when you have them.
+
+**Cover art fallback:** If `art_url` is empty, the API merges in artwork from the **iTunes Search API** (Apple Music catalog, no API key). Optionally set **`SPOTIFY_CLIENT_ID`** and **`SPOTIFY_CLIENT_SECRET`** on the server to use **Spotify Web API** when iTunes returns nothing. Results are cached per track (default **24h**, override with **`COVER_ART_CACHE_TTL`** seconds).
+
+**Artist name for catalog search:** Set **`COVER_ART_ARTIST`** (e.g. another spelling or store listing) if your releases appear under a different name than `Saintted`. Used for iTunes/Spotify cover lookups and included in the cache key so changing it refetches art.
 
 The frontend uses the same layout and copy as the Framer site. Tracks are loaded from the Django API; if the API is unavailable, it falls back to built-in track data.
 

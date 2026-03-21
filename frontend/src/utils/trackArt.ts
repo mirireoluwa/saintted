@@ -8,8 +8,12 @@ const LOCAL_COVER_BY_SLUG: Record<string, string> = {
   runaway: "/runaway-cover.png",
 };
 
-/** Cover art URL for a track. Uses local asset when art_url is not set. */
+/**
+ * Cover art URL for a track.
+ * Prefer `art_url` from the API (backend may fill it from iTunes / Spotify when you
+ * haven’t uploaded art). Otherwise use bundled public images by slug.
+ */
 export function getTrackArtUrl(track: Track): string {
-  if (track.art_url) return track.art_url;
+  if (track.art_url?.trim()) return track.art_url.trim();
   return LOCAL_COVER_BY_SLUG[track.slug] ?? "";
 }

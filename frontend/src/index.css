@@ -184,16 +184,23 @@ a {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* inline-grid + shared cell: both lines size the column (absolute alt didn’t widen the box, so “silence, selah” was clipped) */
 .hero-tag--swap {
   position: relative;
-  display: inline-block;
+  display: inline-grid;
+  grid-template-columns: max-content;
+  grid-template-rows: auto;
+  justify-items: center;
   overflow: hidden;
-  min-width: 16ch;
   text-align: center;
 }
 
 .hero-tag__line {
+  grid-column: 1;
+  grid-row: 1;
   display: block;
+  width: max-content;
+  max-width: min(100vw - 2rem, 42rem);
   transition: transform 0.4s ease;
 }
 
@@ -202,9 +209,6 @@ a {
 }
 
 .hero-tag__line--alt {
-  position: absolute;
-  left: 0;
-  top: 0;
   transform: translateY(100%);
 }
 
@@ -352,8 +356,10 @@ a {
 
 .track-art--skeleton {
   aspect-ratio: 1;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   width: 100%;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
 }
 
 .track-line {
@@ -399,18 +405,69 @@ a {
   border-color: rgba(0, 0, 0, 0.14);
 }
 
+/* Inset art “box” inside the card; text sits in the lower band */
+.track-card__art-frame {
+  padding: 0.9rem 0.9rem 0;
+  flex-shrink: 0;
+}
+
 .track-art {
+  position: relative;
   aspect-ratio: 1;
-  background: rgba(128, 128, 128, 0.12);
   width: 100%;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(128, 128, 128, 0.12);
+  box-sizing: border-box;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-theme="dark"] .track-art {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Real cover: clip to rounded rect — avoids background bleed vs CSS background-image */
+.track-art__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .track-card__body {
-  padding: 1rem 1rem 1.15rem;
+  padding: 0.85rem 1rem 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 1;
+}
+
+/* Loading skeleton uses the same outer shell as real cards */
+.track-card-link--skeleton {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+[data-theme="light"] .track-card-link--skeleton {
+  box-shadow: none;
+}
+
+.track-card-link--skeleton .track-card__body {
+  gap: 0.5rem;
 }
 
 .track-name {

@@ -4,7 +4,12 @@ Django settings for saintted backend.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Local overrides: create backend/.env (see .env.example). Not used if file missing.
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
@@ -111,3 +116,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# Cover-art fallback (iTunes / Spotify search) — override if stores list you under another spelling
+COVER_ART_ARTIST = (os.environ.get("COVER_ART_ARTIST") or "Saintted").strip() or "Saintted"

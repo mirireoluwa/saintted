@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { SiteHeader } from "../components/SiteHeader";
+import { TrackCoverPlaceholder } from "../components/TrackCoverPlaceholder";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
 import { getTrackArtUrl } from "../utils/trackArt";
 import { SocialLinks } from "../components/SocialLinks";
 import type { Track } from "../types/track";
+import {
+  appleMusicSearchUrl,
+  spotifySearchUrl,
+  youtubeSearchUrl,
+} from "../utils/streamingLinks";
 import "./TrackDetailPage.css";
 
-const PLACEHOLDER_LINKS = {
-  youtube: "https://www.youtube.com/@saintted",
-  appleMusic: "https://music.apple.com/artist/saintted",
-  spotify: "https://open.spotify.com/artist/saintted",
-};
+function pickUrl(stored: string | undefined | null, fallback: string): string {
+  const t = (stored ?? "").trim();
+  return t || fallback;
+}
 
 export function TrackDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -59,9 +64,9 @@ export function TrackDetailPage() {
     );
   }
 
-  const yt = track.youtube_url || PLACEHOLDER_LINKS.youtube;
-  const am = track.apple_music_url || PLACEHOLDER_LINKS.appleMusic;
-  const sp = track.spotify_url || PLACEHOLDER_LINKS.spotify;
+  const yt = pickUrl(track.youtube_url, youtubeSearchUrl(track.title));
+  const am = pickUrl(track.apple_music_url, appleMusicSearchUrl(track.title));
+  const sp = pickUrl(track.spotify_url, spotifySearchUrl(track.title));
   const coverUrl = getTrackArtUrl(track);
 
   return (
@@ -94,14 +99,19 @@ export function TrackDetailPage() {
 
         <div className="track-detail__main">
           <div className="track-detail__left">
-            {coverUrl ? (
-              <div
-                className="track-detail__cover"
-                style={{ backgroundImage: `url(${coverUrl})` }}
-                role="img"
-                aria-label={`${track.title} cover art`}
-              />
-            ) : null}
+            <div className="track-detail__cover">
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt={`${track.title} cover art`}
+                  className="track-detail__cover-img"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+              ) : (
+                <TrackCoverPlaceholder variant="detail" />
+              )}
+            </div>
           </div>
           <div className="track-detail__right">
             <section className="track-detail__about">
@@ -117,9 +127,30 @@ export function TrackDetailPage() {
             <span className="track-detail__year-value">{track.year ?? "—"}</span>
           </div>
           <div className="track-detail__streaming">
-            <a href={yt} target="_blank" rel="noopener noreferrer" className="track-detail__stream-link">YOUTUBE</a>
-            <a href={am} target="_blank" rel="noopener noreferrer" className="track-detail__stream-link">APPLE MUSIC</a>
-            <a href={sp} target="_blank" rel="noopener noreferrer" className="track-detail__stream-link">SPOTIFY</a>
+            <a
+              href={yt}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="track-detail__stream-link track-detail__stream-link--youtube"
+            >
+              YouTube
+            </a>
+            <a
+              href={am}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="track-detail__stream-link track-detail__stream-link--apple"
+            >
+              Apple Music
+            </a>
+            <a
+              href={sp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="track-detail__stream-link track-detail__stream-link--spotify"
+            >
+              Spotify
+            </a>
           </div>
         </div>
 

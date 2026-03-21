@@ -1,6 +1,8 @@
 from django.utils.text import slugify
 from rest_framework import serializers
-from .models import Track, FeaturedVideo
+
+from .cover_art import resolve_external_cover_url
+from .models import FeaturedVideo, Track
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -12,6 +14,15 @@ class TrackSerializer(serializers.ModelSerializer):
             "id", "title", "slug", "meta", "art_url", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if (data.get("art_url") or "").strip():
+            return data
+        external = resolve_external_cover_url(instance)
+        if external:
+            data["art_url"] = external
+        return data
 
     def _unique_slug(self, base: str) -> str:
         base = (base or "track").strip() or "track"

@@ -1,0 +1,40 @@
+.track-cover-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.track-cover-placeholder__disc {
+  width: min(42%, 5.25rem);
+  height: auto;
+  object-fit: contain;
+}
+
+/* SVG strokes are black — invert so they read on dark UI (see index.css social icons) */
+[data-theme="dark"] .track-cover-placeholder__disc {
+  opacity: 0.5;
+  filter: invert(1) grayscale(1) brightness(0.88);
+}
+
+[data-theme="light"] .track-cover-placeholder__disc {
+  opacity: 0.28;
+  filter: grayscale(1) brightness(0.35);
+}
+
+.track-cover-placeholder--detail .track-cover-placeholder__disc {
+  width: min(36%, 7.5rem);
+}
+
+[data-theme="dark"] .track-cover-placeholder--detail .track-cover-placeholder__disc {
+  opacity: 0.52;
+  filter: invert(1) grayscale(1) brightness(0.9);
+}
+
+[data-theme="light"] .track-cover-placeholder--detail .track-cover-placeholder__disc {
+  opacity: 0.3;
+  filter: grayscale(1) brightness(0.4);
+}
