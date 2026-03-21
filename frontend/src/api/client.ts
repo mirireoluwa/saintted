@@ -1,9 +1,9 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
+import { getApiBase } from "../utils/apiBase";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_BASE = getApiBase();
 
 export async function fetchTracks(): Promise<Track[]> {
   const res = await fetch(`${API_BASE}/tracks/`);

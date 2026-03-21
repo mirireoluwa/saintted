@@ -1,9 +1,9 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
+import { getApiBase } from "../utils/apiBase";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_BASE = getApiBase();
 
 const TOKEN_KEY = "saintted_admin_token";
 
@@ -39,7 +39,10 @@ export async function login(username: string, password: string): Promise<string>
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as { non_field_errors?: string[] }).non_field_errors?.[0] || "Login failed");
+    const msg = (err as { non_field_errors?: string[] }).non_field_errors?.[0];
+    throw new Error(
+      msg || `Login failed (HTTP ${res.status}). Check VITE_API_URL ends with /api and matches your Render URL.`,
+    );
   }
   const data = (await res.json()) as { token: string };
   return data.token;

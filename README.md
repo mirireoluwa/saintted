@@ -144,6 +144,32 @@ Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS),
 - If blueprint database creation isn’t available on your plan, create **PostgreSQL** manually and set **`DATABASE_URL`** on the web service.  
 - Do not rely on SQLite on Render; the filesystem is ephemeral.
 
+### Troubleshooting: “Track not found” or admin “Login failed”
+
+Both the public site and **`admin.saintted.com`** call the same API. These issues are usually one of the following:
+
+1. **`VITE_API_URL` is wrong (most common)**  
+   It must be exactly:  
+   `https://<your-render-service>.onrender.com/api`  
+   - Include the **`/api`** segment (Django mounts the REST API there).  
+   - **No trailing slash** after `api`.  
+   - Fix it in **Vercel → Project → Settings → Environment Variables**, then **Redeploy** (Vite bakes this in at build time).
+
+2. **Open the API in the browser**  
+   Visit `https://<your-service>.onrender.com/api/tracks/` — you should see JSON. If you get **404**, the path is wrong (often missing `/api`). If the list is **`[]`**, migrations ran but no tracks — add tracks in Django admin or the SPA admin (after login works).
+
+3. **CORS / CSRF**  
+   On Render, **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** must include **`https://saintted.com`**, **`https://admin.saintted.com`**, and any **`https://*.vercel.app`** URL you use. Redeploy the API after saving.
+
+4. **Login**  
+   Create a user on **production**: Render → Web Service → **Shell** → `python manage.py createsuperuser`. Use that username/password on **`admin.saintted.com`**.  
+   If login shows **`HTTP 404`**, the token URL is wrong → recheck **`VITE_API_URL`**.
+
+5. **Migrations**  
+   In Render **Logs**, confirm `migrate` runs and finishes. If the DB was recreated, re-run **`createsuperuser`** and re-import or re-add tracks.
+
+On the live site, open **DevTools → Console**: if **`VITE_API_URL`** doesn’t end with **`/api`**, the app logs a warning.
+
 ## Fonts and styling
 
 Visual language is aligned with **mirireoluwa.com**: dark radial page background, **Space Grotesk** + **Manrope** for UI, **DM Mono** for labels and meta, and portfolio-style section headers (`.my music`, `.videos`). **Saintted Regular** stays the display font for the hero wordmark and track titles. Light/dark toggle still flips tokens for readability.
