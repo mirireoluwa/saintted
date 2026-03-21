@@ -117,10 +117,18 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+def _split_csv_origins(raw: str) -> list[str]:
+    """Comma-separated https origins; strips whitespace and stray quotes from env paste."""
+    out: list[str] = []
+    for part in raw.split(","):
+        o = part.strip().strip('"').strip("'")
+        if o:
+            out.append(o)
+    return out
+
+
 _csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
-CSRF_TRUSTED_ORIGINS = [
-    o.strip() for o in _csrf_origins.split(",") if o.strip()
-]
+CSRF_TRUSTED_ORIGINS = _split_csv_origins(_csrf_origins)
 
 # CORS: Vite dev + optional extra origins (e.g. https://saintted.com,https://admin.saintted.com)
 CORS_ALLOWED_ORIGINS = [
@@ -131,10 +139,7 @@ CORS_ALLOWED_ORIGINS = [
 _cors_extra = os.environ.get("CORS_ORIGINS", "").strip()
 if _cors_extra:
     CORS_ALLOWED_ORIGINS = list(
-        dict.fromkeys(
-            CORS_ALLOWED_ORIGINS
-            + [o.strip() for o in _cors_extra.split(",") if o.strip()]
-        )
+        dict.fromkeys(CORS_ALLOWED_ORIGINS + _split_csv_origins(_cors_extra))
     )
 
 REST_FRAMEWORK = {
