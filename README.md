@@ -70,10 +70,12 @@ The frontend uses the same layout and copy as the Framer site. Tracks are loaded
 
 ```
 saintted/
+├── render.yaml              # Render Blueprint (Postgres + Django web service)
 ├── backend/                 # Django API
 │   ├── config/              # Project settings & URLs
 │   ├── api/                 # Tracks app (model, serializers, views)
 │   ├── manage.py
+│   ├── runtime.txt          # Python version on Render
 │   └── requirements.txt
 ├── frontend/                # React + TypeScript (Vite)
 │   ├── src/
@@ -90,22 +92,53 @@ saintted/
 └── README.md
 ```
 
-## Deploy on Vercel (frontend)
+## Deploy: Render (backend) + Vercel (frontend)
 
-The **frontend** is a static Vite build. The **Django API** must be hosted separately (e.g. Railway, Render, Fly.io, or any VPS) and reachable over HTTPS.
+Deploy the **API first** so you know the URL for `VITE_API_URL` and CORS.
 
-1. In [Vercel](https://vercel.com) → **Add New…** → **Project** → import **`mirireoluwa/saintted`** (or your fork).
-2. Under **Configure Project**:
-   - **Root Directory:** `frontend` (click *Edit* and set to `frontend`).
-   - Framework should auto-detect **Vite**. Build: `npm run build`, Output: `dist`.
-3. **Environment Variables** (Production — required at **build** time for Vite):
-   - `VITE_API_URL` = your public API base, **no trailing slash**, e.g. `https://your-api.example.com/api`
-4. Deploy. Then assign your domain (e.g. `saintted.com`) in **Project → Settings → Domains**.
-5. **Backend CORS:** set `CORS_ORIGINS` on Django to include your Vercel URL(s), e.g. `https://saintted.com,https://www.saintted.com,https://admin.saintted.com` (and `https://*.vercel.app` while testing).
+### A. Backend on [Render](https://render.com)
 
-`frontend/vercel.json` adds SPA **rewrites** so React Router paths like `/music/:slug` and `/admin` work on refresh.
+**Option 1 — Blueprint (repo root `render.yaml`)**  
+1. Render → **New +** → **Blueprint** → connect **`mirireoluwa/saintted`**.  
+2. Apply the blueprint (creates **PostgreSQL** `saintted-db` + **Web Service** `saintted-api` with root **`backend`**).  
+3. In the web service → **Environment**, set (comma-separated lists, **no spaces** after commas):
+   - **`CORS_ORIGINS`** — every origin that loads the SPA in a browser, e.g. `https://your-app.vercel.app,https://saintted.com,https://www.saintted.com`
+   - **`CSRF_TRUSTED_ORIGINS`** — same values as `CORS_ORIGINS` (needed for Django admin + session CSRF over HTTPS)
+   - Optionally **`DJANGO_ALLOWED_HOSTS`** — your API hostname(s), e.g. `saintted-api.onrender.com` (Render `*.onrender.com` is already allowed when `DJANGO_DEBUG=0`)
 
-Optional second Vercel project with the same repo + root `frontend` + domain **`admin.saintted.com`** if you want the admin subdomain isolated; or use one project and add **`admin.saintted.com`** as an additional domain (same build).
+**Option 2 — Manual Web Service**  
+1. **New +** → **PostgreSQL** (note the **Internal/External Database URL**).  
+2. **New +** → **Web Service** → same repo, **Root Directory** = `backend`, **Runtime** = Python.  
+3. **Build command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput`  
+4. **Start command:** `python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`  
+5. **Environment variables:** `DJANGO_DEBUG=0`, generate **`DJANGO_SECRET_KEY`**, paste **`DATABASE_URL`** from Postgres, plus `CORS_ORIGINS` and `CSRF_TRUSTED_ORIGINS` as above.
+
+**After the API is live**
+
+- API base for the frontend: **`https://<your-service>.onrender.com/api`** (no trailing slash after `api`).  
+- **Shell** (Render dashboard → service → **Shell**): `python manage.py createsuperuser` so you can use Django admin and the SPA admin token login.
+
+Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS), **PostgreSQL** via **`DATABASE_URL`**. Local dev still uses SQLite when `DATABASE_URL` is unset.
+
+### B. Frontend on [Vercel](https://vercel.com)
+
+1. **Add New…** → **Project** → import the same repo.  
+2. **Root Directory:** `frontend`. Framework: **Vite** (build `npm run build`, output `dist`).  
+3. **Environment Variables** (Production — needed at **build** time):
+   - **`VITE_API_URL`** = `https://<your-service>.onrender.com/api` (same URL as above; **no trailing slash**)
+   - **`VITE_SITE_URL`** = your public site origin, e.g. `https://saintted.com` (Open Graph / canonical URLs)
+
+4. Deploy, then add your domain under **Settings → Domains**.  
+5. If CORS errors appear, add every deployed frontend origin (including `https://xxx.vercel.app`) to **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** on Render and redeploy the API (or clear cache).
+
+`frontend/vercel.json` adds SPA **rewrites** so `/music/:slug` and `/admin` work on refresh.
+
+**Admin subdomain:** add **`admin.saintted.com`** (or a second Vercel project) to **`CORS_ORIGINS`** / **`CSRF_TRUSTED_ORIGINS`** as well.
+
+### Render + database notes
+
+- If blueprint database creation isn’t available on your plan, create **PostgreSQL** manually and set **`DATABASE_URL`** on the web service.  
+- Do not rely on SQLite on Render; the filesystem is ephemeral.
 
 ## Fonts and styling
 
