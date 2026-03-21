@@ -1,0 +1,87 @@
+/* Text control — same language as track-detail nav buttons.
+   Yellow when offering “light” (dark theme active = light mode inactive). */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+}
+
+.theme-toggle--embedded {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 1;
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 0.55rem 1.15rem;
+}
+
+/* Dark theme active → button reads “light” (light mode inactive): yellow accent */
+[data-theme="dark"] .theme-toggle {
+  color: #eab308;
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(254, 243, 199, 0.14);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  color: #fde047;
+  border-color: rgba(253, 224, 71, 0.55);
+  background: rgba(253, 230, 138, 0.24);
+}
+
+[data-theme="dark"] .theme-toggle .theme-toggle__arrow {
+  color: #facc15;
+}
+
+[data-theme="dark"] .theme-toggle:hover .theme-toggle__arrow {
+  color: #fef08a;
+}
+
+/* Light theme active → button reads “dark” (dark mode inactive): muted, no yellow */
+[data-theme="light"] .theme-toggle {
+  color: #71717a;
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  color: #3f3f46;
+  border-color: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .theme-toggle .theme-toggle__arrow {
+  color: #a1a1aa;
+}
+
+[data-theme="light"] .theme-toggle:hover .theme-toggle__arrow {
+  color: #52525b;
+}
+
+.theme-toggle__label {
+  line-height: 1;
+}
+
+.theme-toggle__arrow {
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  opacity: 0.9;
+}

@@ -1,0 +1,268 @@
+/* Replica of saintted.framer.website */
+@font-face {
+  font-family: "Saintted Regular";
+  src: url("https://framerusercontent.com/assets/LimSbtxVlVTxPCPPurHl7ZiNzU.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --bg: rgb(250, 250, 250);
+  --text: rgb(0, 0, 0);
+  --text-muted: rgb(143, 143, 143);
+  --font-display: "Saintted Regular", "Space Grotesk", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Smooth scroll notice - hide by default (matches Framer behavior) */
+.smooth-scroll-notice {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem 1rem;
+  background: var(--bg);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  z-index: 9999;
+  display: none;
+}
+
+.smooth-scroll-notice small {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+/* Page container */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Hero */
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1.5rem 4rem;
+  text-align: center;
+  position: relative;
+}
+
+.hero-inner {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nav-link {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--text);
+}
+
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 2rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hero-tags--bottom {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.hero-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 15vw, 10rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+/* Intro */
+.intro-section {
+  padding: 4rem 1.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.intro-heading {
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+.intro-text {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Music section */
+.music-section {
+  padding: 4rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-heading {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+  color: var(--text);
+}
+
+.music-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.track-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.track-art {
+  aspect-ratio: 1;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.track-name {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.track-meta {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Featured (placeholder) */
+.featured-section {
+  padding: 4rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Footer */
+.footer {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.footer-copy {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Breakpoints matching Framer (1200px, 471–1199px, ≤470px) */
+@media (min-width: 1200px) {
+  .hero-section {
+    padding: 3rem 2rem 5rem;
+  }
+  .music-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 471px) and (max-width: 1199.98px) {
+  .music-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 470.98px) {
+  .hero-tags {
+    gap: 0.75rem 1.25rem;
+    font-size: 0.6875rem;
+  }
+  .hero-title {
+    font-size: clamp(2.5rem, 18vw, 4rem);
+  }
+  .music-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
