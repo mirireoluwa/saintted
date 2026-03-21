@@ -7,8 +7,8 @@ import spotifyIcon from "../assets/spotify.svg";
 import youtubeIcon from "../assets/youtube.svg";
 
 const SOCIAL_LINKS = [
-  { href: "https://instagram.com/saintted", label: "Instagram", icon: instagramIcon },
-  { href: "https://x.com/saintted", label: "X", icon: xIcon },
+  { href: "https://instagram.com/beingsaintted", label: "Instagram", icon: instagramIcon },
+  { href: "https://x.com/beingsaintted", label: "X", icon: xIcon },
   { href: "https://music.apple.com/artist/saintted", label: "Apple Music", icon: appleMusicIcon },
   { href: "https://open.spotify.com/artist/saintted", label: "Spotify", icon: spotifyIcon },
   { href: "https://www.youtube.com/@saintted", label: "YouTube", icon: youtubeIcon },
