@@ -22,8 +22,8 @@
 
 .track-detail__nav {
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
-  grid-template-areas: "home prev crumb next";
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "home crumb pair";
   align-items: center;
   gap: 0.5rem 0.75rem;
   margin-bottom: 2.5rem;
@@ -37,14 +37,24 @@
   grid-area: prev;
 }
 
+.track-detail__nav-btn--next {
+  grid-area: next;
+}
+
 .track-detail__nav .track-detail__breadcrumb {
   grid-area: crumb;
   justify-self: center;
   min-width: 0;
 }
 
-.track-detail__nav-btn--next {
-  grid-area: next;
+/* Laptop / desktop: previous + next grouped on the right */
+.track-detail__nav-pair {
+  grid-area: pair;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
   justify-self: end;
 }
 
@@ -122,31 +132,46 @@ a.track-detail__nav-btn:hover {
 
 @media (max-width: 768px) {
   .track-detail__nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "home prev next"
-      "crumb crumb crumb";
-    gap: 0.45rem 0.35rem;
-    max-width: 17.5rem;
-    margin-left: auto;
-    margin-right: auto;
+      "home pair"
+      "crumb crumb";
+    gap: 0.5rem 0.45rem;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
     margin-bottom: 2rem;
   }
 
-  .track-detail__nav-btn--next {
-    justify-self: stretch;
+  /* Same idea as desktop: previous + next side-by-side on the right */
+  .track-detail__nav-pair {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+    justify-self: end;
+    align-self: center;
   }
 
-  .track-detail__nav-btn--home,
-  .track-detail__nav-btn--prev,
-  .track-detail__nav-btn--next {
-    justify-self: stretch;
+  .track-detail__nav-btn--home {
+    justify-self: start;
+    text-align: center;
+    padding: 0.4rem 0.55rem;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    min-width: 0;
+  }
+
+  .track-detail__nav-pair .track-detail__nav-btn {
     text-align: center;
     padding: 0.4rem 0.35rem;
     font-size: 9px;
     letter-spacing: 0.08em;
     min-width: 0;
+    flex: 0 1 auto;
   }
 
   .track-detail__nav .track-detail__breadcrumb {

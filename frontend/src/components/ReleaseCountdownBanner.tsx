@@ -17,12 +17,7 @@ function formatRemaining(ms: number) {
   return { days, hours, minutes, seconds };
 }
 
-type ReleaseCountdownBannerProps = {
-  /** Inside hero: sits below title/tags/scroll, styled for the background image */
-  variant?: "default" | "hero";
-};
-
-export function ReleaseCountdownBanner({ variant = "default" }: ReleaseCountdownBannerProps) {
+export function ReleaseCountdownBanner() {
   const [config, setConfig] = useState<ReleaseCountdown | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -52,13 +47,8 @@ export function ReleaseCountdownBanner({ variant = "default" }: ReleaseCountdown
   const presave = config.presave_url?.trim();
   const title = config.song_title?.trim();
 
-  const rootClass =
-    variant === "hero"
-      ? "release-countdown release-countdown--hero"
-      : "release-countdown";
-
   return (
-    <div className={rootClass} role="region" aria-label="Release countdown">
+    <div className="release-countdown" role="region" aria-label="Release countdown">
       <div className="release-countdown__inner">
         {title ? <p className="release-countdown__kicker">New music</p> : null}
         {title ? <h2 className="release-countdown__title">{title}</h2> : null}

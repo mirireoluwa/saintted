@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SiteHeader } from "../components/SiteHeader";
 import { Hero } from "../components/Hero";
+import { ReleaseCountdownBanner } from "../components/ReleaseCountdownBanner";
 import { MusicSection } from "../components/MusicSection";
 import { Featured } from "../components/Featured";
 import { Footer } from "../components/Footer";
@@ -31,6 +32,7 @@ export function HomePage() {
       <SiteHeader />
       <Hero />
       <div className="site-main">
+        <ReleaseCountdownBanner />
         <MusicSection tracks={tracks} loading={loading} />
         <Featured />
         <Footer />

@@ -181,17 +181,6 @@ a {
   align-items: center;
 }
 
-.hero-countdown-slot {
-  flex-shrink: 0;
-  width: 100%;
-  padding-top: 1.25rem;
-}
-
-.hero-countdown-slot:empty {
-  display: none;
-  padding: 0;
-}
-
 .hero-tags {
   display: flex;
   flex-wrap: wrap;

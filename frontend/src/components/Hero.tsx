@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { ReleaseCountdownBanner } from "./ReleaseCountdownBanner";
 
 export function Hero() {
   const [showAltTag, setShowAltTag] = useState(false);
@@ -31,10 +30,6 @@ export function Hero() {
             <span className="hero-scroll__text">Scroll</span>
             <span className="hero-scroll__chevron">↓</span>
           </a>
-        </div>
-
-        <div className="hero-countdown-slot">
-          <ReleaseCountdownBanner variant="hero" />
         </div>
       </div>
     </section>
