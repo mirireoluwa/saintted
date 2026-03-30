@@ -16,6 +16,7 @@ build/
 *.sqlite3
 db.sqlite3
 backend/staticfiles/
+backend/media/
 local_settings.py
 .venv-check/
 *.log

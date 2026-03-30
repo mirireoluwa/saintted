@@ -1,5 +1,6 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { getApiBase } from "../utils/apiBase";
 
@@ -151,6 +152,14 @@ export async function fetchReleaseCountdownAuth(token: string): Promise<ReleaseC
   return res.json();
 }
 
+export async function fetchGalleryImagesAuth(token: string): Promise<GalleryImage[]> {
+  const res = await fetch(`${API_BASE}/gallery-images/`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error("Failed to load gallery images");
+  return res.json();
+}
+
 export async function updateReleaseCountdown(
   token: string,
   body: Partial<Pick<ReleaseCountdown, "enabled" | "song_title" | "release_at" | "presave_url">>
@@ -165,4 +174,96 @@ export async function updateReleaseCountdown(
     throw new Error(JSON.stringify(err));
   }
   return res.json();
+}
+
+export async function updateHeroHeader(
+  token: string,
+  payload: {
+    header_image_url?: string;
+    header_image_crop?: ReleaseCountdown["header_image_crop"];
+    header_image_focus_x?: number;
+    header_image_focus_y?: number;
+    header_image_file?: File | null;
+    clear_header_image_file?: boolean;
+  }
+): Promise<ReleaseCountdown> {
+  const body = new FormData();
+  if (payload.header_image_url !== undefined) {
+    body.set("header_image_url", payload.header_image_url);
+  }
+  if (payload.header_image_crop !== undefined) {
+    body.set("header_image_crop", payload.header_image_crop);
+  }
+  if (payload.header_image_focus_x !== undefined) {
+    body.set("header_image_focus_x", String(payload.header_image_focus_x));
+  }
+  if (payload.header_image_focus_y !== undefined) {
+    body.set("header_image_focus_y", String(payload.header_image_focus_y));
+  }
+  if (payload.header_image_file) {
+    body.set("header_image_file", payload.header_image_file);
+  }
+  if (payload.clear_header_image_file) {
+    body.set("clear_header_image_file", "true");
+  }
+
+  const res = await fetch(`${API_BASE}/release-countdown/`, {
+    method: "PATCH",
+    headers: { Authorization: `Token ${token}` },
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
+export async function createGalleryImage(
+  token: string,
+  payload: { image: File; caption?: string; order?: number }
+): Promise<GalleryImage> {
+  const body = new FormData();
+  body.set("image", payload.image);
+  body.set("caption", payload.caption ?? "");
+  body.set("order", String(payload.order ?? 0));
+  const res = await fetch(`${API_BASE}/gallery-images/`, {
+    method: "POST",
+    headers: { Authorization: `Token ${token}` },
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
+export async function updateGalleryImage(
+  token: string,
+  id: number,
+  payload: { image?: File | null; caption?: string; order?: number }
+): Promise<GalleryImage> {
+  const body = new FormData();
+  if (payload.image) body.set("image", payload.image);
+  if (payload.caption !== undefined) body.set("caption", payload.caption);
+  if (payload.order !== undefined) body.set("order", String(payload.order));
+  const res = await fetch(`${API_BASE}/gallery-images/${id}/`, {
+    method: "PATCH",
+    headers: { Authorization: `Token ${token}` },
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
+export async function deleteGalleryImage(token: string, id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/gallery-images/${id}/`, {
+    method: "DELETE",
+    headers: { Authorization: `Token ${token}` },
+  });
+  if (!res.ok) throw new Error("Delete failed");
 }

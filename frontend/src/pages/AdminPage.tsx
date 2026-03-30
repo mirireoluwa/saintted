@@ -1,20 +1,26 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
   createFeaturedVideo,
+  createGalleryImage,
   createTrack,
+  deleteGalleryImage,
   deleteFeaturedVideo,
   deleteTrack,
   fetchFeaturedVideosAuth,
+  fetchGalleryImagesAuth,
   fetchReleaseCountdownAuth,
   fetchTracksAuth,
   getStoredToken,
   login,
   setStoredToken,
   updateFeaturedVideo,
+  updateGalleryImage,
+  updateHeroHeader,
   updateReleaseCountdown,
   updateTrack,
 } from "../api/adminApi";
@@ -71,6 +77,16 @@ function emptyCountdownForm() {
   return { enabled: false, song_title: "", release_at_local: "", presave_url: "" };
 }
 
+function emptyHeroImageForm() {
+  return {
+    header_image_url: "",
+    header_image_crop: "center" as const,
+    header_image_file_url: "",
+    header_image_focus_x: 50,
+    header_image_focus_y: 50,
+  };
+}
+
 function countdownFormFromApi(c: ReleaseCountdown) {
   return {
     enabled: c.enabled,
@@ -78,6 +94,20 @@ function countdownFormFromApi(c: ReleaseCountdown) {
     release_at_local: isoToDatetimeLocal(c.release_at),
     presave_url: c.presave_url || "",
   };
+}
+
+function heroImageFormFromApi(c: ReleaseCountdown) {
+  return {
+    header_image_url: c.header_image_url || "",
+    header_image_crop: c.header_image_crop || "center",
+    header_image_file_url: c.header_image_file_url || "",
+    header_image_focus_x: typeof c.header_image_focus_x === "number" ? c.header_image_focus_x : 50,
+    header_image_focus_y: typeof c.header_image_focus_y === "number" ? c.header_image_focus_y : 50,
+  };
+}
+
+function emptyGalleryForm() {
+  return { caption: "", order: 0 };
 }
 
 export function AdminPage() {
@@ -89,6 +119,7 @@ export function AdminPage() {
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [videos, setVideos] = useState<FeaturedVideo[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
@@ -96,21 +127,46 @@ export function AdminPage() {
 
   const [videoForm, setVideoForm] = useState({ title: "", youtube_id: "", order: 0 });
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
+  const [galleryForm, setGalleryForm] = useState(emptyGalleryForm);
+  const [galleryFile, setGalleryFile] = useState<File | null>(null);
+  const [editingGalleryId, setEditingGalleryId] = useState<number | null>(null);
 
   const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
+  const [heroImageForm, setHeroImageForm] = useState(emptyHeroImageForm);
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [clearHeroImageUpload, setClearHeroImageUpload] = useState(false);
+  const heroImagePreviewUrl = useMemo(() => {
+    if (heroImageFile) return URL.createObjectURL(heroImageFile);
+    if (heroImageForm.header_image_file_url.trim()) return heroImageForm.header_image_file_url.trim();
+    if (heroImageForm.header_image_url.trim()) return heroImageForm.header_image_url.trim();
+    return "/hero-bg.png";
+  }, [heroImageFile, heroImageForm.header_image_file_url, heroImageForm.header_image_url]);
+
+  useEffect(() => {
+    return () => {
+      if (heroImageFile && heroImagePreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(heroImagePreviewUrl);
+      }
+    };
+  }, [heroImageFile, heroImagePreviewUrl]);
 
   const loadData = useCallback(async (t: string) => {
     setLoading(true);
     setMessage(null);
     try {
-      const [tr, fv, cd] = await Promise.all([
+      const [tr, fv, cd, gi] = await Promise.all([
         fetchTracksAuth(t),
         fetchFeaturedVideosAuth(t),
         fetchReleaseCountdownAuth(t),
+        fetchGalleryImagesAuth(t),
       ]);
       setTracks(tr);
       setVideos(fv);
+      setGalleryImages(gi);
       setCountdownForm(countdownFormFromApi(cd));
+      setHeroImageForm(heroImageFormFromApi(cd));
+      setHeroImageFile(null);
+      setClearHeroImageUpload(false);
     } catch (e) {
       setMessage({ type: "error", text: String(e) });
       setStoredToken(null);
@@ -142,10 +198,17 @@ export function AdminPage() {
     setToken(null);
     setTracks([]);
     setVideos([]);
+    setGalleryImages([]);
     setTrackForm(emptyTrackForm());
     setEditingSlug(null);
     setEditingVideoId(null);
+    setEditingGalleryId(null);
+    setGalleryForm(emptyGalleryForm());
+    setGalleryFile(null);
     setCountdownForm(emptyCountdownForm());
+    setHeroImageForm(emptyHeroImageForm());
+    setHeroImageFile(null);
+    setClearHeroImageUpload(false);
   }
 
   async function saveReleaseCountdown(e: React.FormEvent) {
@@ -164,6 +227,28 @@ export function AdminPage() {
       });
       setCountdownForm(countdownFormFromApi(updated));
       setMessage({ type: "ok", text: "Release countdown saved." });
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  async function saveHeroHeaderImage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setMessage(null);
+    try {
+      const updated = await updateHeroHeader(token, {
+        header_image_url: heroImageForm.header_image_url.trim(),
+        header_image_crop: heroImageForm.header_image_crop,
+        header_image_focus_x: heroImageForm.header_image_focus_x,
+        header_image_focus_y: heroImageForm.header_image_focus_y,
+        header_image_file: heroImageFile,
+        clear_header_image_file: clearHeroImageUpload,
+      });
+      setHeroImageForm(heroImageFormFromApi(updated));
+      setHeroImageFile(null);
+      setClearHeroImageUpload(false);
+      setMessage({ type: "ok", text: "Hero image settings saved." });
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
     }
@@ -282,6 +367,61 @@ export function AdminPage() {
       await deleteFeaturedVideo(token, id);
       setMessage({ type: "ok", text: "Video removed." });
       if (editingVideoId === id) startNewVideo();
+      await loadData(token);
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  function startNewGalleryImage() {
+    setEditingGalleryId(null);
+    setGalleryForm(emptyGalleryForm());
+    setGalleryFile(null);
+  }
+
+  function startEditGalleryImage(img: GalleryImage) {
+    setEditingGalleryId(img.id);
+    setGalleryForm({ caption: img.caption || "", order: img.order });
+    setGalleryFile(null);
+  }
+
+  async function saveGalleryImage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setMessage(null);
+    try {
+      if (editingGalleryId != null) {
+        await updateGalleryImage(token, editingGalleryId, {
+          caption: galleryForm.caption.trim(),
+          order: Number(galleryForm.order) || 0,
+          image: galleryFile,
+        });
+        setMessage({ type: "ok", text: "Image updated." });
+      } else {
+        if (!galleryFile) {
+          setMessage({ type: "error", text: "Select an image file to upload." });
+          return;
+        }
+        await createGalleryImage(token, {
+          image: galleryFile,
+          caption: galleryForm.caption.trim(),
+          order: Number(galleryForm.order) || 0,
+        });
+        setMessage({ type: "ok", text: "Image uploaded." });
+      }
+      await loadData(token);
+      startNewGalleryImage();
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  async function handleDeleteGalleryImage(id: number) {
+    if (!token || !window.confirm("Delete this image?")) return;
+    try {
+      await deleteGalleryImage(token, id);
+      setMessage({ type: "ok", text: "Image deleted." });
+      if (editingGalleryId === id) startNewGalleryImage();
       await loadData(token);
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -422,6 +562,99 @@ export function AdminPage() {
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary">
               Save countdown
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="admin-card">
+        <h2 className="admin-card__title">Hero image</h2>
+        <p className="admin-card__lead">
+          Set the home-page header image using either a hosted URL or a direct upload. Uploaded image takes priority over URL.
+        </p>
+        <form className="admin-form" onSubmit={saveHeroHeaderImage}>
+          <div className="admin-form__row">
+            <label htmlFor="hero-image-url">Image URL (optional)</label>
+            <input
+              id="hero-image-url"
+              type="url"
+              placeholder="https://…"
+              value={heroImageForm.header_image_url}
+              onChange={(e) =>
+                setHeroImageForm((f) => ({ ...f, header_image_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="hero-image-upload">Upload image (optional)</label>
+            <input
+              id="hero-image-upload"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
+            />
+            {heroImageForm.header_image_file_url ? (
+              <p className="admin-form__hint">
+                Current upload:{" "}
+                <a href={heroImageForm.header_image_file_url} target="_blank" rel="noreferrer">
+                  open image
+                </a>
+              </p>
+            ) : null}
+            <label className="admin-form__check">
+              <input
+                type="checkbox"
+                checked={clearHeroImageUpload}
+                onChange={(e) => setClearHeroImageUpload(e.target.checked)}
+              />
+              <span>Remove current uploaded image</span>
+            </label>
+          </div>
+          <div className="admin-form__row">
+            <label>Image alignment (crop editor)</label>
+            <div className="admin-crop-editor">
+              <div
+                className="admin-crop-editor__preview"
+                style={{
+                  backgroundImage: `url(${heroImagePreviewUrl})`,
+                  backgroundPosition: `${heroImageForm.header_image_focus_x}% ${heroImageForm.header_image_focus_y}%`,
+                }}
+                aria-hidden
+              />
+              <div className="admin-crop-editor__controls">
+                <label htmlFor="hero-image-focus-x">Horizontal position: {Math.round(heroImageForm.header_image_focus_x)}%</label>
+                <input
+                  id="hero-image-focus-x"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={heroImageForm.header_image_focus_x}
+                  onChange={(e) =>
+                    setHeroImageForm((f) => ({ ...f, header_image_focus_x: Number(e.target.value) }))
+                  }
+                />
+                <label htmlFor="hero-image-focus-y">Vertical position: {Math.round(heroImageForm.header_image_focus_y)}%</label>
+                <input
+                  id="hero-image-focus-y"
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={heroImageForm.header_image_focus_y}
+                  onChange={(e) =>
+                    setHeroImageForm((f) => ({ ...f, header_image_focus_y: Number(e.target.value) }))
+                  }
+                />
+              </div>
+            </div>
+            <p className="admin-form__hint">
+              Adjust what stays in frame in the hero crop (similar to creator image alignment tools).
+            </p>
+          </div>
+          <div className="admin-page__actions">
+            <button type="submit" className="admin-btn admin-btn--primary">
+              Save hero image
             </button>
           </div>
         </form>
@@ -684,6 +917,106 @@ export function AdminPage() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="admin-card">
+        <h2 className="admin-card__title">{editingGalleryId != null ? "Edit image" : "Add image"}</h2>
+        <p className="admin-card__lead">
+          Upload images for the public image gallery section. They display in a Pinterest-style masonry grid.
+        </p>
+        <form className="admin-form" onSubmit={saveGalleryImage}>
+          <div className="admin-form__row">
+            <label htmlFor="g-file">Image {editingGalleryId == null ? "*" : "(optional to replace)"}</label>
+            <input
+              id="g-file"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setGalleryFile(e.target.files?.[0] || null)}
+            />
+          </div>
+          <div className="admin-form__row admin-form__row--2">
+            <div className="admin-form__row">
+              <label htmlFor="g-caption">Caption (optional)</label>
+              <input
+                id="g-caption"
+                value={galleryForm.caption}
+                onChange={(e) => setGalleryForm((f) => ({ ...f, caption: e.target.value }))}
+              />
+            </div>
+            <div className="admin-form__row">
+              <label htmlFor="g-order">Order</label>
+              <input
+                id="g-order"
+                type="number"
+                value={galleryForm.order}
+                onChange={(e) =>
+                  setGalleryForm((f) => ({ ...f, order: parseInt(e.target.value, 10) || 0 }))
+                }
+              />
+            </div>
+          </div>
+          <div className="admin-page__actions">
+            <button type="submit" className="admin-btn admin-btn--primary">
+              {editingGalleryId != null ? "Save image" : "Upload image"}
+            </button>
+            {editingGalleryId != null && (
+              <button type="button" className="admin-btn" onClick={startNewGalleryImage}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="admin-card">
+        <h2 className="admin-card__title">Gallery images</h2>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Preview</th>
+                <th>Caption</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {galleryImages.map((img) => (
+                <tr key={img.id}>
+                  <td>{img.order}</td>
+                  <td>
+                    <a href={img.image_url || img.image} target="_blank" rel="noreferrer">
+                      open
+                    </a>
+                  </td>
+                  <td>{img.caption || "—"}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => startEditGalleryImage(img)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--danger"
+                      onClick={() => void handleDeleteGalleryImage(img.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {galleryImages.length === 0 ? (
+                <tr>
+                  <td colSpan={4}>No gallery images yet.</td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>

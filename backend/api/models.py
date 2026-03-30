@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -36,6 +37,20 @@ class FeaturedVideo(models.Model):
         return self.title or self.youtube_id
 
 
+class GalleryImage(models.Model):
+    """Uploaded gallery image shown on the public home page."""
+    image = models.ImageField(upload_to="gallery/")
+    caption = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0, help_text="Display order (lower first)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "-created_at", "id"]
+
+    def __str__(self) -> str:
+        return self.caption.strip() or f"Image {self.pk}"
+
+
 class ReleaseCountdown(models.Model):
     """
     Singleton row (pk=1): optional home-page countdown + pre-save link.
@@ -55,6 +70,39 @@ class ReleaseCountdown(models.Model):
     presave_url = models.URLField(
         blank=True,
         help_text="Pre-save / pre-add link (Spotify, Apple, Linkfire, etc.)",
+    )
+    header_image_url = models.URLField(
+        blank=True,
+        default="",
+        help_text="Optional hero/header image URL for the public home page",
+    )
+    header_image_file = models.FileField(
+        upload_to="hero-header/",
+        blank=True,
+        null=True,
+        help_text="Optional uploaded hero/header image for the public home page",
+    )
+    header_image_crop = models.CharField(
+        max_length=16,
+        choices=[
+            ("center", "Center"),
+            ("top", "Top"),
+            ("bottom", "Bottom"),
+            ("left", "Left"),
+            ("right", "Right"),
+        ],
+        default="center",
+        help_text="How the hero/header image should be cropped",
+    )
+    header_image_focus_x = models.FloatField(
+        default=50.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+        help_text="Horizontal focal point in percent (0 = left, 100 = right)",
+    )
+    header_image_focus_y = models.FloatField(
+        default=50.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+        help_text="Vertical focal point in percent (0 = top, 100 = bottom)",
     )
 
     class Meta:

@@ -4,6 +4,7 @@ import { Hero } from "../components/Hero";
 import { ReleaseCountdownBanner } from "../components/ReleaseCountdownBanner";
 import { MusicSection } from "../components/MusicSection";
 import { Featured } from "../components/Featured";
+import { ImageGallery } from "../components/ImageGallery";
 import { Footer } from "../components/Footer";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
@@ -35,6 +36,7 @@ export function HomePage() {
         <ReleaseCountdownBanner />
         <MusicSection tracks={tracks} loading={loading} />
         <Featured />
+        <ImageGallery />
         <Footer />
       </div>
     </main>

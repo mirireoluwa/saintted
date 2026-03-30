@@ -1,9 +1,11 @@
 from rest_framework import generics, viewsets
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
-from .models import FeaturedVideo, ReleaseCountdown, Track
+from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
 from .permissions import ReadOnlyOrAuthenticated
 from .serializers import (
     FeaturedVideoSerializer,
+    GalleryImageSerializer,
     ReleaseCountdownSerializer,
     TrackSerializer,
 )
@@ -28,6 +30,14 @@ class FeaturedVideoViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnlyOrAuthenticated]
 
 
+class GalleryImageViewSet(viewsets.ModelViewSet):
+    """Public gallery images: public GET; writes need authentication."""
+    queryset = GalleryImage.objects.all()
+    serializer_class = GalleryImageSerializer
+    permission_classes = [ReadOnlyOrAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
 class ReleaseCountdownDetailView(generics.RetrieveUpdateAPIView):
     """
     Singleton settings for home-page release countdown + pre-save link.
@@ -35,6 +45,7 @@ class ReleaseCountdownDetailView(generics.RetrieveUpdateAPIView):
     """
     serializer_class = ReleaseCountdownSerializer
     permission_classes = [ReadOnlyOrAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         obj, _ = ReleaseCountdown.objects.get_or_create(
@@ -44,6 +55,10 @@ class ReleaseCountdownDetailView(generics.RetrieveUpdateAPIView):
                 "song_title": "",
                 "release_at": None,
                 "presave_url": "",
+                "header_image_url": "",
+                "header_image_crop": "center",
+                "header_image_focus_x": 50.0,
+                "header_image_focus_y": 50.0,
             },
         )
         return obj

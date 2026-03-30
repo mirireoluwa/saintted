@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import FeaturedVideo, ReleaseCountdown, Track
+from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
 
 
 @admin.register(FeaturedVideo)
@@ -11,8 +11,24 @@ class FeaturedVideoAdmin(admin.ModelAdmin):
 
 @admin.register(ReleaseCountdown)
 class ReleaseCountdownAdmin(admin.ModelAdmin):
-    list_display = ["enabled", "song_title", "release_at", "presave_url"]
-    fields = ["enabled", "song_title", "release_at", "presave_url"]
+    list_display = [
+        "enabled",
+        "song_title",
+        "release_at",
+        "presave_url",
+        "header_image_crop",
+    ]
+    fields = [
+        "enabled",
+        "song_title",
+        "release_at",
+        "presave_url",
+        "header_image_url",
+        "header_image_file",
+        "header_image_crop",
+        "header_image_focus_x",
+        "header_image_focus_y",
+    ]
 
     def has_add_permission(self, request):
         # Prefer singleton pk=1 from migration; allow add only if table is empty
@@ -20,6 +36,12 @@ class ReleaseCountdownAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(GalleryImage)
+class GalleryImageAdmin(admin.ModelAdmin):
+    list_display = ["id", "caption", "order", "created_at"]
+    list_editable = ["order"]
 
 
 @admin.register(Track)

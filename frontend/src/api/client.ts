@@ -1,5 +1,6 @@
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
+import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { getApiBase } from "../utils/apiBase";
 
@@ -29,5 +30,11 @@ export async function fetchFeaturedVideos(): Promise<FeaturedVideo[]> {
 export async function fetchReleaseCountdown(): Promise<ReleaseCountdown | null> {
   const res = await fetch(`${API_BASE}/release-countdown/`);
   if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchGalleryImages(): Promise<GalleryImage[]> {
+  const res = await fetch(`${API_BASE}/gallery-images/`);
+  if (!res.ok) return [];
   return res.json();
 }

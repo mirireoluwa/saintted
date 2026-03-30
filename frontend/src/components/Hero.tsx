@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { fetchReleaseCountdown } from "../api/client";
 
 export function Hero() {
   const [showAltTag, setShowAltTag] = useState(false);
+  const [headerImageUrl, setHeaderImageUrl] = useState("/hero-bg.png");
+  const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -10,8 +13,31 @@ export function Hero() {
     return () => window.clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    fetchReleaseCountdown()
+      .then((config) => {
+        const uploadedUrl = (config?.header_image_file_url || "").trim();
+        const customUrl = (config?.header_image_url || "").trim();
+        setHeaderImageUrl(uploadedUrl || customUrl || "/hero-bg.png");
+        setHeaderImageFocus({
+          x: typeof config?.header_image_focus_x === "number" ? config.header_image_focus_x : 50,
+          y: typeof config?.header_image_focus_y === "number" ? config.header_image_focus_y : 50,
+        });
+      })
+      .catch(() => {
+        setHeaderImageUrl("/hero-bg.png");
+        setHeaderImageFocus({ x: 50, y: 50 });
+      });
+  }, []);
+
   return (
-    <section className="hero-section">
+    <section
+      className="hero-section"
+      style={{
+        backgroundImage: `url(${headerImageUrl})`,
+        backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
+      }}
+    >
       <div className="hero-inner">
         <div className="hero-content">
           <div className="hero-titles">
