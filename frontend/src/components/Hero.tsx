@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
 import { fetchReleaseCountdown } from "../api/client";
 
+async function decodeBackgroundUrl(url: string): Promise<void> {
+  const img = new Image();
+  img.src = url;
+  try {
+    await img.decode();
+  } catch {
+    /* background may still paint; avoids blocking on decode edge cases */
+  }
+}
+
 export function Hero() {
   const [showAltTag, setShowAltTag] = useState(false);
-  const [headerImageUrl, setHeaderImageUrl] = useState("/hero-bg.png");
+  const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
+  const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -14,30 +25,69 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
-    fetchReleaseCountdown()
-      .then((config) => {
+    let cancelled = false;
+
+    const run = async () => {
+      const fallback = "/hero-bg.png";
+      const focusFrom = (config: Awaited<ReturnType<typeof fetchReleaseCountdown>>) => ({
+        x: typeof config?.header_image_focus_x === "number" ? config.header_image_focus_x : 50,
+        y: typeof config?.header_image_focus_y === "number" ? config.header_image_focus_y : 50,
+      });
+
+      try {
+        const config = await fetchReleaseCountdown();
+        if (cancelled) return;
         const uploadedUrl = (config?.header_image_file_url || "").trim();
         const customUrl = (config?.header_image_url || "").trim();
-        setHeaderImageUrl(uploadedUrl || customUrl || "/hero-bg.png");
-        setHeaderImageFocus({
-          x: typeof config?.header_image_focus_x === "number" ? config.header_image_focus_x : 50,
-          y: typeof config?.header_image_focus_y === "number" ? config.header_image_focus_y : 50,
-        });
-      })
-      .catch(() => {
-        setHeaderImageUrl("/hero-bg.png");
+        const url = uploadedUrl || customUrl || fallback;
+        const focus = focusFrom(config);
+        await decodeBackgroundUrl(url);
+        if (cancelled) return;
+        setHeaderImageUrl(url);
+        setHeaderImageFocus(focus);
+      } catch {
+        if (cancelled) return;
+        await decodeBackgroundUrl(fallback);
+        if (cancelled) return;
+        setHeaderImageUrl(fallback);
         setHeaderImageFocus({ x: 50, y: 50 });
-      });
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  useEffect(() => {
+    if (!headerImageUrl) {
+      setHeroPhotoVisible(false);
+      return;
+    }
+    setHeroPhotoVisible(false);
+    let inner = 0;
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(outer);
+      window.cancelAnimationFrame(inner);
+    };
+  }, [headerImageUrl]);
+
   return (
-    <section
-      className="hero-section"
-      style={{
-        backgroundImage: `url(${headerImageUrl})`,
-        backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
-      }}
-    >
+    <section className="hero-section">
+      {headerImageUrl ? (
+        <div
+          className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
+          style={{
+            backgroundImage: `url(${headerImageUrl})`,
+            backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
+          }}
+          aria-hidden
+        />
+      ) : null}
       <div className="hero-inner">
         <div className="hero-content">
           <div className="hero-titles">

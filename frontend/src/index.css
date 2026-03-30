@@ -147,16 +147,39 @@ a {
   padding: 5.5rem 1.5rem 1.75rem;
   text-align: center;
   position: relative;
-  background-image: url("/hero-bg.png");
+  background-color: var(--bg);
+  background-image: var(--page-gradient);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.hero-section__photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.05s ease-out;
+  pointer-events: none;
+}
+
+.hero-section__photo--visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-section__photo {
+    transition-duration: 0.01ms;
+  }
 }
 
 .hero-section::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: rgba(0, 0, 0, 0.42);
   pointer-events: none;
 }
@@ -166,7 +189,7 @@ a {
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   flex: 1;
   display: flex;
   flex-direction: column;
