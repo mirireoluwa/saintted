@@ -27,6 +27,14 @@ import {
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import "./AdminPage.css";
 
+type HeroImageForm = {
+  header_image_url: string;
+  header_image_crop: ReleaseCountdown["header_image_crop"];
+  header_image_file_url: string;
+  header_image_focus_x: number;
+  header_image_focus_y: number;
+};
+
 function emptyTrackForm(): Record<string, string | number> {
   return {
     title: "",
@@ -77,10 +85,10 @@ function emptyCountdownForm() {
   return { enabled: false, song_title: "", release_at_local: "", presave_url: "" };
 }
 
-function emptyHeroImageForm() {
+function emptyHeroImageForm(): HeroImageForm {
   return {
     header_image_url: "",
-    header_image_crop: "center" as const,
+    header_image_crop: "center",
     header_image_file_url: "",
     header_image_focus_x: 50,
     header_image_focus_y: 50,
@@ -96,7 +104,7 @@ function countdownFormFromApi(c: ReleaseCountdown) {
   };
 }
 
-function heroImageFormFromApi(c: ReleaseCountdown) {
+function heroImageFormFromApi(c: ReleaseCountdown): HeroImageForm {
   return {
     header_image_url: c.header_image_url || "",
     header_image_crop: c.header_image_crop || "center",
