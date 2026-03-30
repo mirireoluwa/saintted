@@ -599,11 +599,14 @@ a {
 .image-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  grid-auto-rows: 1fr;
   justify-content: center;
   gap: 1rem;
 }
 
 .image-gallery__item {
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -612,8 +615,20 @@ a {
 
 .image-gallery__img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: 220px;
+  max-height: 260px;
   display: block;
+  object-fit: cover;
+}
+
+.image-gallery__item--landscape {
+  grid-column: span 2;
+}
+
+.image-gallery__item--landscape .image-gallery__img {
+  min-height: 220px;
+  max-height: 240px;
 }
 
 .image-gallery__caption {
@@ -772,5 +787,9 @@ a {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     justify-content: center;
     gap: 0.75rem;
+  }
+
+  .image-gallery__item--landscape {
+    grid-column: span 1;
   }
 }

@@ -37,6 +37,9 @@ export function SiteHeader() {
               <a href="#featured-section" className="site-header__nav-link" onClick={handleAnchorClick}>
                 videos
               </a>
+              <a href="#image-gallery-section" className="site-header__nav-link" onClick={handleAnchorClick}>
+                images
+              </a>
             </nav>
 
             <div className="site-header__tools">
@@ -62,6 +65,9 @@ export function SiteHeader() {
             </a>
             <a href="#featured-section" className="site-header__mobile-link" onClick={handleAnchorClick}>
               videos
+            </a>
+            <a href="#image-gallery-section" className="site-header__mobile-link" onClick={handleAnchorClick}>
+              images
             </a>
           </nav>
         ) : null}

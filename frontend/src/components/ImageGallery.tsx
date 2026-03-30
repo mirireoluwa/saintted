@@ -5,6 +5,7 @@ import type { GalleryImage } from "../types/galleryImage";
 export function ImageGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [landscapeIds, setLandscapeIds] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchGalleryImages()
@@ -30,13 +31,23 @@ export function ImageGallery() {
       ) : (
         <div className="image-gallery">
           {images.map((img) => (
-            <figure key={img.id} className="image-gallery__item">
+            <figure
+              key={img.id}
+              className={`image-gallery__item${landscapeIds[img.id] ? " image-gallery__item--landscape" : ""}`}
+            >
               <img
                 src={img.image_url || img.image}
                 alt={img.caption || "Saintted gallery image"}
                 className="image-gallery__img"
                 loading="lazy"
                 decoding="async"
+                onLoad={(e) => {
+                  const { naturalWidth, naturalHeight } = e.currentTarget;
+                  const isLandscape = naturalWidth > naturalHeight;
+                  setLandscapeIds((prev) =>
+                    prev[img.id] === isLandscape ? prev : { ...prev, [img.id]: isLandscape }
+                  );
+                }}
               />
               {img.caption ? <figcaption className="image-gallery__caption">{img.caption}</figcaption> : null}
             </figure>
