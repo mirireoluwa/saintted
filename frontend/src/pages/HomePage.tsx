@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { SiteHeader } from "../components/SiteHeader";
 import { Hero } from "../components/Hero";
 import { ReleaseCountdownBanner } from "../components/ReleaseCountdownBanner";
@@ -18,6 +19,7 @@ const FALLBACK_TRACKS: Track[] = [
 ];
 
 export function HomePage() {
+  const location = useLocation();
   const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +29,16 @@ export function HomePage() {
       .catch(() => setTracks(FALLBACK_TRACKS))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const id = location.hash.replace(/^#/, "");
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.pathname, location.hash]);
 
   return (
     <main id="main" className="page">
