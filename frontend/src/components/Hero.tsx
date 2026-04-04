@@ -1,16 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchReleaseCountdown } from "../api/client";
 
-async function decodeBackgroundUrl(url: string): Promise<void> {
-  const img = new Image();
-  img.src = url;
-  try {
-    await img.decode();
-  } catch {
-    /* background may still paint; avoids blocking on decode edge cases */
-  }
-}
-
 export function Hero() {
   const [showAltTag, setShowAltTag] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
@@ -41,13 +31,10 @@ export function Hero() {
         const customUrl = (config?.header_image_url || "").trim();
         const url = uploadedUrl || customUrl || fallback;
         const focus = focusFrom(config);
-        await decodeBackgroundUrl(url);
         if (cancelled) return;
         setHeaderImageUrl(url);
         setHeaderImageFocus(focus);
       } catch {
-        if (cancelled) return;
-        await decodeBackgroundUrl(fallback);
         if (cancelled) return;
         setHeaderImageUrl(fallback);
         setHeaderImageFocus({ x: 50, y: 50 });
@@ -66,14 +53,8 @@ export function Hero() {
       return;
     }
     setHeroPhotoVisible(false);
-    let inner = 0;
-    const outer = window.requestAnimationFrame(() => {
-      inner = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
-    });
-    return () => {
-      window.cancelAnimationFrame(outer);
-      window.cancelAnimationFrame(inner);
-    };
+    const id = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
+    return () => window.cancelAnimationFrame(id);
   }, [headerImageUrl]);
 
   return (
