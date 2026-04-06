@@ -25,7 +25,25 @@ import {
   updateTrack,
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
+import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
 import "./AdminPage.css";
+
+function AdminSubdomainCallout() {
+  if (typeof window === "undefined" || !shouldSuggestAdminSubdomain()) return null;
+  const href = `${getAdminSiteOrigin()}/`;
+  return (
+    <div className="admin-callout admin-callout--subdomain" role="status">
+      <p className="admin-callout__text">
+        Prefer the dedicated admin host:{" "}
+        <a href={href} rel="noopener noreferrer">
+          {href.replace(/\/+$/, "")}
+        </a>
+        . If that opens the public site instead of this CMS, add the admin domain to the same Vercel project
+        as your main site and turn off “redirect to primary domain” for it (details in the README).
+      </p>
+    </div>
+  );
+}
 
 type HeroImageForm = {
   header_image_url: string;
@@ -443,6 +461,7 @@ export function AdminPage() {
     return (
       <div className="admin-page">
         <AdminSiteHeader />
+        <AdminSubdomainCallout />
         {message && (
           <div className={`admin-msg admin-msg--${message.type}`}>{message.text}</div>
         )}
@@ -495,6 +514,7 @@ export function AdminPage() {
   return (
     <div className="admin-page">
       <AdminSiteHeader />
+      <AdminSubdomainCallout />
 
       <div className="admin-page__toolbar">
         <div className="admin-page__toolbar-label">

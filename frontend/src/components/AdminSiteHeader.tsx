@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { isAdminHostname } from "../utils/adminHost";
+import { getSiteUrl } from "../utils/siteUrl";
 import "./AdminSiteHeader.css";
 
 export function AdminSiteHeader() {
+  const onAdminHost =
+    typeof window !== "undefined" && isAdminHostname(window.location.hostname);
+  const viewSiteHref = onAdminHost ? `${getSiteUrl()}/` : "/";
+
   return (
     <header className="admin-site-header">
       <div className="admin-site-header__shell">
@@ -31,9 +37,15 @@ export function AdminSiteHeader() {
             </div>
             <div className="admin-site-header__actions">
               <ThemeToggle embedded />
-              <Link to="/" className="admin-site-header__view-site">
-                view site
-              </Link>
+              {onAdminHost ? (
+                <a href={viewSiteHref} className="admin-site-header__view-site" rel="noopener noreferrer">
+                  view site
+                </a>
+              ) : (
+                <Link to="/" className="admin-site-header__view-site">
+                  view site
+                </Link>
+              )}
             </div>
           </div>
         </div>

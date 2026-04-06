@@ -4,23 +4,28 @@ import { HomePage } from "./pages/HomePage";
 import { TrackDetailPage } from "./pages/TrackDetailPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminPage } from "./pages/AdminPage";
+import { isAdminHostname } from "./utils/adminHost";
 import "./index.css";
 
 const isAdminHost =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "admin.saintted.com" ||
-    window.location.hostname === "admin.localhost");
+  typeof window !== "undefined" && isAdminHostname(window.location.hostname);
 
 function App() {
   return (
     <Routes>
-      {isAdminHost && <Route path="/" element={<Navigate to="/admin" replace />} />}
       <Route path="/admin" element={<AdminPage />} />
-      <Route path="/" element={<PublicShell />}>
-        <Route index element={<HomePage />} />
-        <Route path="music/:slug" element={<TrackDetailPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
+      {isAdminHost ? (
+        <>
+          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </>
+      ) : (
+        <Route path="/" element={<PublicShell />}>
+          <Route index element={<HomePage />} />
+          <Route path="music/:slug" element={<TrackDetailPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      )}
     </Routes>
   );
 }

@@ -1,4 +1,48 @@
 /* Admin — aligned with admin.mirireoluwa-style CMS */
+.admin-callout--subdomain {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 255, 119, 0.35);
+  background: rgba(0, 255, 119, 0.06);
+}
+
+.admin-callout__text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.admin-callout__code {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.admin-callout--subdomain a {
+  color: var(--accent-green);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.admin-callout--subdomain a:hover {
+  text-decoration: none;
+}
+
+[data-theme="light"] .admin-callout--subdomain {
+  border-color: rgba(10, 138, 69, 0.45);
+  background: rgba(10, 138, 69, 0.08);
+}
+
+[data-theme="light"] .admin-callout--subdomain a {
+  color: #0a8a45;
+}
+
 .admin-page {
   min-height: 100vh;
   padding: 0 1rem 3rem;

@@ -140,6 +140,8 @@ Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS),
 
 **Admin subdomain:** add **`admin.saintted.com`** (or a second Vercel project) to **`CORS_ORIGINS`** / **`CSRF_TRUSTED_ORIGINS`** as well.
 
+**If `admin.saintted.com` opens the public homepage (as `saintted.com`):** The browser is being **redirected to your primary domain** before the SPA runs, so the app never sees the `admin` hostname. On Vercel → your project → **Settings → Domains**, add **`admin.saintted.com`** as a domain on the **same** project as the main site. Ensure it is **not** configured to “redirect” to the apex domain (each hostname should serve the deployment directly). DNS should point the `admin` host at Vercel (e.g. **CNAME** to `cname.vercel-dns.com` as shown in the dashboard). Optional: set **`VITE_ADMIN_HOSTS`** in the Vercel env to a comma-separated list of extra hostnames that should use admin-only routing (e.g. a preview URL).
+
 ### Render + database notes
 
 - If blueprint database creation isn’t available on your plan, create **PostgreSQL** manually and set **`DATABASE_URL`** on the web service.  
