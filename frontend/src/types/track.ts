@@ -11,4 +11,9 @@ export interface Track {
   youtube_url?: string;
   apple_music_url?: string;
   spotify_url?: string;
+  /** Public API omits unpublished tracks; admin returns all. */
+  is_published?: boolean;
+  /** Present on GET /api/tracks/<slug>/ (detail); enables prev/next before the list loads. */
+  previous_slug?: string | null;
+  next_slug?: string | null;
 }

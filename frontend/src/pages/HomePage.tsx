@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
-import { SiteHeader } from "../components/SiteHeader";
+import { AnimatedSection } from "../components/AnimatedSection";
 import { Hero } from "../components/Hero";
 import { ReleaseCountdownBanner } from "../components/ReleaseCountdownBanner";
 import { MusicSection } from "../components/MusicSection";
 import { Featured } from "../components/Featured";
 import { ImageGallery } from "../components/ImageGallery";
 import { Footer } from "../components/Footer";
+import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
+import { getSiteUrl } from "../utils/siteUrl";
 
 const FALLBACK_TRACKS: Track[] = [
   { id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0 },
@@ -22,6 +25,17 @@ export function HomePage() {
   const location = useLocation();
   const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
   const [loading, setLoading] = useState(true);
+
+  const jsonLd = useMemo(() => {
+    const site = getSiteUrl();
+    return JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      name: "Saintted",
+      url: site,
+      description: "love, saintted",
+    });
+  }, []);
 
   useEffect(() => {
     fetchTracks()
@@ -41,16 +55,31 @@ export function HomePage() {
   }, [location.pathname, location.hash]);
 
   return (
-    <main id="main" className="page">
-      <SiteHeader />
-      <Hero />
-      <div className="site-main">
-        <ReleaseCountdownBanner />
-        <MusicSection tracks={tracks} loading={loading} />
-        <Featured />
-        <ImageGallery />
-        <Footer />
-      </div>
-    </main>
+    <>
+      <SeoHead title="saintted" description="love, saintted" canonicalPath="/" />
+      <Helmet>
+        <script type="application/ld+json">{jsonLd}</script>
+      </Helmet>
+      <main id="main" className="page">
+        <Hero />
+        <div className="site-main">
+          <AnimatedSection>
+            <ReleaseCountdownBanner />
+          </AnimatedSection>
+          <AnimatedSection>
+            <MusicSection tracks={tracks} loading={loading} />
+          </AnimatedSection>
+          <AnimatedSection>
+            <Featured />
+          </AnimatedSection>
+          <AnimatedSection>
+            <ImageGallery />
+          </AnimatedSection>
+          <AnimatedSection>
+            <Footer />
+          </AnimatedSection>
+        </div>
+      </main>
+    </>
   );
 }

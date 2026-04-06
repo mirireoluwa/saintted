@@ -1,5 +1,7 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
+import { staggerChildren, sectionTransition } from "../utils/motion";
 import { TrackCoverPlaceholder } from "./TrackCoverPlaceholder";
 import { getTrackArtUrl } from "../utils/trackArt";
 
@@ -9,6 +11,8 @@ interface MusicSectionProps {
 }
 
 export function MusicSection({ tracks, loading }: MusicSectionProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+
   return (
     <section className="music-section" id="music-section">
       <div className="section-label">
@@ -32,21 +36,42 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
           ))}
         </div>
       ) : (
-        <div className="music-grid">
+        <motion.div
+          className="music-grid"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: { staggerChildren: staggerChildren(reduceMotion, 0.055) },
+            },
+          }}
+          initial={reduceMotion ? false : "hidden"}
+          animate="visible"
+        >
           {tracks.map((track) => {
             const artUrl = getTrackArtUrl(track);
             return (
-              <article key={track.id} className="track-card">
+              <motion.article
+                key={track.id}
+                className="track-card"
+                variants={{
+                  hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                transition={sectionTransition(reduceMotion)}
+              >
                 <Link to={`/music/${track.slug}`} className="track-card-link">
                   <div className="track-card__art-frame">
                     <div className="track-art">
                       {artUrl ? (
-                        <img
+                        <motion.img
                           src={artUrl}
                           alt={`${track.title} cover art`}
                           className="track-art__img"
                           loading="lazy"
                           decoding="async"
+                          initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
                         />
                       ) : (
                         <TrackCoverPlaceholder variant="card" />
@@ -58,10 +83,10 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                     <p className="track-meta">{track.meta}</p>
                   </div>
                 </Link>
-              </article>
+              </motion.article>
             );
           })}
-        </div>
+        </motion.div>
       )}
     </section>
   );

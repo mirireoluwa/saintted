@@ -16,6 +16,10 @@ class Track(models.Model):
     youtube_url = models.URLField(blank=True)
     apple_music_url = models.URLField(blank=True)
     spotify_url = models.URLField(blank=True)
+    is_published = models.BooleanField(
+        default=True,
+        help_text="When off, track is hidden from public API and site (draft).",
+    )
 
     class Meta:
         ordering = ["order", "title"]

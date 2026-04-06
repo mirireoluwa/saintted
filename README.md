@@ -130,7 +130,8 @@ Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS),
 2. **Root Directory:** `frontend`. Framework: **Vite** (build `npm run build`, output `dist`).  
 3. **Environment Variables** (Production — needed at **build** time):
    - **`VITE_API_URL`** = `https://<your-service>.onrender.com/api` (same URL as above; **no trailing slash**)
-   - **`VITE_SITE_URL`** = your public site origin, e.g. `https://saintted.com` (Open Graph / canonical URLs)
+   - **`VITE_SITE_URL`** = your public site origin, e.g. `https://saintted.com` (Open Graph / canonical URLs, sitemap, and `react-helmet-async` fallbacks)
+   - **`VITE_SENTRY_DSN`** (optional) — enables browser error reporting and tracing via Sentry when set
 
 4. Deploy, then add your domain under **Settings → Domains**.  
 5. If CORS errors appear, add every deployed frontend origin (including `https://xxx.vercel.app`) to **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** on Render and redeploy the API (or clear cache).
@@ -169,6 +170,15 @@ Both the public site and **`admin.saintted.com`** call the same API. These issue
    In Render **Logs**, confirm `migrate` runs and finishes. If the DB was recreated, re-run **`createsuperuser`** and re-import or re-add tracks.
 
 On the live site, open **DevTools → Console**: if **`VITE_API_URL`** doesn’t end with **`/api`**, the app logs a warning.
+
+## SEO, drafts, performance, and monitoring
+
+- **Per-page meta:** The SPA updates `<title>`, description, canonical URL, and Open Graph / Twitter tags via **`react-helmet-async`**. Track pages use cover art as **`og:image`** when available, plus JSON-LD (`MusicGroup` on the home page, `MusicRecording` on track pages).
+- **Sitemap:** `npm run build` runs **`scripts/generate-sitemap.mjs`** first (`prebuild`), which writes **`frontend/public/sitemap.xml`** using **`VITE_SITE_URL`** and **`VITE_API_URL`** (public track list). Commit the generated file or rely on CI to regenerate each deploy.
+- **`robots.txt`:** Served from **`frontend/public/robots.txt`**. Update the **`Sitemap:`** line if your production domain is not `saintted.com`.
+- **Draft tracks:** The **`Track.is_published`** flag (default **true**) hides tracks from **anonymous** `GET /api/tracks/` and `GET /api/tracks/<slug>/`. Authenticated admin/API token requests still see all tracks. Run **`python manage.py migrate`** after pulling to apply migration **`0014_track_is_published`**.
+- **Hero prefetch:** `index.html` includes a **`link rel="prefetch"`** for **`/release-countdown/`** when **`VITE_API_URL`** is set at build time; the client also starts that fetch early and caches hero settings in **`sessionStorage`** for faster repeat visits.
+- **Operations (recommended outside the repo):** Use an uptime monitor on your Render API URL; enable **automated Postgres backups** in your host dashboard; tune **Sentry** alerts in the Sentry project.
 
 ## Fonts and styling
 

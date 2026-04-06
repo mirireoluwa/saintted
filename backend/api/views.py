@@ -7,6 +7,7 @@ from .serializers import (
     FeaturedVideoSerializer,
     GalleryImageSerializer,
     ReleaseCountdownSerializer,
+    TrackDetailSerializer,
     TrackSerializer,
 )
 
@@ -15,12 +16,25 @@ class TrackViewSet(viewsets.ModelViewSet):
     """
     List/retrieve/update tracks. Public GET; POST/PATCH/PUT/DELETE need token auth.
     Detail by slug: /api/tracks/<slug>/
+    Unauthenticated reads only see published tracks; authenticated users see all.
     """
-    queryset = Track.objects.all()
+
     serializer_class = TrackSerializer
     permission_classes = [ReadOnlyOrAuthenticated]
     lookup_field = "slug"
     lookup_url_kwarg = "slug"
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return TrackDetailSerializer
+        return TrackSerializer
+
+    def get_queryset(self):
+        qs = Track.objects.all()
+        user = getattr(self.request, "user", None)
+        if user and user.is_authenticated:
+            return qs
+        return qs.filter(is_published=True)
 
 
 class FeaturedVideoViewSet(viewsets.ModelViewSet):

@@ -48,6 +48,7 @@ function emptyTrackForm(): Record<string, string | number> {
     youtube_url: "",
     apple_music_url: "",
     spotify_url: "",
+    is_published: 1,
   };
 }
 
@@ -64,6 +65,7 @@ function trackToForm(t: Track): Record<string, string | number> {
     youtube_url: t.youtube_url || "",
     apple_music_url: t.apple_music_url || "",
     spotify_url: t.spotify_url || "",
+    is_published: t.is_published === false ? 0 : 1,
   };
 }
 
@@ -288,6 +290,7 @@ export function AdminPage() {
       youtube_url: String(trackForm.youtube_url).trim(),
       apple_music_url: String(trackForm.apple_music_url).trim(),
       spotify_url: String(trackForm.spotify_url).trim(),
+      is_published: Number(trackForm.is_published) !== 0,
     };
     if (!payload.title) {
       setMessage({ type: "error", text: "Title is required." });
@@ -780,6 +783,19 @@ export function AdminPage() {
               onChange={(e) => setTrackForm((f) => ({ ...f, description: e.target.value }))}
             />
           </div>
+          <div className="admin-form__row admin-form__row--checkbox">
+            <label className="admin-form__checkbox-label">
+              <input
+                id="t-published"
+                type="checkbox"
+                checked={Number(trackForm.is_published) !== 0}
+                onChange={(e) =>
+                  setTrackForm((f) => ({ ...f, is_published: e.target.checked ? 1 : 0 }))
+                }
+              />
+              <span>Published (visible on public site and API)</span>
+            </label>
+          </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary">
               {editingSlug ? "Save changes" : "Create track"}
@@ -803,6 +819,7 @@ export function AdminPage() {
                 <th>Title</th>
                 <th>Slug</th>
                 <th>Year</th>
+                <th>Public</th>
                 <th />
               </tr>
             </thead>
@@ -815,6 +832,7 @@ export function AdminPage() {
                     <Link to={`/music/${t.slug}`}>{t.slug}</Link>
                   </td>
                   <td>{t.year ?? "—"}</td>
+                  <td>{t.is_published === false ? "draft" : "live"}</td>
                   <td>
                     <button
                       type="button"

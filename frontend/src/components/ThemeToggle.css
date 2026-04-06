@@ -22,6 +22,11 @@
   color: inherit;
 }
 
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 3px;
+}
+
 .theme-toggle--embedded {
   position: relative;
   top: auto;

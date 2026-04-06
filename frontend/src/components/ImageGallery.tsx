@@ -1,11 +1,14 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchGalleryImages } from "../api/client";
 import type { GalleryImage } from "../types/galleryImage";
+import { staggerChildren, sectionTransition } from "../utils/motion";
 
 export function ImageGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [landscapeIds, setLandscapeIds] = useState<Record<number, boolean>>({});
+  const reduceMotion = useReducedMotion() ?? false;
 
   useEffect(() => {
     fetchGalleryImages()
@@ -29,18 +32,37 @@ export function ImageGallery() {
           ))}
         </div>
       ) : (
-        <div className="image-gallery">
+        <motion.div
+          className="image-gallery"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: { staggerChildren: staggerChildren(reduceMotion, 0.06) },
+            },
+          }}
+          initial={reduceMotion ? false : "hidden"}
+          animate="visible"
+        >
           {images.map((img) => (
-            <figure
+            <motion.figure
               key={img.id}
               className={`image-gallery__item${landscapeIds[img.id] ? " image-gallery__item--landscape" : ""}`}
+              variants={{
+                hidden: reduceMotion ? {} : { opacity: 0, y: 18 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={sectionTransition(reduceMotion)}
             >
-              <img
+              <motion.img
                 src={img.image_url || img.image}
                 alt={img.caption || "Saintted gallery image"}
                 className="image-gallery__img"
                 loading="lazy"
                 decoding="async"
+                sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                initial={reduceMotion ? false : { opacity: 0, scale: 1.02 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: reduceMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
                 onLoad={(e) => {
                   const { naturalWidth, naturalHeight } = e.currentTarget;
                   const isLandscape = naturalWidth > naturalHeight;
@@ -50,9 +72,9 @@ export function ImageGallery() {
                 }}
               />
               {img.caption ? <figcaption className="image-gallery__caption">{img.caption}</figcaption> : null}
-            </figure>
+            </motion.figure>
           ))}
-        </div>
+        </motion.div>
       )}
     </section>
   );

@@ -1,12 +1,15 @@
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { sectionTransition } from "../utils/motion";
 import "./SiteHeader.css";
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion() ?? false;
 
   const handleSectionClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -71,31 +74,41 @@ export function SiteHeader() {
           </div>
         </div>
 
-        {menuOpen ? (
-          <nav className="site-header__mobile" aria-label="Mobile">
-            <a
-              href="/#music-section"
-              className="site-header__mobile-link"
-              onClick={(e) => handleSectionClick(e, "music-section")}
+        <AnimatePresence>
+          {menuOpen ? (
+            <motion.nav
+              className="site-header__mobile"
+              aria-label="Mobile"
+              initial={reduceMotion ? false : { opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+              transition={sectionTransition(reduceMotion)}
             >
-              music
-            </a>
-            <a
-              href="/#featured-section"
-              className="site-header__mobile-link"
-              onClick={(e) => handleSectionClick(e, "featured-section")}
-            >
-              videos
-            </a>
-            <a
-              href="/#image-gallery-section"
-              className="site-header__mobile-link"
-              onClick={(e) => handleSectionClick(e, "image-gallery-section")}
-            >
-              images
-            </a>
-          </nav>
-        ) : null}
+              {(
+                [
+                  ["music-section", "music"],
+                  ["featured-section", "videos"],
+                  ["image-gallery-section", "images"],
+                ] as const
+              ).map(([id, label], i) => (
+                <motion.a
+                  key={id}
+                  href={`/#${id}`}
+                  className="site-header__mobile-link"
+                  initial={reduceMotion ? false : { opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{
+                    ...sectionTransition(reduceMotion),
+                    delay: reduceMotion ? 0 : 0.05 + i * 0.045,
+                  }}
+                  onClick={(e) => handleSectionClick(e, id)}
+                >
+                  {label}
+                </motion.a>
+              ))}
+            </motion.nav>
+          ) : null}
+        </AnimatePresence>
       </div>
     </header>
   );

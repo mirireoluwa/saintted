@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchReleaseCountdown } from "../api/client";
+import { readHeroCache, writeHeroCache } from "../utils/heroCache";
 
 export function Hero() {
   const [showAltTag, setShowAltTag] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
   const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
+  const prevHeroUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -16,9 +18,14 @@ export function Hero() {
 
   useEffect(() => {
     let cancelled = false;
+    const fallback = "/hero-bg.png";
+    const cached = readHeroCache();
+    if (cached) {
+      setHeaderImageUrl(cached.url);
+      setHeaderImageFocus(cached.focus);
+    }
 
     const run = async () => {
-      const fallback = "/hero-bg.png";
       const focusFrom = (config: Awaited<ReturnType<typeof fetchReleaseCountdown>>) => ({
         x: typeof config?.header_image_focus_x === "number" ? config.header_image_focus_x : 50,
         y: typeof config?.header_image_focus_y === "number" ? config.header_image_focus_y : 50,
@@ -32,6 +39,7 @@ export function Hero() {
         const url = uploadedUrl || customUrl || fallback;
         const focus = focusFrom(config);
         if (cancelled) return;
+        writeHeroCache(config, fallback);
         setHeaderImageUrl(url);
         setHeaderImageFocus(focus);
       } catch {
@@ -49,9 +57,14 @@ export function Hero() {
 
   useEffect(() => {
     if (!headerImageUrl) {
+      prevHeroUrlRef.current = null;
       setHeroPhotoVisible(false);
       return;
     }
+    if (prevHeroUrlRef.current === headerImageUrl) {
+      return;
+    }
+    prevHeroUrlRef.current = headerImageUrl;
     setHeroPhotoVisible(false);
     const id = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
     return () => window.cancelAnimationFrame(id);
@@ -65,6 +78,7 @@ export function Hero() {
           style={{
             backgroundImage: `url(${headerImageUrl})`,
             backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
+            transformOrigin: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
           }}
           aria-hidden
         />

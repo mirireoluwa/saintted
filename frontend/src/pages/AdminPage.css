@@ -168,6 +168,24 @@
   background: rgba(255, 255, 255, 0.75);
 }
 
+.admin-form__row--checkbox {
+  align-items: center;
+}
+
+.admin-form__checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.admin-form__checkbox-label input {
+  width: auto;
+  accent-color: rgba(245, 158, 11, 0.85);
+}
+
 .admin-form textarea {
   min-height: 100px;
   resize: vertical;
@@ -179,6 +197,18 @@
   outline: none;
   border-color: rgba(245, 158, 11, 0.45);
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2);
+}
+
+.admin-form input:focus-visible,
+.admin-form select:focus-visible,
+.admin-form textarea:focus-visible {
+  outline: 2px solid rgba(245, 158, 11, 0.65);
+  outline-offset: 2px;
+}
+
+.admin-btn:focus-visible {
+  outline: 2px solid rgba(245, 158, 11, 0.65);
+  outline-offset: 2px;
 }
 
 .admin-btn {

@@ -15,7 +15,15 @@ export default defineConfig(({ mode }) => {
       {
         name: "html-site-url",
         transformIndexHtml(html) {
-          return html.replaceAll("%SITE_URL%", siteUrl);
+          let out = html.replaceAll("%SITE_URL%", siteUrl);
+          const apiBase = (env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+          if (apiBase) {
+            out = out.replace(
+              "</head>",
+              `<link rel="prefetch" href="${apiBase}/release-countdown/" crossorigin="anonymous" />\n</head>`
+            );
+          }
+          return out;
         },
       },
     ],

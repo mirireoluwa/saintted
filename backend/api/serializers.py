@@ -13,6 +13,7 @@ class TrackSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "slug", "meta", "art_url", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
+            "is_published",
         ]
 
     def to_representation(self, instance):
@@ -48,6 +49,42 @@ class TrackSerializer(serializers.ModelSerializer):
         if "slug" in validated_data and not (validated_data.get("slug") or "").strip():
             validated_data.pop("slug", None)
         return super().update(instance, validated_data)
+
+
+class TrackDetailSerializer(TrackSerializer):
+    """Retrieve-only extras: neighbor slugs so the client can enable prev/next without loading the full list."""
+
+    previous_slug = serializers.SerializerMethodField()
+    next_slug = serializers.SerializerMethodField()
+
+    class Meta(TrackSerializer.Meta):
+        fields = [*TrackSerializer.Meta.fields, "previous_slug", "next_slug"]
+
+    def _visible_queryset(self):
+        qs = Track.objects.all()
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request else None
+        if user and user.is_authenticated:
+            return qs
+        return qs.filter(is_published=True)
+
+    def get_previous_slug(self, obj):
+        return (
+            self._visible_queryset()
+            .filter(order__lt=obj.order)
+            .order_by("-order")
+            .values_list("slug", flat=True)
+            .first()
+        )
+
+    def get_next_slug(self, obj):
+        return (
+            self._visible_queryset()
+            .filter(order__gt=obj.order)
+            .order_by("order")
+            .values_list("slug", flat=True)
+            .first()
+        )
 
 
 class FeaturedVideoSerializer(serializers.ModelSerializer):
