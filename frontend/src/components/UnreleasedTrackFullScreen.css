@@ -82,7 +82,7 @@
   margin-bottom: 1rem;
   padding: 0.35rem 0.65rem;
   border: 1px solid rgba(255, 75, 99, 0.55);
-  border-radius: 999px;
+  border-radius: 8px;
   background: rgba(255, 75, 99, 0.12);
 }
 
