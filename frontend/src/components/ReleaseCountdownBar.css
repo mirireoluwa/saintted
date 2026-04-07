@@ -1,0 +1,109 @@
+/* Overlaid on hero via .home-landing__countdown; pill matches nav glass bar */
+.release-countdown-bar {
+  width: 100%;
+  padding: 0 max(1.15rem, env(safe-area-inset-right)) 0 max(1.15rem, env(safe-area-inset-left));
+  scroll-margin-top: 6rem;
+}
+
+.release-countdown-bar__shell {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.release-countdown-bar__pill {
+  pointer-events: auto;
+  width: 100%;
+  max-width: min(22.5rem, 100%);
+  margin-inline: auto;
+  border-radius: 14px;
+  border: 1px solid var(--header-border);
+  background: var(--header-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--header-float-shadow);
+}
+
+.release-countdown-bar__inner {
+  padding: 0.5rem 0.85rem 0.5rem 0.95rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.55rem;
+  min-height: 2.75rem;
+}
+
+.release-countdown-bar__title {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(0.85rem, 2.5vw, 1.05rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  color: var(--text);
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.release-countdown-bar__time {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(0.68rem, 1.6vw, 0.78rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.release-countdown-bar__live {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  font-weight: 400;
+  text-transform: lowercase;
+  color: var(--accent-green);
+  white-space: nowrap;
+}
+
+.release-countdown-bar__link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+  white-space: nowrap;
+}
+
+.release-countdown-bar__link:hover {
+  color: var(--accent-green);
+  border-color: rgba(0, 255, 119, 0.45);
+  background: rgba(0, 255, 119, 0.08);
+}
+
+.release-countdown-bar__link:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 3px;
+}

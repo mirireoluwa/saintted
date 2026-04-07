@@ -8,6 +8,12 @@ class Track(models.Model):
     slug = models.SlugField(max_length=255, unique=True)
     meta = models.CharField(max_length=128, help_text="e.g. Single, Single (Sound), EP")
     art_url = models.URLField(blank=True, help_text="Cover art image URL")
+    art_file = models.ImageField(
+        upload_to="track-art/",
+        blank=True,
+        null=True,
+        help_text="Uploaded cover art (shown in preference to art URL when set)",
+    )
     link_url = models.URLField(blank=True, help_text="Streaming or purchase link")
     order = models.PositiveIntegerField(default=0, help_text="Display order (lower first)")
     # Detail page
@@ -19,6 +25,19 @@ class Track(models.Model):
     is_published = models.BooleanField(
         default=True,
         help_text="When off, track is hidden from public API and site (draft).",
+    )
+    is_unreleased = models.BooleanField(
+        default=False,
+        help_text="When on, track appears as upcoming on the site; detail page shows countdown + pre-save.",
+    )
+    release_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Drop time for unreleased tracks (UTC in DB; set via admin in local time).",
+    )
+    presave_url = models.URLField(
+        blank=True,
+        help_text="Pre-save / pre-add link for this track (shown on unreleased detail page).",
     )
 
     class Meta:

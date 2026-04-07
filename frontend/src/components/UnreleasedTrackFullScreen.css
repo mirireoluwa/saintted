@@ -1,0 +1,218 @@
+.unreleased-fs {
+  position: relative;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  color: #fff;
+  overflow: hidden;
+}
+
+.unreleased-fs__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.06);
+  filter: saturate(0.85) contrast(1.05);
+}
+
+.unreleased-fs__scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 120% 80% at 50% 40%, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.82));
+  pointer-events: none;
+}
+
+.unreleased-fs__content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(9.85rem + env(safe-area-inset-top, 0px)) 1.25rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  max-width: 40rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Fixed below site header (header z-index 50) so the home control stays visible on desktop */
+.unreleased-fs__nav-bar {
+  position: fixed;
+  top: calc(6.85rem + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 max(1.15rem, env(safe-area-inset-right)) 0 max(1.15rem, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.unreleased-fs__nav-bar .track-detail__nav-btn {
+  pointer-events: auto;
+  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.unreleased-fs a.track-detail__nav-btn:hover {
+  color: var(--accent-green);
+  border-color: rgba(0, 255, 119, 0.5);
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.unreleased-fs__badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 1rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(255, 75, 99, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 75, 99, 0.12);
+}
+
+.unreleased-fs__title {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(2rem, 8vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-transform: lowercase;
+  margin: 0 0 0.5rem;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
+}
+
+.unreleased-fs__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 2rem;
+}
+
+.unreleased-fs__timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.15rem 0.35rem;
+  margin-bottom: 2rem;
+}
+
+.unreleased-fs__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 3.5rem;
+}
+
+.unreleased-fs__value {
+  font-family: var(--font-mono);
+  font-size: clamp(2.35rem, 11vw, 4.5rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-shadow: 0 4px 32px rgba(0, 0, 0, 0.55);
+}
+
+.unreleased-fs__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.unreleased-fs__colon {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 7vw, 3rem);
+  font-weight: 500;
+  opacity: 0.45;
+  align-self: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.1rem;
+}
+
+.unreleased-fs__live {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  text-transform: lowercase;
+  color: var(--accent-green);
+  margin: 0 0 2rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
+}
+
+.unreleased-fs__soon {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 2rem;
+}
+
+.unreleased-fs__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.unreleased-fs__cta:hover {
+  color: var(--accent-green);
+  border-color: rgba(0, 255, 119, 0.55);
+  background: rgba(0, 255, 119, 0.12);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.unreleased-fs__placeholder-wrap {
+  margin-top: 2rem;
+  width: min(12rem, 55vw);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .unreleased-fs__content {
+    padding-top: calc(9.35rem + env(safe-area-inset-top, 0px));
+  }
+
+  .unreleased-fs__nav-bar {
+    top: calc(6.55rem + env(safe-area-inset-top, 0px));
+  }
+}

@@ -5,6 +5,7 @@ import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
+  clearTrackCoverArt,
   createFeaturedVideo,
   createGalleryImage,
   createTrack,
@@ -17,6 +18,7 @@ import {
   fetchTracksAuth,
   getStoredToken,
   login,
+  patchTrackCoverArt,
   setStoredToken,
   updateFeaturedVideo,
   updateGalleryImage,
@@ -67,6 +69,9 @@ function emptyTrackForm(): Record<string, string | number> {
     apple_music_url: "",
     spotify_url: "",
     is_published: 1,
+    is_unreleased: 0,
+    release_at_local: "",
+    presave_url: "",
   };
 }
 
@@ -84,6 +89,9 @@ function trackToForm(t: Track): Record<string, string | number> {
     apple_music_url: t.apple_music_url || "",
     spotify_url: t.spotify_url || "",
     is_published: t.is_published === false ? 0 : 1,
+    is_unreleased: t.is_unreleased ? 1 : 0,
+    release_at_local: isoToDatetimeLocal(t.release_at),
+    presave_url: t.presave_url || "",
   };
 }
 
@@ -152,6 +160,23 @@ export function AdminPage() {
 
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [trackCoverFile, setTrackCoverFile] = useState<File | null>(null);
+  const [clearTrackCover, setClearTrackCover] = useState(false);
+  const [trackCoverBlobUrl, setTrackCoverBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!trackCoverFile) {
+      setTrackCoverBlobUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(trackCoverFile);
+    setTrackCoverBlobUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [trackCoverFile]);
+
+  const trackCoverPreviewUrl =
+    trackCoverBlobUrl ||
+    (editingSlug ? tracks.find((x) => x.slug === editingSlug)?.art_url?.trim() ?? "" : "");
 
   const [videoForm, setVideoForm] = useState({ title: "", youtube_id: "", order: 0 });
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
@@ -285,17 +310,26 @@ export function AdminPage() {
   function startNewTrack() {
     setEditingSlug(null);
     setTrackForm(emptyTrackForm());
+    setTrackCoverFile(null);
+    setClearTrackCover(false);
   }
 
   function startEditTrack(t: Track) {
     setEditingSlug(t.slug);
     setTrackForm(trackToForm(t));
+    setTrackCoverFile(null);
+    setClearTrackCover(false);
   }
 
   async function saveTrack(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
     setMessage(null);
+    const isUnreleased = Number(trackForm.is_unreleased) !== 0;
+    const releaseAtLocal = String(trackForm.release_at_local || "").trim();
+    const release_at =
+      isUnreleased && releaseAtLocal ? new Date(releaseAtLocal).toISOString() : null;
+
     const payload: Record<string, unknown> = {
       title: String(trackForm.title).trim(),
       slug: String(trackForm.slug).trim(),
@@ -309,21 +343,39 @@ export function AdminPage() {
       apple_music_url: String(trackForm.apple_music_url).trim(),
       spotify_url: String(trackForm.spotify_url).trim(),
       is_published: Number(trackForm.is_published) !== 0,
+      is_unreleased: isUnreleased,
+      release_at,
+      presave_url: String(trackForm.presave_url).trim(),
     };
     if (!payload.title) {
       setMessage({ type: "error", text: "Title is required." });
       return;
     }
+    if (isUnreleased && !release_at) {
+      setMessage({ type: "error", text: "Unreleased tracks need a release date and time." });
+      return;
+    }
+    const coverFile = trackCoverFile;
+    const shouldClearCover = clearTrackCover && !coverFile;
+
     try {
       if (editingSlug) {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
         await updateTrack(token, editingSlug, body as Partial<Track>);
+        if (coverFile) {
+          await patchTrackCoverArt(token, editingSlug, coverFile);
+        } else if (shouldClearCover) {
+          await clearTrackCoverArt(token, editingSlug);
+        }
         setMessage({ type: "ok", text: "Track updated." });
       } else {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
-        await createTrack(token, body as Partial<Track>);
+        const created = await createTrack(token, body as Partial<Track>);
+        if (coverFile) {
+          await patchTrackCoverArt(token, created.slug, coverFile);
+        }
         setMessage({ type: "ok", text: "Track created." });
       }
       await loadData(token);
@@ -739,10 +791,51 @@ export function AdminPage() {
             <label htmlFor="t-art">Cover art URL</label>
             <input
               id="t-art"
+              placeholder="Optional — or upload a file below"
               value={String(trackForm.art_url)}
               onChange={(e) => setTrackForm((f) => ({ ...f, art_url: e.target.value }))}
             />
           </div>
+          <div className="admin-form__row admin-form__row--2">
+            <div className="admin-form__row">
+              <label htmlFor="t-art-file">Upload cover art</label>
+              <input
+                id="t-art-file"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setTrackCoverFile(f);
+                  if (f) setClearTrackCover(false);
+                }}
+              />
+            </div>
+            {trackCoverPreviewUrl ? (
+              <div className="admin-form__row admin-form__preview">
+                <span className="admin-form__preview-label">Preview</span>
+                <img
+                  src={trackCoverPreviewUrl}
+                  alt=""
+                  className="admin-track-cover-preview"
+                />
+              </div>
+            ) : null}
+          </div>
+          {editingSlug ? (
+            <div className="admin-form__row admin-form__row--checkbox">
+              <label className="admin-form__checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={clearTrackCover}
+                  onChange={(e) => {
+                    setClearTrackCover(e.target.checked);
+                    if (e.target.checked) setTrackCoverFile(null);
+                  }}
+                />
+                <span>Remove uploaded cover (use URL above or automatic art only)</span>
+              </label>
+            </div>
+          ) : null}
           <div className="admin-form__row">
             <label htmlFor="t-link">General link</label>
             <input
@@ -816,6 +909,40 @@ export function AdminPage() {
               <span>Published (visible on public site and API)</span>
             </label>
           </div>
+          <div className="admin-form__row admin-form__row--checkbox">
+            <label className="admin-form__checkbox-label">
+              <input
+                id="t-unreleased"
+                type="checkbox"
+                checked={Number(trackForm.is_unreleased) !== 0}
+                onChange={(e) =>
+                  setTrackForm((f) => ({ ...f, is_unreleased: e.target.checked ? 1 : 0 }))
+                }
+              />
+              <span>Unreleased / upcoming (countdown page + “upcoming” row on home)</span>
+            </label>
+          </div>
+          <div className="admin-form__row admin-form__row--2">
+            <div className="admin-form__row">
+              <label htmlFor="t-release-at">Release date &amp; time (required if unreleased)</label>
+              <input
+                id="t-release-at"
+                type="datetime-local"
+                value={String(trackForm.release_at_local)}
+                onChange={(e) => setTrackForm((f) => ({ ...f, release_at_local: e.target.value }))}
+              />
+            </div>
+            <div className="admin-form__row">
+              <label htmlFor="t-presave">Pre-save URL (optional)</label>
+              <input
+                id="t-presave"
+                type="url"
+                placeholder="https://…"
+                value={String(trackForm.presave_url)}
+                onChange={(e) => setTrackForm((f) => ({ ...f, presave_url: e.target.value }))}
+              />
+            </div>
+          </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary">
               {editingSlug ? "Save changes" : "Create track"}
@@ -840,6 +967,7 @@ export function AdminPage() {
                 <th>Slug</th>
                 <th>Year</th>
                 <th>Public</th>
+                <th>Upcoming</th>
                 <th />
               </tr>
             </thead>
@@ -853,6 +981,7 @@ export function AdminPage() {
                   </td>
                   <td>{t.year ?? "—"}</td>
                   <td>{t.is_published === false ? "draft" : "live"}</td>
+                  <td>{t.is_unreleased ? "yes" : "—"}</td>
                   <td>
                     <button
                       type="button"

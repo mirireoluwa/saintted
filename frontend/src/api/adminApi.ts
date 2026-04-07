@@ -87,6 +87,37 @@ export async function updateTrack(
   return res.json();
 }
 
+/** PATCH cover only (multipart). Call after JSON create/update for metadata. */
+export async function patchTrackCoverArt(token: string, slug: string, file: File): Promise<Track> {
+  const body = new FormData();
+  body.set("art_file", file);
+  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+    method: "PATCH",
+    headers: { Authorization: `Token ${token}` },
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
+export async function clearTrackCoverArt(token: string, slug: string): Promise<Track> {
+  const body = new FormData();
+  body.set("clear_art_file", "true");
+  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+    method: "PATCH",
+    headers: { Authorization: `Token ${token}` },
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err));
+  }
+  return res.json();
+}
+
 export async function deleteTrack(token: string, slug: string): Promise<void> {
   const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
     method: "DELETE",

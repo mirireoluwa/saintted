@@ -46,11 +46,18 @@ class GalleryImageAdmin(admin.ModelAdmin):
 
 @admin.register(Track)
 class TrackAdmin(admin.ModelAdmin):
-    list_display = ["title", "meta", "year", "order", "is_published"]
-    list_editable = ["order", "is_published"]
-    list_filter = ["year", "is_published"]
+    list_display = ["title", "meta", "year", "order", "is_published", "is_unreleased"]
+    list_editable = ["order", "is_published", "is_unreleased"]
+    list_filter = ["year", "is_published", "is_unreleased"]
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
-        (None, {"fields": ("title", "slug", "meta", "order", "is_published", "art_url", "link_url")}),
+        (None, {"fields": ("title", "slug", "meta", "order", "is_published", "art_url", "art_file", "link_url")}),
+        (
+            "Unreleased / upcoming",
+            {
+                "fields": ("is_unreleased", "release_at", "presave_url"),
+                "description": "When unreleased is checked, set release time and optional pre-save URL for the countdown page.",
+            },
+        ),
         ("Detail page", {"fields": ("description", "year", "youtube_url", "apple_music_url", "spotify_url")}),
     )

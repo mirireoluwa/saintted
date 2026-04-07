@@ -8,6 +8,7 @@ import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
 import { getTrackArtUrl } from "../utils/trackArt";
 import { SocialLinks } from "../components/SocialLinks";
+import { UnreleasedTrackFullScreen } from "../components/UnreleasedTrackFullScreen";
 import {
   appleMusicSearchUrl,
   spotifySearchUrl,
@@ -134,7 +135,7 @@ export function TrackDetailPage() {
   const nextSlug = displayTrack?.next_slug || listNeighbors.next || null;
 
   const trackJsonLd = useMemo(() => {
-    if (!track || !resolved) return "";
+    if (!track || !resolved || track.is_unreleased) return "";
     const site = getSiteUrl();
     const cover = getTrackArtUrl(track);
     return JSON.stringify({
@@ -178,6 +179,24 @@ export function TrackDetailPage() {
 
   if (!displayTrack && !showInterstitial) {
     return null;
+  }
+
+  if (!showInterstitial && resolved && track.is_unreleased) {
+    const ogU = getTrackArtUrl(track);
+    return (
+      <>
+        <SeoHead
+          title={`${track.title} · unreleased · saintted`}
+          description={`${track.meta} · coming soon · love, saintted`}
+          canonicalPath={canonicalPath}
+          ogImage={ogU ? absoluteUrl(ogU) : undefined}
+          ogType="music.song"
+        />
+        <div className="track-detail track-detail--unreleased">
+          <UnreleasedTrackFullScreen track={track} />
+        </div>
+      </>
+    );
   }
 
   const desc =

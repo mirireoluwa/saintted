@@ -17,12 +17,14 @@ class TrackViewSet(viewsets.ModelViewSet):
     List/retrieve/update tracks. Public GET; POST/PATCH/PUT/DELETE need token auth.
     Detail by slug: /api/tracks/<slug>/
     Unauthenticated reads only see published tracks; authenticated users see all.
+    Accepts JSON or multipart (for cover art upload / clear).
     """
 
     serializer_class = TrackSerializer
     permission_classes = [ReadOnlyOrAuthenticated]
     lookup_field = "slug"
     lookup_url_kwarg = "slug"
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_class(self):
         if self.action == "retrieve":

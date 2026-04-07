@@ -1,5 +1,6 @@
 from django.utils.text import slugify
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from .cover_art import resolve_external_cover_url
 from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
@@ -7,23 +8,43 @@ from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
 
 class TrackSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_blank=True)
+    art_file = serializers.ImageField(required=False, allow_null=True, write_only=True)
+    clear_art_file = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Track
         fields = [
-            "id", "title", "slug", "meta", "art_url", "link_url", "order",
+            "id", "title", "slug", "meta", "art_url", "art_file", "clear_art_file", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
             "is_published",
+            "is_unreleased", "release_at", "presave_url",
         ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        request = self.context.get("request")
+        if instance.art_file:
+            url = instance.art_file.url
+            data["art_url"] = request.build_absolute_uri(url) if request else url
+            return data
         if (data.get("art_url") or "").strip():
             return data
         external = resolve_external_cover_url(instance)
         if external:
             data["art_url"] = external
         return data
+
+    def validate(self, attrs):
+        instance = getattr(self, "instance", None)
+        unreleased = attrs.get("is_unreleased", instance.is_unreleased if instance else False)
+        release_at = attrs.get("release_at", empty)
+        if release_at is empty:
+            release_at = instance.release_at if instance else None
+        if unreleased and not release_at:
+            raise serializers.ValidationError(
+                {"release_at": "Set a release date and time when the track is marked unreleased."}
+            )
+        return attrs
 
     def _unique_slug(self, base: str) -> str:
         base = (base or "track").strip() or "track"
@@ -37,18 +58,38 @@ class TrackSerializer(serializers.ModelSerializer):
             n += 1
 
     def create(self, validated_data):
+        validated_data.pop("clear_art_file", False)
+        art_file = validated_data.pop("art_file", None)
         raw_slug = (validated_data.get("slug") or "").strip()
         if not raw_slug:
             base = slugify(validated_data["title"]) or "track"
             validated_data["slug"] = self._unique_slug(base)
         else:
             validated_data["slug"] = raw_slug
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        if art_file is not None:
+            instance.art_file = art_file
+            instance.save(update_fields=["art_file"])
+        return instance
 
     def update(self, instance, validated_data):
         if "slug" in validated_data and not (validated_data.get("slug") or "").strip():
             validated_data.pop("slug", None)
-        return super().update(instance, validated_data)
+        clear_art = validated_data.pop("clear_art_file", False)
+        art_file = validated_data.pop("art_file", None)
+        if clear_art:
+            if instance.art_file:
+                instance.art_file.delete(save=False)
+            instance.art_file = None
+        instance = super().update(instance, validated_data)
+        if art_file is not None:
+            if instance.art_file:
+                instance.art_file.delete(save=False)
+            instance.art_file = art_file
+            instance.save(update_fields=["art_file"])
+        elif clear_art:
+            instance.save(update_fields=["art_file"])
+        return instance
 
 
 class TrackDetailSerializer(TrackSerializer):

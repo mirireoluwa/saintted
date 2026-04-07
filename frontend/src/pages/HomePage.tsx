@@ -3,7 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { AnimatedSection } from "../components/AnimatedSection";
 import { Hero } from "../components/Hero";
-import { ReleaseCountdownBanner } from "../components/ReleaseCountdownBanner";
+import { ReleaseCountdownBar } from "../components/ReleaseCountdownBar";
+import { fetchReleaseCountdown } from "../api/client";
+import type { ReleaseCountdown } from "../types/releaseCountdown";
+import { writeHeroCache } from "../utils/heroCache";
 import { MusicSection } from "../components/MusicSection";
 import { Featured } from "../components/Featured";
 import { ImageGallery } from "../components/ImageGallery";
@@ -21,10 +24,17 @@ const FALLBACK_TRACKS: Track[] = [
   { id: 5, title: "home", slug: "home", meta: "Single", art_url: "", link_url: "", order: 4 },
 ];
 
+function releaseBarVisible(c: ReleaseCountdown | null): c is ReleaseCountdown {
+  if (!c?.enabled || !c.release_at) return false;
+  return !Number.isNaN(new Date(c.release_at).getTime());
+}
+
 export function HomePage() {
   const location = useLocation();
   const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
   const [loading, setLoading] = useState(true);
+  const [releaseConfig, setReleaseConfig] = useState<ReleaseCountdown | null>(null);
+  const [releaseLoaded, setReleaseLoaded] = useState(false);
 
   const jsonLd = useMemo(() => {
     const site = getSiteUrl();
@@ -45,6 +55,27 @@ export function HomePage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const fallback = "/hero-bg.png";
+    (async () => {
+      try {
+        const c = await fetchReleaseCountdown();
+        if (cancelled) return;
+        setReleaseConfig(c);
+        writeHeroCache(c, fallback);
+      } catch {
+        if (cancelled) return;
+        setReleaseConfig(null);
+      } finally {
+        if (!cancelled) setReleaseLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const id = location.hash.replace(/^#/, "");
     if (!id) return;
     const el = document.getElementById(id);
@@ -60,12 +91,19 @@ export function HomePage() {
       <Helmet>
         <script type="application/ld+json">{jsonLd}</script>
       </Helmet>
-      <main id="main" className="page">
-        <Hero />
+      <main
+        id="main"
+        className={`page${releaseBarVisible(releaseConfig) ? " page--release-countdown" : ""}`}
+      >
+        <div className="home-landing">
+          <Hero releaseConfig={releaseConfig} releaseLoaded={releaseLoaded} />
+          {releaseBarVisible(releaseConfig) ? (
+            <div className="home-landing__countdown">
+              <ReleaseCountdownBar config={releaseConfig} />
+            </div>
+          ) : null}
+        </div>
         <div className="site-main">
-          <AnimatedSection>
-            <ReleaseCountdownBanner />
-          </AnimatedSection>
           <AnimatedSection>
             <MusicSection tracks={tracks} loading={loading} />
           </AnimatedSection>

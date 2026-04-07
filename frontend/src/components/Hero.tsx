@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchReleaseCountdown } from "../api/client";
-import { readHeroCache, writeHeroCache } from "../utils/heroCache";
+import type { ReleaseCountdown } from "../types/releaseCountdown";
+import { readHeroCache } from "../utils/heroCache";
 
-export function Hero() {
+type HeroProps = {
+  releaseConfig: ReleaseCountdown | null;
+  releaseLoaded: boolean;
+};
+
+export function Hero({ releaseConfig, releaseLoaded }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
@@ -17,43 +22,33 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
     const fallback = "/hero-bg.png";
-    const cached = readHeroCache();
-    if (cached) {
-      setHeaderImageUrl(cached.url);
-      setHeaderImageFocus(cached.focus);
+
+    if (!releaseLoaded) {
+      const cached = readHeroCache();
+      if (cached) {
+        setHeaderImageUrl(cached.url);
+        setHeaderImageFocus(cached.focus);
+      }
+      return;
     }
 
-    const run = async () => {
-      const focusFrom = (config: Awaited<ReturnType<typeof fetchReleaseCountdown>>) => ({
-        x: typeof config?.header_image_focus_x === "number" ? config.header_image_focus_x : 50,
-        y: typeof config?.header_image_focus_y === "number" ? config.header_image_focus_y : 50,
-      });
+    if (!releaseConfig) {
+      setHeaderImageUrl(fallback);
+      setHeaderImageFocus({ x: 50, y: 50 });
+      return;
+    }
 
-      try {
-        const config = await fetchReleaseCountdown();
-        if (cancelled) return;
-        const uploadedUrl = (config?.header_image_file_url || "").trim();
-        const customUrl = (config?.header_image_url || "").trim();
-        const url = uploadedUrl || customUrl || fallback;
-        const focus = focusFrom(config);
-        if (cancelled) return;
-        writeHeroCache(config, fallback);
-        setHeaderImageUrl(url);
-        setHeaderImageFocus(focus);
-      } catch {
-        if (cancelled) return;
-        setHeaderImageUrl(fallback);
-        setHeaderImageFocus({ x: 50, y: 50 });
-      }
+    const uploadedUrl = (releaseConfig.header_image_file_url || "").trim();
+    const customUrl = (releaseConfig.header_image_url || "").trim();
+    const url = uploadedUrl || customUrl || fallback;
+    const focus = {
+      x: typeof releaseConfig.header_image_focus_x === "number" ? releaseConfig.header_image_focus_x : 50,
+      y: typeof releaseConfig.header_image_focus_y === "number" ? releaseConfig.header_image_focus_y : 50,
     };
-
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    setHeaderImageUrl(url);
+    setHeaderImageFocus(focus);
+  }, [releaseLoaded, releaseConfig]);
 
   useEffect(() => {
     if (!headerImageUrl) {
@@ -71,7 +66,7 @@ export function Hero() {
   }, [headerImageUrl]);
 
   return (
-    <section className="hero-section">
+    <section id="hero-section" className="hero-section">
       {headerImageUrl ? (
         <div
           className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
