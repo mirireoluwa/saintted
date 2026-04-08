@@ -5,9 +5,10 @@ import { readHeroCache } from "../utils/heroCache";
 type HeroProps = {
   releaseConfig: ReleaseCountdown | null;
   releaseLoaded: boolean;
+  summaryText?: string;
 };
 
-export function Hero({ releaseConfig, releaseLoaded }: HeroProps) {
+export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
@@ -91,6 +92,8 @@ export function Hero({ releaseConfig, releaseLoaded }: HeroProps) {
               <span className="hero-tag__line hero-tag__line--alt">silence, selah</span>
             </span>
           </div>
+
+          {summaryText ? <p className="hero-summary">{summaryText}</p> : null}
 
           <a href="#music-section" className="hero-scroll">
             <span className="hero-scroll__text">Scroll</span>

@@ -16,6 +16,9 @@ import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
 import { getSiteUrl } from "../utils/siteUrl";
 
+const HOMEPAGE_DESCRIPTION =
+  "A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
+
 const FALLBACK_TRACKS: Track[] = [
   { id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0 },
   { id: 2, title: "shimmer", slug: "shimmer", meta: "Single (Sound)", art_url: "", link_url: "", order: 1 },
@@ -43,7 +46,16 @@ export function HomePage() {
       "@type": "MusicGroup",
       name: "Saintted",
       url: site,
-      description: "love, saintted",
+      description: HOMEPAGE_DESCRIPTION,
+      genre: ["Alternative", "Afrobeats"],
+      sameAs: [
+        "https://instagram.com/beingsaintted",
+        "https://x.com/beingsaintted",
+        "https://music.apple.com/ng/artist/saintted/1683622819",
+        "https://open.spotify.com/artist/6y6qTKA4172ZvpCg8t6wE6",
+        "https://www.youtube.com/@saintted",
+        "https://linktr.ee/saintted",
+      ],
     });
   }, []);
 
@@ -87,7 +99,7 @@ export function HomePage() {
 
   return (
     <>
-      <SeoHead title="saintted" description="love, saintted" canonicalPath="/" />
+      <SeoHead title="saintted" description={HOMEPAGE_DESCRIPTION} canonicalPath="/" />
       <Helmet>
         <script type="application/ld+json">{jsonLd}</script>
       </Helmet>
@@ -96,7 +108,11 @@ export function HomePage() {
         className={`page${releaseBarVisible(releaseConfig) ? " page--release-countdown" : ""}`}
       >
         <div className="home-landing">
-          <Hero releaseConfig={releaseConfig} releaseLoaded={releaseLoaded} />
+          <Hero
+            releaseConfig={releaseConfig}
+            releaseLoaded={releaseLoaded}
+            summaryText={HOMEPAGE_DESCRIPTION}
+          />
           {releaseBarVisible(releaseConfig) ? (
             <div className="home-landing__countdown">
               <ReleaseCountdownBar config={releaseConfig} />
