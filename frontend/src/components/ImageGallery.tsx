@@ -3,22 +3,6 @@ import { useEffect, useState } from "react";
 import { fetchGalleryImages } from "../api/client";
 import type { GalleryImage } from "../types/galleryImage";
 import { staggerChildren, sectionTransition } from "../utils/motion";
-import { getApiBase } from "../utils/apiBase";
-
-const API_BASE = getApiBase();
-
-function withApiOrigin(url: string): string {
-  const raw = (url || "").trim();
-  if (!raw) return "";
-  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
-  const path = raw.startsWith("/") ? raw : `/${raw}`;
-  try {
-    return new URL(path, API_BASE).toString();
-  } catch {
-    return raw;
-  }
-}
-
 export function ImageGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +53,7 @@ export function ImageGallery() {
               transition={sectionTransition(reduceMotion)}
             >
               <motion.img
-                src={withApiOrigin(img.image_url || img.image)}
+                src={img.image_url || img.image}
                 alt={img.caption || "Saintted gallery image"}
                 className="image-gallery__img"
                 loading="lazy"
