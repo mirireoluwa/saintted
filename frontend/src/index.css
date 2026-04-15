@@ -202,6 +202,10 @@ a {
   pointer-events: none;
 }
 
+.hero-section__video--visible {
+  opacity: 1;
+}
+
 .hero-section__photo--visible {
   opacity: 1;
   will-change: transform;
@@ -322,6 +326,23 @@ a {
   color: rgba(255, 255, 255, 0.92);
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(10px);
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+.hero-summary--visible {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s ease,
+    visibility 0s;
 }
 
 [data-theme="light"] .hero-summary {
@@ -346,7 +367,7 @@ a {
 }
 
 .hero-scroll {
-  margin-top: 2.5rem;
+  margin-top: 3.35rem;
   display: inline-flex;
   flex-direction: column;
   align-items: center;

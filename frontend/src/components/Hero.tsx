@@ -10,10 +10,14 @@ type HeroProps = {
 
 export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const summaryHideTimerRef = useRef<number | null>(null);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
   const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
+  const [heroVideoError, setHeroVideoError] = useState(false);
   const prevHeroMediaRef = useRef<string | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -22,6 +26,14 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
       setShowAltTag((prev) => !prev);
     }, 3200);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (summaryHideTimerRef.current != null) {
+        window.clearTimeout(summaryHideTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -77,33 +89,90 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   }, [headerImageUrl, activeVideoUrl]);
 
   useEffect(() => {
-    if (!activeVideoUrl) return;
+    if (!activeVideoUrl) {
+      setHeroVideoReady(false);
+      setHeroVideoError(false);
+      return;
+    }
+
     const el = heroVideoRef.current;
     if (!el) return;
-    const p = el.play();
-    if (p && typeof p.catch === "function") {
-      p.catch(() => {
-        // Silent catch: some browsers may defer play until media is fully ready.
-      });
-    }
+
+    const tryPlay = () => {
+      el.muted = true;
+      el.defaultMuted = true;
+      const p = el.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {
+          // Silent catch: browser can still require user gesture in rare cases.
+        });
+      }
+    };
+
+    const handleCanPlay = () => {
+      setHeroVideoReady(true);
+      setHeroVideoError(false);
+      tryPlay();
+    };
+    const handlePlaying = () => {
+      setHeroVideoReady(true);
+      setHeroVideoError(false);
+    };
+    const handleError = () => {
+      setHeroVideoReady(false);
+      setHeroVideoError(true);
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        tryPlay();
+      }
+    };
+
+    setHeroVideoReady(false);
+    setHeroVideoError(false);
+    el.addEventListener("canplay", handleCanPlay);
+    el.addEventListener("playing", handlePlaying);
+    el.addEventListener("error", handleError);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pageshow", tryPlay);
+    tryPlay();
+
+    return () => {
+      el.removeEventListener("canplay", handleCanPlay);
+      el.removeEventListener("playing", handlePlaying);
+      el.removeEventListener("error", handleError);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pageshow", tryPlay);
+    };
   }, [activeVideoUrl]);
+
+  const handleSummaryHoverStart = () => {
+    if (summaryHideTimerRef.current != null) {
+      window.clearTimeout(summaryHideTimerRef.current);
+      summaryHideTimerRef.current = null;
+    }
+    setShowSummary(true);
+  };
+
+  const handleSummaryHoverEnd = () => {
+    if (summaryHideTimerRef.current != null) {
+      window.clearTimeout(summaryHideTimerRef.current);
+    }
+    const hideDelayMs =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(max-width: 640px)").matches ||
+        window.matchMedia("(hover: none)").matches)
+        ? 1200
+        : 2200;
+    summaryHideTimerRef.current = window.setTimeout(() => {
+      setShowSummary(false);
+      summaryHideTimerRef.current = null;
+    }, hideDelayMs);
+  };
 
   return (
     <section id="hero-section" className="hero-section">
-      {activeVideoUrl ? (
-        <video
-          ref={heroVideoRef}
-          className={`hero-section__video${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
-          src={activeVideoUrl}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden
-        />
-      ) : null}
-      {headerImageUrl && !activeVideoUrl ? (
+      {headerImageUrl ? (
         <div
           className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
           style={{
@@ -114,6 +183,20 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
           aria-hidden
         />
       ) : null}
+      {activeVideoUrl && !heroVideoError ? (
+        <video
+          key={activeVideoUrl}
+          ref={heroVideoRef}
+          className={`hero-section__video${heroVideoReady ? " hero-section__video--visible" : ""}`}
+          src={activeVideoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden
+        />
+      ) : null}
       <div className="hero-inner">
         <div className="hero-content">
           <div className="hero-titles">
@@ -121,14 +204,38 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
           </div>
 
           <div className="hero-tags hero-tags--bottom">
-            <span className="hero-tag">ARTIST</span>
-            <span className={`hero-tag hero-tag--swap${showAltTag ? " hero-tag--alt" : ""}`}>
+            <span
+              className="hero-tag"
+              onMouseEnter={handleSummaryHoverStart}
+              onMouseLeave={handleSummaryHoverEnd}
+              onFocus={handleSummaryHoverStart}
+              onBlur={handleSummaryHoverEnd}
+              onTouchStart={handleSummaryHoverStart}
+              onTouchEnd={handleSummaryHoverEnd}
+              onTouchCancel={handleSummaryHoverEnd}
+            >
+              ARTIST
+            </span>
+            <span
+              className={`hero-tag hero-tag--swap${showAltTag ? " hero-tag--alt" : ""}`}
+              onMouseEnter={handleSummaryHoverStart}
+              onMouseLeave={handleSummaryHoverEnd}
+              onFocus={handleSummaryHoverStart}
+              onBlur={handleSummaryHoverEnd}
+              onTouchStart={handleSummaryHoverStart}
+              onTouchEnd={handleSummaryHoverEnd}
+              onTouchCancel={handleSummaryHoverEnd}
+            >
               <span className="hero-tag__line hero-tag__line--primary">PRODUCER</span>
               <span className="hero-tag__line hero-tag__line--alt">silence, selah</span>
             </span>
           </div>
 
-          {summaryText ? <p className="hero-summary">{summaryText}</p> : null}
+          {summaryText ? (
+            <p className={`hero-summary${showSummary ? " hero-summary--visible" : ""}`}>
+              {summaryText}
+            </p>
+          ) : null}
 
           <a href="#music-section" className="hero-scroll">
             <span className="hero-scroll__text">Scroll</span>
