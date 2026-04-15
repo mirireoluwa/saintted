@@ -746,7 +746,7 @@ export function AdminPage() {
       <div className="admin-card">
         <h2 className="admin-card__title">Hero media</h2>
         <p className="admin-card__lead">
-          Set the home-page hero using either image or video URL/upload. Uploaded files take priority over URLs, and video takes priority over image.
+          Set the home-page hero using image and optional video URL/upload. Uploaded files take priority over URLs, and on slower connections the site automatically falls back to the image for reliability.
         </p>
         <form className="admin-form" onSubmit={saveHeroHeaderImage}>
           <div className="admin-form__row">
@@ -797,6 +797,9 @@ export function AdminPage() {
                 setHeroImageForm((f) => ({ ...f, header_video_url: e.target.value }))
               }
             />
+              <p className="admin-form__hint">
+                Tip: always keep a hero image set. Video is disabled automatically for weaker network conditions.
+              </p>
           </div>
           <div className="admin-form__row">
             <label htmlFor="hero-video-upload">Upload video (optional)</label>

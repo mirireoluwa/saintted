@@ -37,6 +37,27 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
       }),
     [tracks, nowTick]
   );
+  const highlightedTracks = useMemo(
+    () =>
+      tracks.filter((t) => {
+        const ms = releaseMs(t);
+        const autoHighlighted = !!t.is_unreleased && ms != null && ms <= nowTick;
+        return !!t.is_highlighted || autoHighlighted;
+      }),
+    [tracks, nowTick]
+  );
+  const regularTracks = useMemo(
+    () =>
+      tracks.filter((t) => {
+        const ms = releaseMs(t);
+        const autoHighlighted = !!t.is_unreleased && ms != null && ms <= nowTick;
+        const highlighted = !!t.is_highlighted || autoHighlighted;
+        if (highlighted) return false;
+        if (!t.is_unreleased) return true;
+        return ms != null && ms <= nowTick;
+      }),
+    [tracks, nowTick]
+  );
 
   useEffect(() => {
     if (upcoming.length === 0) return;
@@ -247,6 +268,69 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
         </div>
       ) : null}
 
+      {!loading && highlightedTracks.length > 0 ? (
+        <div className="music-highlighted">
+          <div className="music-highlighted__label">
+            <span className="music-highlighted__label-text">.new release</span>
+            <span className="music-highlighted__label-line" aria-hidden />
+          </div>
+          <motion.div
+            className="music-highlighted__list"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: { staggerChildren: staggerChildren(reduceMotion, 0.08) },
+              },
+            }}
+            initial={reduceMotion ? false : "hidden"}
+            animate="visible"
+          >
+            {highlightedTracks.map((track) => {
+              const artUrl = getTrackArtUrl(track);
+              return (
+                <motion.article
+                  key={track.id}
+                  className="track-card track-card--highlighted"
+                  variants={{
+                    hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
+                    visible: { opacity: 1, y: 0 },
+                  }}
+                  transition={sectionTransition(reduceMotion)}
+                >
+                  <Link to={`/music/${track.slug}`} className="track-card-link track-card-link--highlighted">
+                    <div className="track-card__art-frame">
+                      <div className="track-art">
+                        {artUrl ? (
+                          <motion.img
+                            src={artUrl}
+                            alt={`${track.title} cover art`}
+                            className="track-art__img"
+                            loading="lazy"
+                            decoding="async"
+                            initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          />
+                        ) : (
+                          <TrackCoverPlaceholder variant="card" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="track-card__body">
+                      <div className="track-card__title-row">
+                        <h3 className="track-name">{track.title}</h3>
+                        <span className="track-card__new-pill">NEW</span>
+                      </div>
+                      <p className="track-meta">{track.meta}</p>
+                    </div>
+                  </Link>
+                </motion.article>
+              );
+            })}
+          </motion.div>
+        </div>
+      ) : null}
+
       <div className="section-label music-section__label-released">
         <span className="section-label__text">.my music</span>
         <span className="section-label__line" aria-hidden />
@@ -279,36 +363,21 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
           initial={reduceMotion ? false : "hidden"}
           animate="visible"
         >
-          {tracks
-            .filter((t) => {
-              if (!t.is_unreleased) return true;
-              const ms = releaseMs(t);
-              return ms != null && ms <= nowTick;
-            })
-            .map((track) => {
+          {regularTracks.map((track) => {
               const artUrl = getTrackArtUrl(track);
-              const ms = releaseMs(track);
-              const autoHighlighted = !!track.is_unreleased && ms != null && ms <= nowTick;
-              const highlighted = !!track.is_highlighted || autoHighlighted;
               return (
                 <motion.article
                   key={track.id}
-                  className={`track-card${highlighted ? " track-card--highlighted" : ""}`}
+                  className="track-card"
                   variants={{
                     hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
                     visible: { opacity: 1, y: 0 },
                   }}
                   transition={sectionTransition(reduceMotion)}
                 >
-                  <Link
-                    to={`/music/${track.slug}`}
-                    className={`track-card-link${highlighted ? " track-card-link--highlighted" : ""}`}
-                  >
+                  <Link to={`/music/${track.slug}`} className="track-card-link">
                     <div className="track-card__art-frame">
                       <div className="track-art">
-                        {highlighted ? (
-                          <span className="track-card__highlight-badge">new release</span>
-                        ) : null}
                         {artUrl ? (
                           <motion.img
                             src={artUrl}

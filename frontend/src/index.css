@@ -318,8 +318,8 @@ a {
 }
 
 [data-theme="light"] .hero-summary {
-  color: rgba(18, 19, 24, 0.9);
-  text-shadow: none;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .hero-titles {
@@ -505,6 +505,47 @@ a {
 
 .music-unreleased {
   margin-bottom: 1.65rem;
+}
+
+.music-highlighted {
+  margin-bottom: 1.85rem;
+}
+
+.music-highlighted__label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.music-highlighted__label-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: lowercase;
+  letter-spacing: 0.25em;
+  color: var(--accent-green);
+  flex-shrink: 0;
+}
+
+.music-highlighted__label-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 119, 0.5), var(--section-line) 55%, transparent);
+  min-width: 2rem;
+}
+
+[data-theme="light"] .music-highlighted__label-text {
+  color: #1f7a49;
+}
+
+[data-theme="light"] .music-highlighted__label-line {
+  background: linear-gradient(90deg, rgba(31, 122, 73, 0.62), var(--section-line) 55%, transparent);
+}
+
+.music-highlighted__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 .music-unreleased__label {
@@ -1042,22 +1083,36 @@ a {
   box-shadow: 0 0 0 1px rgba(13, 138, 74, 0.24);
 }
 
-.track-card__highlight-badge {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 2;
+.track-card__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.track-card__title-row .track-name {
+  margin: 0;
+}
+
+.track-card__new-pill {
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.96);
-  padding: 0.3rem 0.45rem;
+  line-height: 1;
+  color: #4e9f5f;
+  padding: 0.34rem 0.5rem;
   border-radius: 6px;
-  background: rgba(0, 255, 119, 0.9);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+  background: rgba(35, 96, 52, 0.2);
+  border: 1px solid rgba(44, 122, 68, 0.9);
+}
+
+[data-theme="light"] .track-card__new-pill {
+  color: #1f6a34;
+  background: rgba(34, 117, 58, 0.14);
+  border-color: rgba(29, 102, 50, 0.78);
 }
 
 .track-card__body--unreleased .track-name {

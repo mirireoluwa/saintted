@@ -14,13 +14,40 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
   const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
+  const [allowHeroVideo, setAllowHeroVideo] = useState(true);
   const prevHeroMediaRef = useRef<string | null>(null);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
       setShowAltTag((prev) => !prev);
     }, 3200);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    const nav = navigator as Navigator & {
+      connection?: {
+        effectiveType?: string;
+        saveData?: boolean;
+        addEventListener?: (type: string, cb: () => void) => void;
+        removeEventListener?: (type: string, cb: () => void) => void;
+      };
+    };
+    const connection = nav.connection;
+    if (!connection) return;
+
+    const applyNetworkPolicy = () => {
+      const et = String(connection.effectiveType || "").toLowerCase();
+      const saveData = !!connection.saveData;
+      const slow = saveData || et.includes("2g") || et === "3g";
+      setAllowHeroVideo(!slow);
+    };
+
+    applyNetworkPolicy();
+    connection.addEventListener?.("change", applyNetworkPolicy);
+    return () => connection.removeEventListener?.("change", applyNetworkPolicy);
   }, []);
 
   useEffect(() => {
@@ -58,8 +85,10 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     setHeaderImageFocus(focus);
   }, [releaseLoaded, releaseConfig]);
 
+  const activeVideoUrl = allowHeroVideo ? headerVideoUrl : null;
+
   useEffect(() => {
-    const mediaKey = headerVideoUrl || headerImageUrl || "";
+    const mediaKey = activeVideoUrl || headerImageUrl || "";
     if (!mediaKey) {
       prevHeroMediaRef.current = null;
       setHeroPhotoVisible(false);
@@ -72,22 +101,36 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     setHeroPhotoVisible(false);
     const id = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
     return () => window.cancelAnimationFrame(id);
-  }, [headerImageUrl, headerVideoUrl]);
+  }, [headerImageUrl, activeVideoUrl]);
+
+  useEffect(() => {
+    if (!activeVideoUrl) return;
+    const el = heroVideoRef.current;
+    if (!el) return;
+    const p = el.play();
+    if (p && typeof p.catch === "function") {
+      p.catch(() => {
+        // Silent catch: some browsers may defer play until media is fully ready.
+      });
+    }
+  }, [activeVideoUrl]);
 
   return (
     <section id="hero-section" className="hero-section">
-      {headerVideoUrl ? (
+      {activeVideoUrl ? (
         <video
+          ref={heroVideoRef}
           className={`hero-section__video${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
-          src={headerVideoUrl}
+          src={activeVideoUrl}
           autoPlay
           muted
           loop
           playsInline
+          preload="auto"
           aria-hidden
         />
       ) : null}
-      {headerImageUrl && !headerVideoUrl ? (
+      {headerImageUrl && !activeVideoUrl ? (
         <div
           className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
           style={{
