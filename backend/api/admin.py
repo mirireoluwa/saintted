@@ -17,6 +17,7 @@ class ReleaseCountdownAdmin(admin.ModelAdmin):
         "release_at",
         "presave_url",
         "header_image_crop",
+        "header_video_url",
     ]
     fields = [
         "enabled",
@@ -25,6 +26,8 @@ class ReleaseCountdownAdmin(admin.ModelAdmin):
         "presave_url",
         "header_image_url",
         "header_image_file",
+        "header_video_url",
+        "header_video_file",
         "header_image_crop",
         "header_image_focus_x",
         "header_image_focus_y",
@@ -46,12 +49,27 @@ class GalleryImageAdmin(admin.ModelAdmin):
 
 @admin.register(Track)
 class TrackAdmin(admin.ModelAdmin):
-    list_display = ["title", "meta", "year", "order", "is_published", "is_unreleased"]
-    list_editable = ["order", "is_published", "is_unreleased"]
-    list_filter = ["year", "is_published", "is_unreleased"]
+    list_display = ["title", "meta", "year", "order", "is_published", "is_unreleased", "is_highlighted"]
+    list_editable = ["order", "is_published", "is_unreleased", "is_highlighted"]
+    list_filter = ["year", "is_published", "is_unreleased", "is_highlighted"]
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
-        (None, {"fields": ("title", "slug", "meta", "order", "is_published", "art_url", "art_file", "link_url")}),
+        (
+            None,
+            {
+                "fields": (
+                    "title",
+                    "slug",
+                    "meta",
+                    "order",
+                    "is_published",
+                    "is_highlighted",
+                    "art_url",
+                    "art_file",
+                    "link_url",
+                )
+            },
+        ),
         (
             "Unreleased / upcoming",
             {

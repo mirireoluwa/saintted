@@ -19,6 +19,7 @@ import {
   getStoredToken,
   login,
   patchTrackCoverArt,
+  resetAdminPassword,
   setStoredToken,
   updateFeaturedVideo,
   updateGalleryImage,
@@ -53,6 +54,8 @@ type HeroImageForm = {
   header_image_file_url: string;
   header_image_focus_x: number;
   header_image_focus_y: number;
+  header_video_url: string;
+  header_video_file_url: string;
 };
 
 function emptyTrackForm(): Record<string, string | number> {
@@ -69,6 +72,7 @@ function emptyTrackForm(): Record<string, string | number> {
     apple_music_url: "",
     spotify_url: "",
     is_published: 1,
+    is_highlighted: 0,
     is_unreleased: 0,
     release_at_local: "",
     presave_url: "",
@@ -89,6 +93,7 @@ function trackToForm(t: Track): Record<string, string | number> {
     apple_music_url: t.apple_music_url || "",
     spotify_url: t.spotify_url || "",
     is_published: t.is_published === false ? 0 : 1,
+    is_highlighted: t.is_highlighted ? 1 : 0,
     is_unreleased: t.is_unreleased ? 1 : 0,
     release_at_local: isoToDatetimeLocal(t.release_at),
     presave_url: t.presave_url || "",
@@ -120,6 +125,8 @@ function emptyHeroImageForm(): HeroImageForm {
     header_image_file_url: "",
     header_image_focus_x: 50,
     header_image_focus_y: 50,
+    header_video_url: "",
+    header_video_file_url: "",
   };
 }
 
@@ -139,6 +146,8 @@ function heroImageFormFromApi(c: ReleaseCountdown): HeroImageForm {
     header_image_file_url: c.header_image_file_url || "",
     header_image_focus_x: typeof c.header_image_focus_x === "number" ? c.header_image_focus_x : 50,
     header_image_focus_y: typeof c.header_image_focus_y === "number" ? c.header_image_focus_y : 50,
+    header_video_url: c.header_video_url || "",
+    header_video_file_url: c.header_video_file_url || "",
   };
 }
 
@@ -151,6 +160,8 @@ export function AdminPage() {
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [resetSecret, setResetSecret] = useState("");
+  const [resetInfo, setResetInfo] = useState<{ username: string; new_password: string } | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -187,43 +198,74 @@ export function AdminPage() {
   const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
   const [heroImageForm, setHeroImageForm] = useState(emptyHeroImageForm);
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [heroVideoFile, setHeroVideoFile] = useState<File | null>(null);
   const [clearHeroImageUpload, setClearHeroImageUpload] = useState(false);
+  const [clearHeroVideoUpload, setClearHeroVideoUpload] = useState(false);
   const heroImagePreviewUrl = useMemo(() => {
     if (heroImageFile) return URL.createObjectURL(heroImageFile);
     if (heroImageForm.header_image_file_url.trim()) return heroImageForm.header_image_file_url.trim();
     if (heroImageForm.header_image_url.trim()) return heroImageForm.header_image_url.trim();
     return "/hero-bg.png";
   }, [heroImageFile, heroImageForm.header_image_file_url, heroImageForm.header_image_url]);
+  const heroVideoPreviewUrl = useMemo(() => {
+    if (heroVideoFile) return URL.createObjectURL(heroVideoFile);
+    if (heroImageForm.header_video_file_url.trim()) return heroImageForm.header_video_file_url.trim();
+    if (heroImageForm.header_video_url.trim()) return heroImageForm.header_video_url.trim();
+    return "";
+  }, [heroVideoFile, heroImageForm.header_video_file_url, heroImageForm.header_video_url]);
 
   useEffect(() => {
     return () => {
       if (heroImageFile && heroImagePreviewUrl.startsWith("blob:")) {
         URL.revokeObjectURL(heroImagePreviewUrl);
       }
+      if (heroVideoFile && heroVideoPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(heroVideoPreviewUrl);
+      }
     };
-  }, [heroImageFile, heroImagePreviewUrl]);
+  }, [heroImageFile, heroImagePreviewUrl, heroVideoFile, heroVideoPreviewUrl]);
 
   const loadData = useCallback(async (t: string) => {
     setLoading(true);
     setMessage(null);
+    const [tr, fv, cd, gi] = await Promise.allSettled([
+      fetchTracksAuth(t),
+      fetchFeaturedVideosAuth(t),
+      fetchReleaseCountdownAuth(t),
+      fetchGalleryImagesAuth(t),
+    ]);
+
     try {
-      const [tr, fv, cd, gi] = await Promise.all([
-        fetchTracksAuth(t),
-        fetchFeaturedVideosAuth(t),
-        fetchReleaseCountdownAuth(t),
-        fetchGalleryImagesAuth(t),
-      ]);
-      setTracks(tr);
-      setVideos(fv);
-      setGalleryImages(gi);
-      setCountdownForm(countdownFormFromApi(cd));
-      setHeroImageForm(heroImageFormFromApi(cd));
+      if (tr.status === "fulfilled") setTracks(tr.value);
+      else setTracks([]);
+
+      if (fv.status === "fulfilled") setVideos(fv.value);
+      else setVideos([]);
+
+      if (gi.status === "fulfilled") setGalleryImages(gi.value);
+      else setGalleryImages([]);
+
+      if (cd.status === "fulfilled") {
+        setCountdownForm(countdownFormFromApi(cd.value));
+        setHeroImageForm(heroImageFormFromApi(cd.value));
+      } else {
+        setCountdownForm(emptyCountdownForm());
+        setHeroImageForm(emptyHeroImageForm());
+      }
+
       setHeroImageFile(null);
+      setHeroVideoFile(null);
       setClearHeroImageUpload(false);
-    } catch (e) {
-      setMessage({ type: "error", text: String(e) });
-      setStoredToken(null);
-      setToken(null);
+      setClearHeroVideoUpload(false);
+
+      const failures = [tr, fv, cd, gi].filter((x) => x.status === "rejected");
+      if (failures.length > 0) {
+        const firstErr = String((failures[0] as PromiseRejectedResult).reason);
+        setMessage({
+          type: "error",
+          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr}`,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -241,6 +283,27 @@ export function AdminPage() {
       setStoredToken(tok);
       setToken(tok);
       setLoginPass("");
+      setResetInfo(null);
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    setResetInfo(null);
+    try {
+      const username = loginUser.trim();
+      if (!username) {
+        setMessage({ type: "error", text: "Enter your username first." });
+        return;
+      }
+      const data = await resetAdminPassword(username, resetSecret.trim() || undefined);
+      setResetInfo({ username: data.username, new_password: data.new_password });
+      setLoginPass(data.new_password);
+      setShowLoginPassword(true);
+      setMessage({ type: "ok", text: "Password reset. Use the generated password to sign in." });
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
     }
@@ -261,7 +324,9 @@ export function AdminPage() {
     setCountdownForm(emptyCountdownForm());
     setHeroImageForm(emptyHeroImageForm());
     setHeroImageFile(null);
+    setHeroVideoFile(null);
     setClearHeroImageUpload(false);
+    setClearHeroVideoUpload(false);
   }
 
   async function saveReleaseCountdown(e: React.FormEvent) {
@@ -297,11 +362,16 @@ export function AdminPage() {
         header_image_focus_y: heroImageForm.header_image_focus_y,
         header_image_file: heroImageFile,
         clear_header_image_file: clearHeroImageUpload,
+        header_video_url: heroImageForm.header_video_url.trim(),
+        header_video_file: heroVideoFile,
+        clear_header_video_file: clearHeroVideoUpload,
       });
       setHeroImageForm(heroImageFormFromApi(updated));
       setHeroImageFile(null);
+      setHeroVideoFile(null);
       setClearHeroImageUpload(false);
-      setMessage({ type: "ok", text: "Hero image settings saved." });
+      setClearHeroVideoUpload(false);
+      setMessage({ type: "ok", text: "Hero media settings saved." });
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
     }
@@ -343,6 +413,7 @@ export function AdminPage() {
       apple_music_url: String(trackForm.apple_music_url).trim(),
       spotify_url: String(trackForm.spotify_url).trim(),
       is_published: Number(trackForm.is_published) !== 0,
+      is_highlighted: Number(trackForm.is_highlighted) !== 0,
       is_unreleased: isUnreleased,
       release_at,
       presave_url: String(trackForm.presave_url).trim(),
@@ -558,6 +629,28 @@ export function AdminPage() {
               Get API token
             </button>
           </form>
+          <form className="admin-form admin-form--forgot" onSubmit={handleForgotPassword}>
+            <div className="admin-form__row">
+              <label htmlFor="admin-reset-secret">Reset secret (required in production)</label>
+              <input
+                id="admin-reset-secret"
+                type="password"
+                autoComplete="off"
+                placeholder="Only needed when production reset is enabled"
+                value={resetSecret}
+                onChange={(e) => setResetSecret(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="admin-btn">
+              Forgot password (generate new one)
+            </button>
+            {resetInfo ? (
+              <p className="admin-form__hint">
+                New password for <strong>{resetInfo.username}</strong>:{" "}
+                <code>{resetInfo.new_password}</code>
+              </p>
+            ) : null}
+          </form>
         </div>
       </div>
     );
@@ -651,9 +744,9 @@ export function AdminPage() {
       </div>
 
       <div className="admin-card">
-        <h2 className="admin-card__title">Hero image</h2>
+        <h2 className="admin-card__title">Hero media</h2>
         <p className="admin-card__lead">
-          Set the home-page header image using either a hosted URL or a direct upload. Uploaded image takes priority over URL.
+          Set the home-page hero using either image or video URL/upload. Uploaded files take priority over URLs, and video takes priority over image.
         </p>
         <form className="admin-form" onSubmit={saveHeroHeaderImage}>
           <div className="admin-form__row">
@@ -692,6 +785,52 @@ export function AdminPage() {
               />
               <span>Remove current uploaded image</span>
             </label>
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="hero-video-url">Video URL (optional)</label>
+            <input
+              id="hero-video-url"
+              type="url"
+              placeholder="https://…"
+              value={heroImageForm.header_video_url}
+              onChange={(e) =>
+                setHeroImageForm((f) => ({ ...f, header_video_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="hero-video-upload">Upload video (optional)</label>
+            <input
+              id="hero-video-upload"
+              type="file"
+              accept="video/*"
+              onChange={(e) => setHeroVideoFile(e.target.files?.[0] || null)}
+            />
+            {heroImageForm.header_video_file_url ? (
+              <p className="admin-form__hint">
+                Current upload:{" "}
+                <a href={heroImageForm.header_video_file_url} target="_blank" rel="noreferrer">
+                  open video
+                </a>
+              </p>
+            ) : null}
+            <label className="admin-form__check">
+              <input
+                type="checkbox"
+                checked={clearHeroVideoUpload}
+                onChange={(e) => setClearHeroVideoUpload(e.target.checked)}
+              />
+              <span>Remove current uploaded video</span>
+            </label>
+            {heroVideoPreviewUrl ? (
+              <video
+                className="admin-hero-video-preview"
+                src={heroVideoPreviewUrl}
+                controls
+                muted
+                playsInline
+              />
+            ) : null}
           </div>
           <div className="admin-form__row">
             <label>Image alignment (crop editor)</label>
@@ -912,6 +1051,19 @@ export function AdminPage() {
           <div className="admin-form__row admin-form__row--checkbox">
             <label className="admin-form__checkbox-label">
               <input
+                id="t-highlighted"
+                type="checkbox"
+                checked={Number(trackForm.is_highlighted) !== 0}
+                onChange={(e) =>
+                  setTrackForm((f) => ({ ...f, is_highlighted: e.target.checked ? 1 : 0 }))
+                }
+              />
+              <span>Highlight as featured/new release on home page</span>
+            </label>
+          </div>
+          <div className="admin-form__row admin-form__row--checkbox">
+            <label className="admin-form__checkbox-label">
+              <input
                 id="t-unreleased"
                 type="checkbox"
                 checked={Number(trackForm.is_unreleased) !== 0}
@@ -968,6 +1120,7 @@ export function AdminPage() {
                 <th>Year</th>
                 <th>Public</th>
                 <th>Upcoming</th>
+                <th>Highlighted</th>
                 <th />
               </tr>
             </thead>
@@ -982,6 +1135,7 @@ export function AdminPage() {
                   <td>{t.year ?? "—"}</td>
                   <td>{t.is_published === false ? "draft" : "live"}</td>
                   <td>{t.is_unreleased ? "yes" : "—"}</td>
+                  <td>{t.is_highlighted ? "yes" : "—"}</td>
                   <td>
                     <button
                       type="button"

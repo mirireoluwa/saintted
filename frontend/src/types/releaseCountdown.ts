@@ -9,4 +9,6 @@ export interface ReleaseCountdown {
   header_image_file_url: string;
   header_image_focus_x: number;
   header_image_focus_y: number;
+  header_video_url: string;
+  header_video_file_url: string;
 }

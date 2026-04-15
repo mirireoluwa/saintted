@@ -16,11 +16,27 @@ function upcomingStatusAria(parts: ReturnType<typeof remainingPartsFromMs>) {
   return `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds remaining`;
 }
 
+function releaseMs(track: Track): number | null {
+  const iso = (track.release_at || "").trim();
+  if (!iso) return null;
+  const ms = new Date(iso).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
 export function MusicSection({ tracks, loading }: MusicSectionProps) {
   const reduceMotion = useReducedMotion() ?? false;
   const [nowTick, setNowTick] = useState(() => Date.now());
 
-  const upcoming = useMemo(() => tracks.filter((t) => t.is_unreleased), [tracks]);
+  const upcoming = useMemo(
+    () =>
+      tracks.filter((t) => {
+        if (!t.is_unreleased) return false;
+        const ms = releaseMs(t);
+        if (ms == null) return true;
+        return ms > nowTick;
+      }),
+    [tracks, nowTick]
+  );
 
   useEffect(() => {
     if (upcoming.length === 0) return;
@@ -264,22 +280,35 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
           animate="visible"
         >
           {tracks
-            .filter((t) => !t.is_unreleased)
+            .filter((t) => {
+              if (!t.is_unreleased) return true;
+              const ms = releaseMs(t);
+              return ms != null && ms <= nowTick;
+            })
             .map((track) => {
               const artUrl = getTrackArtUrl(track);
+              const ms = releaseMs(track);
+              const autoHighlighted = !!track.is_unreleased && ms != null && ms <= nowTick;
+              const highlighted = !!track.is_highlighted || autoHighlighted;
               return (
                 <motion.article
                   key={track.id}
-                  className="track-card"
+                  className={`track-card${highlighted ? " track-card--highlighted" : ""}`}
                   variants={{
                     hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
                     visible: { opacity: 1, y: 0 },
                   }}
                   transition={sectionTransition(reduceMotion)}
                 >
-                  <Link to={`/music/${track.slug}`} className="track-card-link">
+                  <Link
+                    to={`/music/${track.slug}`}
+                    className={`track-card-link${highlighted ? " track-card-link--highlighted" : ""}`}
+                  >
                     <div className="track-card__art-frame">
                       <div className="track-art">
+                        {highlighted ? (
+                          <span className="track-card__highlight-badge">new release</span>
+                        ) : null}
                         {artUrl ? (
                           <motion.img
                             src={artUrl}

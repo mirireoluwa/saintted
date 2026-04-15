@@ -181,7 +181,15 @@ export function TrackDetailPage() {
     return null;
   }
 
-  if (!showInterstitial && resolved && track.is_unreleased) {
+  const unreleasedTargetMs = track?.release_at ? new Date(track.release_at).getTime() : NaN;
+  const showUnreleasedFullscreen =
+    !showInterstitial &&
+    resolved &&
+    !!track?.is_unreleased &&
+    Number.isFinite(unreleasedTargetMs) &&
+    unreleasedTargetMs > Date.now();
+
+  if (showUnreleasedFullscreen) {
     const ogU = getTrackArtUrl(track);
     return (
       <>

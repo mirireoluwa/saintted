@@ -102,14 +102,46 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
+
+# Media storage:
+# - Local dev/default: filesystem under MEDIA_ROOT
+# - Production option: S3-compatible object storage (AWS S3, Cloudflare R2, etc.)
+USE_S3_MEDIA = os.environ.get("USE_S3_MEDIA", "0") == "1"
+_s3_bucket = (os.environ.get("S3_BUCKET_NAME") or "").strip()
+if USE_S3_MEDIA and _s3_bucket:
+    AWS_ACCESS_KEY_ID = (os.environ.get("S3_ACCESS_KEY_ID") or "").strip()
+    AWS_SECRET_ACCESS_KEY = (os.environ.get("S3_SECRET_ACCESS_KEY") or "").strip()
+    AWS_STORAGE_BUCKET_NAME = _s3_bucket
+    AWS_S3_REGION_NAME = (os.environ.get("S3_REGION") or "").strip() or None
+    AWS_S3_ENDPOINT_URL = (os.environ.get("S3_ENDPOINT_URL") or "").strip() or None
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_ADDRESSING_STYLE = (os.environ.get("S3_ADDRESSING_STYLE") or "auto").strip()
+    _s3_custom_domain = (os.environ.get("S3_CUSTOM_DOMAIN") or "").strip()
+    if _s3_custom_domain:
+        AWS_S3_CUSTOM_DOMAIN = _s3_custom_domain
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "location": (os.environ.get("S3_MEDIA_LOCATION") or "media").strip(),
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -154,3 +186,7 @@ REST_FRAMEWORK = {
 
 # Cover-art fallback (iTunes / Spotify search) — override if stores list you under another spelling
 COVER_ART_ARTIST = (os.environ.get("COVER_ART_ARTIST") or "Saintted").strip() or "Saintted"
+
+# Optional shared secret for admin password reset endpoint in production.
+# Required when DEBUG=False if you want to use /api/auth/reset-password/.
+RESET_PASSWORD_SECRET = (os.environ.get("RESET_PASSWORD_SECRET") or "").strip()

@@ -16,7 +16,7 @@ class TrackSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "slug", "meta", "art_url", "art_file", "clear_art_file", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
-            "is_published",
+            "is_published", "is_highlighted",
             "is_unreleased", "release_at", "presave_url",
         ]
 
@@ -154,6 +154,9 @@ class ReleaseCountdownSerializer(serializers.ModelSerializer):
     header_image_file = serializers.FileField(required=False, allow_null=True, write_only=True)
     header_image_file_url = serializers.SerializerMethodField(read_only=True)
     clear_header_image_file = serializers.BooleanField(write_only=True, required=False, default=False)
+    header_video_file = serializers.FileField(required=False, allow_null=True, write_only=True)
+    header_video_file_url = serializers.SerializerMethodField(read_only=True)
+    clear_header_video_file = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = ReleaseCountdown
@@ -170,6 +173,10 @@ class ReleaseCountdownSerializer(serializers.ModelSerializer):
             "clear_header_image_file",
             "header_image_focus_x",
             "header_image_focus_y",
+            "header_video_url",
+            "header_video_file",
+            "header_video_file_url",
+            "clear_header_video_file",
         ]
 
     def validate(self, attrs):
@@ -189,10 +196,22 @@ class ReleaseCountdownSerializer(serializers.ModelSerializer):
         url = obj.header_image_file.url
         return request.build_absolute_uri(url) if request else url
 
+    def get_header_video_file_url(self, obj):
+        if not obj.header_video_file:
+            return ""
+        request = self.context.get("request")
+        url = obj.header_video_file.url
+        return request.build_absolute_uri(url) if request else url
+
     def update(self, instance, validated_data):
         clear_file = validated_data.pop("clear_header_image_file", False)
+        clear_video = validated_data.pop("clear_header_video_file", False)
         if clear_file:
             if instance.header_image_file:
                 instance.header_image_file.delete(save=False)
             instance.header_image_file = None
+        if clear_video:
+            if instance.header_video_file:
+                instance.header_video_file.delete(save=False)
+            instance.header_video_file = None
         return super().update(instance, validated_data)

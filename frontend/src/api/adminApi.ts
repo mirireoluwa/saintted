@@ -49,6 +49,27 @@ export async function login(username: string, password: string): Promise<string>
   return data.token;
 }
 
+export async function resetAdminPassword(
+  username: string,
+  resetSecret?: string
+): Promise<{ username: string; new_password: string; detail: string }> {
+  const res = await fetch(`${API_BASE}/auth/reset-password/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username,
+      ...(resetSecret ? { reset_secret: resetSecret } : {}),
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg =
+      (err as { detail?: string }).detail || `Password reset failed (HTTP ${res.status}).`;
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
 export async function fetchTracksAuth(token: string): Promise<Track[]> {
   const res = await fetch(`${API_BASE}/tracks/`, {
     headers: authHeaders(token),
@@ -216,6 +237,9 @@ export async function updateHeroHeader(
     header_image_focus_y?: number;
     header_image_file?: File | null;
     clear_header_image_file?: boolean;
+    header_video_url?: string;
+    header_video_file?: File | null;
+    clear_header_video_file?: boolean;
   }
 ): Promise<ReleaseCountdown> {
   const body = new FormData();
@@ -236,6 +260,15 @@ export async function updateHeroHeader(
   }
   if (payload.clear_header_image_file) {
     body.set("clear_header_image_file", "true");
+  }
+  if (payload.header_video_url !== undefined) {
+    body.set("header_video_url", payload.header_video_url);
+  }
+  if (payload.header_video_file) {
+    body.set("header_video_file", payload.header_video_file);
+  }
+  if (payload.clear_header_video_file) {
+    body.set("clear_header_video_file", "true");
   }
 
   const res = await fetch(`${API_BASE}/release-countdown/`, {

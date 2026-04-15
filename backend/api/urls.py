@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 
+from .auth_views import AdminPasswordResetView
 from .views import FeaturedVideoViewSet, GalleryImageViewSet, ReleaseCountdownDetailView, TrackViewSet
 
 router = DefaultRouter()
@@ -11,6 +12,7 @@ router.register(r"gallery-images", GalleryImageViewSet, basename="gallery-image"
 
 urlpatterns = [
     path("auth/token/", obtain_auth_token),
+    path("auth/reset-password/", AdminPasswordResetView.as_view(), name="auth-reset-password"),
     path("release-countdown/", ReleaseCountdownDetailView.as_view(), name="release-countdown"),
     path("", include(router.urls)),
 ]

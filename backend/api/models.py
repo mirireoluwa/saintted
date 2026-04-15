@@ -39,6 +39,10 @@ class Track(models.Model):
         blank=True,
         help_text="Pre-save / pre-add link for this track (shown on unreleased detail page).",
     )
+    is_highlighted = models.BooleanField(
+        default=False,
+        help_text="Highlight this track as a featured/new release on the public site.",
+    )
 
     class Meta:
         ordering = ["order", "title"]
@@ -126,6 +130,17 @@ class ReleaseCountdown(models.Model):
         default=50.0,
         validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
         help_text="Vertical focal point in percent (0 = top, 100 = bottom)",
+    )
+    header_video_url = models.URLField(
+        blank=True,
+        default="",
+        help_text="Optional hero/header video URL for the public home page",
+    )
+    header_video_file = models.FileField(
+        upload_to="hero-header-video/",
+        blank=True,
+        null=True,
+        help_text="Optional uploaded hero/header video for the public home page",
     )
 
     class Meta:

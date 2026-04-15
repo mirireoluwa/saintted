@@ -11,9 +11,10 @@ type HeroProps = {
 export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
+  const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
   const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
-  const prevHeroUrlRef = useRef<string | null>(null);
+  const prevHeroMediaRef = useRef<string | null>(null);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -28,7 +29,8 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     if (!releaseLoaded) {
       const cached = readHeroCache();
       if (cached) {
-        setHeaderImageUrl(cached.url);
+        setHeaderImageUrl(cached.imageUrl);
+        setHeaderVideoUrl(cached.videoUrl || null);
         setHeaderImageFocus(cached.focus);
       }
       return;
@@ -36,39 +38,56 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
 
     if (!releaseConfig) {
       setHeaderImageUrl(fallback);
+      setHeaderVideoUrl(null);
       setHeaderImageFocus({ x: 50, y: 50 });
       return;
     }
 
+    const uploadedVideo = (releaseConfig.header_video_file_url || "").trim();
+    const customVideo = (releaseConfig.header_video_url || "").trim();
     const uploadedUrl = (releaseConfig.header_image_file_url || "").trim();
     const customUrl = (releaseConfig.header_image_url || "").trim();
-    const url = uploadedUrl || customUrl || fallback;
+    const imageUrl = uploadedUrl || customUrl || fallback;
+    const videoUrl = uploadedVideo || customVideo || null;
     const focus = {
       x: typeof releaseConfig.header_image_focus_x === "number" ? releaseConfig.header_image_focus_x : 50,
       y: typeof releaseConfig.header_image_focus_y === "number" ? releaseConfig.header_image_focus_y : 50,
     };
-    setHeaderImageUrl(url);
+    setHeaderImageUrl(imageUrl);
+    setHeaderVideoUrl(videoUrl);
     setHeaderImageFocus(focus);
   }, [releaseLoaded, releaseConfig]);
 
   useEffect(() => {
-    if (!headerImageUrl) {
-      prevHeroUrlRef.current = null;
+    const mediaKey = headerVideoUrl || headerImageUrl || "";
+    if (!mediaKey) {
+      prevHeroMediaRef.current = null;
       setHeroPhotoVisible(false);
       return;
     }
-    if (prevHeroUrlRef.current === headerImageUrl) {
+    if (prevHeroMediaRef.current === mediaKey) {
       return;
     }
-    prevHeroUrlRef.current = headerImageUrl;
+    prevHeroMediaRef.current = mediaKey;
     setHeroPhotoVisible(false);
     const id = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
     return () => window.cancelAnimationFrame(id);
-  }, [headerImageUrl]);
+  }, [headerImageUrl, headerVideoUrl]);
 
   return (
     <section id="hero-section" className="hero-section">
-      {headerImageUrl ? (
+      {headerVideoUrl ? (
+        <video
+          className={`hero-section__video${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
+          src={headerVideoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden
+        />
+      ) : null}
+      {headerImageUrl && !headerVideoUrl ? (
         <div
           className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
           style={{

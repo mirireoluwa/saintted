@@ -144,6 +144,12 @@
   gap: 1rem;
 }
 
+.admin-form--forgot {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
 .admin-form__row {
   display: grid;
   gap: 0.35rem;
@@ -593,6 +599,15 @@
   width: 120px;
   height: 120px;
   object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-hover);
+}
+
+.admin-hero-video-preview {
+  margin-top: 0.6rem;
+  width: min(100%, 32rem);
+  max-height: 15rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--bg-hover);
