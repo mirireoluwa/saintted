@@ -391,7 +391,7 @@ a {
   transform: translateY(2px);
 }
 
-/* Home: hero is full-bleed from top; countdown overlays the photo under the fixed nav */
+/* Home: hero is full-bleed; ticker sits at the bottom */
 .home-landing {
   position: relative;
   min-height: 100vh;
@@ -399,11 +399,11 @@ a {
 
 .home-landing__countdown {
   position: absolute;
-  top: 5.5rem;
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 45;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .home-landing__countdown .release-countdown-bar {
@@ -411,13 +411,13 @@ a {
   margin: 0;
 }
 
-/* Clear fixed nav + overlaid countdown strip (~2.75rem pill + gap) */
+/* Leave room for bottom ticker so content and scroll cue do not clash */
 .page--release-countdown .hero-section {
-  padding-top: calc(5.5rem + 2.75rem + 0.5rem);
+  padding-bottom: calc(1.75rem + 2.2rem);
 }
 
 .page--release-countdown .hero-inner {
-  min-height: calc(100svh - 5.5rem - 2.75rem - 0.5rem - 1.75rem);
+  min-height: calc(100svh - 5.5rem - 2.2rem - 1.75rem);
 }
 
 /* Intro */
@@ -1580,11 +1580,11 @@ a {
   }
 
   .page--release-countdown .hero-section {
-    padding: calc(5.5rem + 2.75rem + 0.5rem) 2rem 2rem;
+    padding: 5.5rem 2rem calc(2rem + 2.2rem);
   }
 
   .page--release-countdown .hero-inner {
-    min-height: calc(100svh - 5.5rem - 2.75rem - 0.5rem - 2rem);
+    min-height: calc(100svh - 5.5rem - 2.2rem - 2rem);
   }
 
   .music-grid {

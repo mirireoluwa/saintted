@@ -1,109 +1,96 @@
-/* Overlaid on hero via .home-landing__countdown; pill matches nav glass bar */
+/* Headline-style ticker at the bottom of the hero */
 .release-countdown-bar {
   width: 100%;
-  padding: 0 max(1.15rem, env(safe-area-inset-right)) 0 max(1.15rem, env(safe-area-inset-left));
   scroll-margin-top: 6rem;
+  pointer-events: auto;
 }
 
 .release-countdown-bar__shell {
-  max-width: 80rem;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-}
-
-.release-countdown-bar__pill {
-  pointer-events: auto;
   width: 100%;
-  max-width: min(22.5rem, 100%);
-  margin-inline: auto;
-  border-radius: 14px;
-  border: 1px solid var(--header-border);
-  background: var(--header-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--header-float-shadow);
 }
 
-.release-countdown-bar__inner {
-  padding: 0.5rem 0.85rem 0.5rem 0.95rem;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem 0.55rem;
-  min-height: 2.75rem;
-}
-
-.release-countdown-bar__title {
-  font-family: var(--font-display), var(--font-body), sans-serif;
-  font-size: clamp(0.85rem, 2.5vw, 1.05rem);
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  text-transform: lowercase;
-  color: var(--text);
-  margin: 0;
-  min-width: 0;
-  flex: 1 1 auto;
+.release-countdown-bar__ticker-wrap {
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0.58)),
+    radial-gradient(circle at 10% 50%, rgba(0, 255, 119, 0.22), transparent 42%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.release-countdown-bar__time {
-  margin: 0;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: clamp(0.68rem, 1.6vw, 0.78rem);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.release-countdown-bar__live {
-  margin: 0;
-  flex-shrink: 0;
-  font-family: var(--font-display), var(--font-body), sans-serif;
-  font-size: clamp(0.8rem, 2vw, 0.95rem);
-  font-weight: 400;
-  text-transform: lowercase;
-  color: var(--accent-green);
-  white-space: nowrap;
-}
-
-.release-countdown-bar__link {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  padding: 0.28rem 0.55rem;
-  font-family: var(--font-mono);
-  font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.release-countdown-bar__ticker {
+  display: block;
+  width: 100%;
   text-decoration: none;
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-hover);
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
-  white-space: nowrap;
+  color: inherit;
 }
 
-.release-countdown-bar__link:hover {
-  color: var(--hover-green-text, var(--accent-green));
-  border-color: var(--hover-green-border, rgba(0, 255, 119, 0.45));
-  background: var(--hover-green-bg, rgba(0, 255, 119, 0.08));
+.release-countdown-bar__ticker--link {
+  cursor: pointer;
 }
 
-.release-countdown-bar__link:focus-visible {
+.release-countdown-bar__ticker-track {
+  display: inline-flex;
+  align-items: center;
+  min-width: max-content;
+  padding: 0.48rem 0;
+  animation: release-ticker-scroll 21s linear infinite;
+}
+
+.release-countdown-bar__ticker-track span {
+  display: inline-block;
+  padding-right: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: clamp(0.64rem, 1.05vw, 0.78rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: #b9fdd9;
+  text-shadow: 0 0 10px rgba(0, 255, 119, 0.3);
+  animation: release-ticker-color 3.6s ease-in-out infinite alternate;
+}
+
+.release-countdown-bar__ticker--link:hover .release-countdown-bar__ticker-track span {
+  color: #ecfdf5;
+  text-shadow: 0 0 12px rgba(167, 243, 208, 0.55);
+}
+
+.release-countdown-bar__ticker--link:focus-visible {
   outline: 2px solid var(--accent-green);
-  outline-offset: 3px;
+  outline-offset: -2px;
+}
+
+@keyframes release-ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+@keyframes release-ticker-color {
+  0% {
+    color: #86efac;
+  }
+  50% {
+    color: #4ade80;
+  }
+  100% {
+    color: #22c55e;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .release-countdown-bar__ticker-track {
+    animation: none;
+  }
+
+  .release-countdown-bar__ticker-track span {
+    animation: none;
+  }
 }

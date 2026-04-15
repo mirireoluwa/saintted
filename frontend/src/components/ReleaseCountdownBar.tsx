@@ -35,6 +35,8 @@ export function ReleaseCountdownBar({ config }: Props) {
   const presave = (config.presave_url || "").trim();
   const title = (config.song_title || "").trim();
   const heading = title || "new music soon";
+  const actionText = isLive ? "tap to listen now" : "tap to pre-save";
+  const marqueeText = `${heading} · ${isLive ? "out now" : `${timeLabel} left`} · ${actionText} ·`;
 
   useEffect(() => {
     if (Date.now() >= targetMs) return;
@@ -42,41 +44,41 @@ export function ReleaseCountdownBar({ config }: Props) {
     return () => window.clearInterval(id);
   }, [targetMs]);
 
+  const tickerLabel = `${heading}. ${
+    isLive
+      ? "Out now."
+      : `${remaining.days} days, ${remaining.hours} hours, ${remaining.minutes} minutes, ${remaining.seconds} seconds remaining.`
+  } ${actionText}.`;
+
   return (
-    <div
-      id="release-countdown-section"
-      className="release-countdown-bar"
-      role="region"
-      aria-label="Release countdown"
-    >
+    <div id="release-countdown-section" className="release-countdown-bar" role="region" aria-label="Release ticker">
       <div className="release-countdown-bar__shell">
-        <div className="release-countdown-bar__pill">
-          <div className="release-countdown-bar__inner">
-            <h2 className="release-countdown-bar__title">{heading}</h2>
-            {!isLive ? (
-              <p
-                className="release-countdown-bar__time"
-                role="timer"
-                aria-live="polite"
-                aria-atomic="true"
-                aria-label={`${remaining.days} days, ${remaining.hours} hours, ${remaining.minutes} minutes, ${remaining.seconds} seconds remaining`}
-              >
-                {timeLabel}
-              </p>
-            ) : (
-              <p className="release-countdown-bar__live">out now</p>
-            )}
-            {presave ? (
-              <a
-                href={presave}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="release-countdown-bar__link"
-              >
-                {isLive ? "Listen / save" : "Pre-save"}
-              </a>
-            ) : null}
-          </div>
+        <div className="release-countdown-bar__ticker-wrap">
+          {presave ? (
+            <a
+              href={presave}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="release-countdown-bar__ticker release-countdown-bar__ticker--link"
+              aria-label={tickerLabel}
+            >
+              <span className="release-countdown-bar__ticker-track" aria-hidden>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+              </span>
+            </a>
+          ) : (
+            <div className="release-countdown-bar__ticker" aria-label={tickerLabel}>
+              <span className="release-countdown-bar__ticker-track" aria-hidden>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
