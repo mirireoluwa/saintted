@@ -271,7 +271,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
       {!loading && highlightedTracks.length > 0 ? (
         <div className="music-highlighted">
           <div className="music-highlighted__label">
-            <span className="music-highlighted__label-text">.new release</span>
+            <span className="music-highlighted__label-text">.latest release</span>
             <span className="music-highlighted__label-line" aria-hidden />
           </div>
           <motion.div

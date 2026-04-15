@@ -68,13 +68,12 @@ export function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    const fallback = "/hero-bg.png";
     (async () => {
       try {
         const c = await fetchReleaseCountdown();
         if (cancelled) return;
         setReleaseConfig(c);
-        writeHeroCache(c, fallback);
+        writeHeroCache(c, "")
       } catch {
         if (cancelled) return;
         setReleaseConfig(null);

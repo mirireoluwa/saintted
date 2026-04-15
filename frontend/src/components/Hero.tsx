@@ -14,7 +14,6 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
   const [headerImageFocus, setHeaderImageFocus] = useState({ x: 50, y: 50 });
   const [heroPhotoVisible, setHeroPhotoVisible] = useState(false);
-  const [allowHeroVideo, setAllowHeroVideo] = useState(true);
   const prevHeroMediaRef = useRef<string | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -26,32 +25,6 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   }, []);
 
   useEffect(() => {
-    if (typeof navigator === "undefined") return;
-    const nav = navigator as Navigator & {
-      connection?: {
-        effectiveType?: string;
-        saveData?: boolean;
-        addEventListener?: (type: string, cb: () => void) => void;
-        removeEventListener?: (type: string, cb: () => void) => void;
-      };
-    };
-    const connection = nav.connection;
-    if (!connection) return;
-
-    const applyNetworkPolicy = () => {
-      const et = String(connection.effectiveType || "").toLowerCase();
-      const saveData = !!connection.saveData;
-      const slow = saveData || et.includes("2g") || et === "3g";
-      setAllowHeroVideo(!slow);
-    };
-
-    applyNetworkPolicy();
-    connection.addEventListener?.("change", applyNetworkPolicy);
-    return () => connection.removeEventListener?.("change", applyNetworkPolicy);
-  }, []);
-
-  useEffect(() => {
-    const fallback = "/hero-bg.png";
 
     if (!releaseLoaded) {
       const cached = readHeroCache();
@@ -64,7 +37,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     }
 
     if (!releaseConfig) {
-      setHeaderImageUrl(fallback);
+      setHeaderImageUrl(null);
       setHeaderVideoUrl(null);
       setHeaderImageFocus({ x: 50, y: 50 });
       return;
@@ -74,7 +47,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     const customVideo = (releaseConfig.header_video_url || "").trim();
     const uploadedUrl = (releaseConfig.header_image_file_url || "").trim();
     const customUrl = (releaseConfig.header_image_url || "").trim();
-    const imageUrl = uploadedUrl || customUrl || fallback;
+    const imageUrl = uploadedUrl || customUrl || null;
     const videoUrl = uploadedVideo || customVideo || null;
     const focus = {
       x: typeof releaseConfig.header_image_focus_x === "number" ? releaseConfig.header_image_focus_x : 50,
@@ -85,7 +58,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     setHeaderImageFocus(focus);
   }, [releaseLoaded, releaseConfig]);
 
-  const activeVideoUrl = allowHeroVideo ? headerVideoUrl : null;
+  const activeVideoUrl = headerVideoUrl;
 
   useEffect(() => {
     const mediaKey = activeVideoUrl || headerImageUrl || "";

@@ -205,7 +205,7 @@ export function AdminPage() {
     if (heroImageFile) return URL.createObjectURL(heroImageFile);
     if (heroImageForm.header_image_file_url.trim()) return heroImageForm.header_image_file_url.trim();
     if (heroImageForm.header_image_url.trim()) return heroImageForm.header_image_url.trim();
-    return "/hero-bg.png";
+    return "";
   }, [heroImageFile, heroImageForm.header_image_file_url, heroImageForm.header_image_url]);
   const heroVideoPreviewUrl = useMemo(() => {
     if (heroVideoFile) return URL.createObjectURL(heroVideoFile);
@@ -350,7 +350,7 @@ export function AdminPage() {
     }
   }
 
-  async function saveHeroHeaderImage(e: React.FormEvent) {
+  async function saveHeroImageSettings(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
     setMessage(null);
@@ -362,16 +362,30 @@ export function AdminPage() {
         header_image_focus_y: heroImageForm.header_image_focus_y,
         header_image_file: heroImageFile,
         clear_header_image_file: clearHeroImageUpload,
+      });
+      setHeroImageForm(heroImageFormFromApi(updated));
+      setHeroImageFile(null);
+      setClearHeroImageUpload(false);
+      setMessage({ type: "ok", text: "Hero image settings saved." });
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  async function saveHeroVideoSettings(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setMessage(null);
+    try {
+      const updated = await updateHeroHeader(token, {
         header_video_url: heroImageForm.header_video_url.trim(),
         header_video_file: heroVideoFile,
         clear_header_video_file: clearHeroVideoUpload,
       });
       setHeroImageForm(heroImageFormFromApi(updated));
-      setHeroImageFile(null);
       setHeroVideoFile(null);
-      setClearHeroImageUpload(false);
       setClearHeroVideoUpload(false);
-      setMessage({ type: "ok", text: "Hero media settings saved." });
+      setMessage({ type: "ok", text: "Hero video settings saved." });
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
     }
@@ -748,141 +762,170 @@ export function AdminPage() {
         <p className="admin-card__lead">
           Set the home-page hero using image and optional video URL/upload. Uploaded files take priority over URLs, and on slower connections the site automatically falls back to the image for reliability.
         </p>
-        <form className="admin-form" onSubmit={saveHeroHeaderImage}>
-          <div className="admin-form__row">
-            <label htmlFor="hero-image-url">Image URL (optional)</label>
-            <input
-              id="hero-image-url"
-              type="url"
-              placeholder="https://…"
-              value={heroImageForm.header_image_url}
-              onChange={(e) =>
-                setHeroImageForm((f) => ({ ...f, header_image_url: e.target.value }))
+        <div className="admin-hero-media-grid">
+          <form className="admin-form admin-hero-media-col" onSubmit={saveHeroImageSettings}>
+            <h3 className="admin-hero-media-col__title">Image</h3>
+            <div
+              className="admin-crop-editor__preview admin-hero-media-col__preview"
+              style={
+                heroImagePreviewUrl
+                  ? {
+                      backgroundImage: `url(${heroImagePreviewUrl})`,
+                      backgroundPosition: `${heroImageForm.header_image_focus_x}% ${heroImageForm.header_image_focus_y}%`,
+                    }
+                  : undefined
               }
+              aria-hidden
             />
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="hero-image-upload">Upload image (optional)</label>
-            <input
-              id="hero-image-upload"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
-            />
-            {heroImageForm.header_image_file_url ? (
-              <p className="admin-form__hint">
-                Current upload:{" "}
-                <a href={heroImageForm.header_image_file_url} target="_blank" rel="noreferrer">
-                  open image
-                </a>
-              </p>
-            ) : null}
-            <label className="admin-form__check">
+            {!heroImagePreviewUrl ? <p className="admin-form__hint">No image selected yet.</p> : null}
+            <div className="admin-form__row">
+              <label htmlFor="hero-image-url">Image URL (optional)</label>
               <input
-                type="checkbox"
-                checked={clearHeroImageUpload}
-                onChange={(e) => setClearHeroImageUpload(e.target.checked)}
+                id="hero-image-url"
+                type="url"
+                placeholder="https://…"
+                value={heroImageForm.header_image_url}
+                onChange={(e) =>
+                  setHeroImageForm((f) => ({ ...f, header_image_url: e.target.value }))
+                }
               />
-              <span>Remove current uploaded image</span>
-            </label>
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="hero-video-url">Video URL (optional)</label>
-            <input
-              id="hero-video-url"
-              type="url"
-              placeholder="https://…"
-              value={heroImageForm.header_video_url}
-              onChange={(e) =>
-                setHeroImageForm((f) => ({ ...f, header_video_url: e.target.value }))
-              }
-            />
-              <p className="admin-form__hint">
-                Tip: always keep a hero image set. Video is disabled automatically for weaker network conditions.
-              </p>
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="hero-video-upload">Upload video (optional)</label>
-            <input
-              id="hero-video-upload"
-              type="file"
-              accept="video/*"
-              onChange={(e) => setHeroVideoFile(e.target.files?.[0] || null)}
-            />
-            {heroImageForm.header_video_file_url ? (
-              <p className="admin-form__hint">
-                Current upload:{" "}
-                <a href={heroImageForm.header_video_file_url} target="_blank" rel="noreferrer">
-                  open video
-                </a>
-              </p>
-            ) : null}
-            <label className="admin-form__check">
+            </div>
+            <div className="admin-form__row">
+              <label htmlFor="hero-image-upload">Upload image (optional)</label>
               <input
-                type="checkbox"
-                checked={clearHeroVideoUpload}
-                onChange={(e) => setClearHeroVideoUpload(e.target.checked)}
+                id="hero-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
               />
-              <span>Remove current uploaded video</span>
-            </label>
+              {heroImageForm.header_image_file_url ? (
+                <p className="admin-form__hint">
+                  Current upload:{" "}
+                  <a href={heroImageForm.header_image_file_url} target="_blank" rel="noreferrer">
+                    open image
+                  </a>
+                </p>
+              ) : null}
+              <label className="admin-form__check">
+                <input
+                  type="checkbox"
+                  checked={clearHeroImageUpload}
+                  onChange={(e) => setClearHeroImageUpload(e.target.checked)}
+                />
+                <span>Remove current uploaded image</span>
+              </label>
+            </div>
+            <div className="admin-form__row">
+              <label>Image alignment (crop editor)</label>
+              <div className="admin-crop-editor">
+                <div className="admin-crop-editor__controls">
+                  <label htmlFor="hero-image-focus-x">
+                    Horizontal position: {Math.round(heroImageForm.header_image_focus_x)}%
+                  </label>
+                  <input
+                    id="hero-image-focus-x"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={heroImageForm.header_image_focus_x}
+                    onChange={(e) =>
+                      setHeroImageForm((f) => ({ ...f, header_image_focus_x: Number(e.target.value) }))
+                    }
+                  />
+                  <label htmlFor="hero-image-focus-y">
+                    Vertical position: {Math.round(heroImageForm.header_image_focus_y)}%
+                  </label>
+                  <input
+                    id="hero-image-focus-y"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={heroImageForm.header_image_focus_y}
+                    onChange={(e) =>
+                      setHeroImageForm((f) => ({ ...f, header_image_focus_y: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+              </div>
+              <p className="admin-form__hint">
+                Adjust what stays in frame in the hero crop.
+              </p>
+            </div>
+            <div className="admin-page__actions">
+              <button
+                type="submit"
+                className="admin-btn admin-btn--primary admin-hero-media-col__save-btn"
+              >
+                Save image
+              </button>
+            </div>
+          </form>
+
+          <form className="admin-form admin-hero-media-col" onSubmit={saveHeroVideoSettings}>
+            <h3 className="admin-hero-media-col__title">Video</h3>
             {heroVideoPreviewUrl ? (
               <video
-                className="admin-hero-video-preview"
+                className="admin-hero-video-preview admin-hero-media-col__preview"
                 src={heroVideoPreviewUrl}
                 controls
                 muted
                 playsInline
               />
-            ) : null}
-          </div>
-          <div className="admin-form__row">
-            <label>Image alignment (crop editor)</label>
-            <div className="admin-crop-editor">
-              <div
-                className="admin-crop-editor__preview"
-                style={{
-                  backgroundImage: `url(${heroImagePreviewUrl})`,
-                  backgroundPosition: `${heroImageForm.header_image_focus_x}% ${heroImageForm.header_image_focus_y}%`,
-                }}
-                aria-hidden
+            ) : (
+              <div className="admin-hero-media-col__empty">No video selected yet.</div>
+            )}
+            <div className="admin-form__row">
+              <label htmlFor="hero-video-url">Video URL (optional)</label>
+              <input
+                id="hero-video-url"
+                type="url"
+                placeholder="https://…"
+                value={heroImageForm.header_video_url}
+                onChange={(e) =>
+                  setHeroImageForm((f) => ({ ...f, header_video_url: e.target.value }))
+                }
               />
-              <div className="admin-crop-editor__controls">
-                <label htmlFor="hero-image-focus-x">Horizontal position: {Math.round(heroImageForm.header_image_focus_x)}%</label>
-                <input
-                  id="hero-image-focus-x"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={heroImageForm.header_image_focus_x}
-                  onChange={(e) =>
-                    setHeroImageForm((f) => ({ ...f, header_image_focus_x: Number(e.target.value) }))
-                  }
-                />
-                <label htmlFor="hero-image-focus-y">Vertical position: {Math.round(heroImageForm.header_image_focus_y)}%</label>
-                <input
-                  id="hero-image-focus-y"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={heroImageForm.header_image_focus_y}
-                  onChange={(e) =>
-                    setHeroImageForm((f) => ({ ...f, header_image_focus_y: Number(e.target.value) }))
-                  }
-                />
-              </div>
+              <p className="admin-form__hint">
+                Video autoplay is attempted on the public site. Keep an image set as visual fallback.
+              </p>
             </div>
-            <p className="admin-form__hint">
-              Adjust what stays in frame in the hero crop (similar to creator image alignment tools).
-            </p>
-          </div>
-          <div className="admin-page__actions">
-            <button type="submit" className="admin-btn admin-btn--primary">
-              Save hero image
-            </button>
-          </div>
-        </form>
+            <div className="admin-form__row">
+              <label htmlFor="hero-video-upload">Upload video (optional)</label>
+              <input
+                id="hero-video-upload"
+                type="file"
+                accept="video/*"
+                onChange={(e) => setHeroVideoFile(e.target.files?.[0] || null)}
+              />
+              {heroImageForm.header_video_file_url ? (
+                <p className="admin-form__hint">
+                  Current upload:{" "}
+                  <a href={heroImageForm.header_video_file_url} target="_blank" rel="noreferrer">
+                    open video
+                  </a>
+                </p>
+              ) : null}
+              <label className="admin-form__check">
+                <input
+                  type="checkbox"
+                  checked={clearHeroVideoUpload}
+                  onChange={(e) => setClearHeroVideoUpload(e.target.checked)}
+                />
+                <span>Remove current uploaded video</span>
+              </label>
+            </div>
+            <div className="admin-page__actions">
+              <button
+                type="submit"
+                className="admin-btn admin-btn--primary admin-hero-media-col__save-btn"
+              >
+                Save video
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <div className="admin-card">

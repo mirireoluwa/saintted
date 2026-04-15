@@ -32,12 +32,16 @@
   --header-float-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   --section-line: #27272a;
   --footer-border: rgba(255, 255, 255, 0.08);
+  --hover-green-text: var(--accent-green);
+  --hover-green-border: rgba(0, 255, 119, 0.45);
+  --hover-green-bg: rgba(0, 255, 119, 0.08);
 }
 
 [data-theme="light"] {
   --page-gradient: radial-gradient(circle at top, #fafafa 0, #e4e4e7 55%, #d4d4d8 100%);
   --bg: #fafafa;
   --text: #18181b;
+  --accent-green: #065f35;
   /* Stronger contrast for small labels (WCAG-friendly vs gray on light gray) */
   --text-muted: #3f3f46;
   --border: rgba(0, 0, 0, 0.1);
@@ -49,6 +53,9 @@
   --footer-border: rgba(0, 0, 0, 0.08);
   --surface: rgba(255, 255, 255, 0.92);
   --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.08);
+  --hover-green-text: #065f35;
+  --hover-green-border: rgba(6, 95, 53, 0.7);
+  --hover-green-bg: rgba(16, 185, 129, 0.24);
 }
 
 [data-theme="dark"] .footer__social-icon img,
@@ -1008,16 +1015,16 @@ a {
 }
 
 .music-upcoming-row__cta:hover {
-  color: var(--accent-green);
-  border-color: rgba(0, 255, 119, 0.45);
-  background: rgba(0, 255, 119, 0.08);
+  color: var(--hover-green-text);
+  border-color: var(--hover-green-border);
+  background: var(--hover-green-bg);
   text-decoration: none;
 }
 
 [data-theme="light"] .music-upcoming-row__cta:hover {
-  color: #0a7a3b;
-  border-color: rgba(10, 122, 59, 0.55);
-  background: rgba(10, 122, 59, 0.16);
+  color: var(--hover-green-text);
+  border-color: var(--hover-green-border);
+  background: var(--hover-green-bg);
 }
 
 [data-theme="light"] .music-upcoming-row__segment,

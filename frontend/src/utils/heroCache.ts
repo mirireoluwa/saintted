@@ -1,6 +1,6 @@
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 
-const KEY = "saintted_hero_config_v1";
+const KEY = "saintted_hero_config_v2";
 const MAX_AGE_MS = 1000 * 60 * 30;
 
 type Cached = {
@@ -17,7 +17,7 @@ function focusFrom(config: ReleaseCountdown | null) {
   };
 }
 
-export function imageUrlFromCountdown(config: ReleaseCountdown | null, fallback: string): string {
+export function imageUrlFromCountdown(config: ReleaseCountdown | null, fallback = ""): string {
   const uploaded = (config?.header_image_file_url || "").trim();
   const custom = (config?.header_image_url || "").trim();
   return uploaded || custom || fallback;
@@ -53,7 +53,7 @@ export function readHeroCache():
   }
 }
 
-export function writeHeroCache(config: ReleaseCountdown | null, fallback: string): void {
+export function writeHeroCache(config: ReleaseCountdown | null, fallback = ""): void {
   try {
     const imageUrl = imageUrlFromCountdown(config, fallback);
     const videoUrl = videoUrlFromCountdown(config);

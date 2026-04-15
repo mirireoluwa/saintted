@@ -98,9 +98,9 @@
 }
 
 .release-countdown-bar__link:hover {
-  color: var(--accent-green);
-  border-color: rgba(0, 255, 119, 0.45);
-  background: rgba(0, 255, 119, 0.08);
+  color: var(--hover-green-text, var(--accent-green));
+  border-color: var(--hover-green-border, rgba(0, 255, 119, 0.45));
+  background: var(--hover-green-bg, rgba(0, 255, 119, 0.08));
 }
 
 .release-countdown-bar__link:focus-visible {

@@ -193,9 +193,9 @@
 }
 
 .unreleased-fs__cta:hover {
-  color: var(--accent-green);
-  border-color: rgba(0, 255, 119, 0.55);
-  background: rgba(0, 255, 119, 0.12);
+  color: var(--hover-green-text, var(--accent-green));
+  border-color: var(--hover-green-border, rgba(0, 255, 119, 0.55));
+  background: var(--hover-green-bg, rgba(0, 255, 119, 0.12));
   transform: translateY(-2px);
   text-decoration: none;
 }
