@@ -1,0 +1,11 @@
+# Railway config-as-code. In the service settings, set Root Directory to `backend`
+# so this file is used. See https://docs.railway.com/guides/config-as-code
+
+[build]
+buildCommand = "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+
+[deploy]
+preDeployCommand = ["python manage.py migrate --noinput"]
+startCommand = "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+healthcheckPath = "/api/tracks/"
+healthcheckTimeout = 100

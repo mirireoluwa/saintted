@@ -74,12 +74,13 @@ The frontend uses the same layout and copy as the Framer site. Tracks are loaded
 
 ```
 saintted/
-├── render.yaml              # Render Blueprint (Postgres + Django web service)
 ├── backend/                 # Django API
+│   ├── railway.toml         # Railway build / migrate / start (config-as-code)
+│   ├── Procfile             # release + web (Heroku-style; optional on Railway)
 │   ├── config/              # Project settings & URLs
 │   ├── api/                 # Tracks app (model, serializers, views)
 │   ├── manage.py
-│   ├── runtime.txt          # Python version on Render
+│   ├── runtime.txt          # pinned Python version (some hosts read this)
 │   └── requirements.txt
 ├── frontend/                # React + TypeScript (Vite)
 │   ├── src/
@@ -96,45 +97,48 @@ saintted/
 └── README.md
 ```
 
-## Deploy: Render (backend) + Vercel (frontend)
+## Deploy: [Railway](https://railway.app) (Django API) + [Neon](https://neon.tech) (Postgres) + [Vercel](https://vercel.com) (frontend)
 
-Deploy the **API first** so you know the URL for `VITE_API_URL` and CORS.
+Deploy the **API first** so you have a stable URL for **`VITE_API_URL`** and for **`CORS_ORIGINS`** / **`CSRF_TRUSTED_ORIGINS`**.
 
-### A. Backend on [Render](https://render.com)
+### A. Postgres on [Neon](https://neon.tech)
 
-**Option 1 — Blueprint (repo root `render.yaml`)**  
-1. Render → **New +** → **Blueprint** → connect **`mirireoluwa/saintted`**.  
-2. Apply the blueprint (creates **PostgreSQL** `saintted-db` + **Web Service** `saintted-api` with root **`backend`**).  
-3. In the web service → **Environment**, set (comma-separated lists, **no spaces** after commas):
-   - **`CORS_ORIGINS`** — every origin that loads the SPA in a browser, e.g. `https://your-app.vercel.app,https://saintted.com,https://www.saintted.com`
-   - **`CSRF_TRUSTED_ORIGINS`** — same values as `CORS_ORIGINS` (needed for Django admin + session CSRF over HTTPS)
-   - Optionally **`DJANGO_ALLOWED_HOSTS`** — your API hostname(s), e.g. `saintted-api.onrender.com` (Render `*.onrender.com` is already allowed when `DJANGO_DEBUG=0`)
+Create a project, create a database, and copy **`DATABASE_URL`**. Prefer Neon’s **direct** (port **`5432`**) URI for migrations unless you know you need the pooler.
 
-**Option 2 — Manual Web Service**  
-1. **New +** → **PostgreSQL** (note the **Internal/External Database URL**).  
-2. **New +** → **Web Service** → same repo, **Root Directory** = `backend`, **Runtime** = Python.  
-3. **Build command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput`  
-4. **Start command:** `python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`  
-5. **Environment variables:** `DJANGO_DEBUG=0`, generate **`DJANGO_SECRET_KEY`**, paste **`DATABASE_URL`** from Postgres, plus `CORS_ORIGINS` and `CSRF_TRUSTED_ORIGINS` as above.
+### B. API on [Railway](https://railway.app)
 
-**After the API is live**
+This repo ships **`backend/railway.toml`** (build, **pre-deploy** `migrate`, **start** Gunicorn, health check on **`/api/tracks/`**). Railway defaults to **Railpack** for Python; **`backend/runtime.txt`** pins **Python 3.12.8**.
 
-- API base for the frontend: **`https://<your-service>.onrender.com/api`** (no trailing slash after `api`).  
-- **Shell** (Render dashboard → service → **Shell**): `python manage.py createsuperuser` so you can use Django admin and the SPA admin token login.
+1. [Railway](https://railway.app) → **New project** → **Deploy from GitHub repo** → select this repository.  
+2. Open the new **web service** → **Settings** → **Root Directory** → set to **`backend`** (required so Railway finds **`railway.toml`**, **`manage.py`**, and **`requirements.txt`**).  
+3. **Variables** → add (comma-separated lists have **no spaces** after commas):
+   - **`DJANGO_DEBUG`** = `0`
+   - **`DJANGO_SECRET_KEY`** — long random string (Railway can generate one)
+   - **`DATABASE_URL`** — paste Neon’s connection string (must work from the public internet; include **`sslmode=require`** if Neon shows it)
+   - **`CORS_ORIGINS`** — every HTTPS origin that loads the SPA, e.g. `https://your-app.vercel.app,https://saintted.com,https://www.saintted.com`
+   - **`CSRF_TRUSTED_ORIGINS`** — same values as **`CORS_ORIGINS`**
+   - Optionally **`DJANGO_ALLOWED_HOSTS`** — only if you use a **custom API domain**; Railway’s **`*.up.railway.app`** hostnames are already allowed when **`DJANGO_DEBUG=0`**
+4. **Deploy** (or push to the connected branch). Watch logs: **pre-deploy** should run **`migrate`**, then Gunicorn should bind to **`$PORT`**.  
+5. **Networking** → generate a public **`.up.railway.app`** URL (or attach your own domain). Your frontend base is **`https://<that-host>/api`** (**no** trailing slash after **`api`**).  
+6. **Shell** (or one-off command): **`python manage.py createsuperuser`** for Django admin and SPA admin login.
 
-Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS), **PostgreSQL** via **`DATABASE_URL`**. Local dev still uses SQLite when `DATABASE_URL` is unset.
+**Optional:** If the service root is **not** `backend`, set **Settings → Config-as-code path** to **`/backend/railway.toml`** so Railway still loads this file.
 
-### B. Frontend on [Vercel](https://vercel.com)
+**Other hosts:** **`backend/Procfile`** defines **`release`** (migrate) and **`web`** (Gunicorn) for Heroku-style platforms. Values in **`railway.toml`** override dashboard defaults on Railway.
+
+Production stack: **Gunicorn**, **WhiteNoise**, **PostgreSQL** via **`DATABASE_URL`**. Local dev uses SQLite when **`DATABASE_URL`** is unset.
+
+### C. Frontend on [Vercel](https://vercel.com)
 
 1. **Add New…** → **Project** → import the same repo.  
 2. **Root Directory:** `frontend`. Framework: **Vite** (build `npm run build`, output `dist`).  
 3. **Environment Variables** (Production — needed at **build** time):
-   - **`VITE_API_URL`** = `https://<your-service>.onrender.com/api` (same URL as above; **no trailing slash**)
+   - **`VITE_API_URL`** = `https://<your-api-host>/api` (**no trailing slash**)
    - **`VITE_SITE_URL`** = your public site origin, e.g. `https://saintted.com` (Open Graph / canonical URLs, sitemap, and `react-helmet-async` fallbacks)
    - **`VITE_SENTRY_DSN`** (optional) — enables browser error reporting and tracing via Sentry when set
 
 4. Deploy, then add your domain under **Settings → Domains**.  
-5. If CORS errors appear, add every deployed frontend origin (including `https://xxx.vercel.app`) to **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** on Render and redeploy the API (or clear cache).
+5. If CORS errors appear, add every deployed frontend origin (including `https://xxx.vercel.app`) to **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** on the **API** service and redeploy.
 
 `frontend/vercel.json` adds SPA **rewrites** so `/music/:slug` and `/admin` work on refresh.
 
@@ -142,34 +146,33 @@ Production stack: **Gunicorn**, **WhiteNoise** for static (Django admin CSS/JS),
 
 **If `admin.saintted.com` opens the public homepage (as `saintted.com`):** The browser is being **redirected to your primary domain** before the SPA runs, so the app never sees the `admin` hostname. On Vercel → your project → **Settings → Domains**, add **`admin.saintted.com`** as a domain on the **same** project as the main site. Ensure it is **not** configured to “redirect” to the apex domain (each hostname should serve the deployment directly). DNS should point the `admin` host at Vercel (e.g. **CNAME** to `cname.vercel-dns.com` as shown in the dashboard). Optional: set **`VITE_ADMIN_HOSTS`** in the Vercel env to a comma-separated list of extra hostnames that should use admin-only routing (e.g. a preview URL).
 
-### Render + database notes
+### Host + database notes
 
-- If blueprint database creation isn’t available on your plan, create **PostgreSQL** manually and set **`DATABASE_URL`** on the web service.  
-- Do not rely on SQLite on Render; the filesystem is ephemeral.
+- Do not rely on SQLite in production; most PaaS disks are ephemeral.  
+- Prefer **Neon** (or another managed Postgres) for **`DATABASE_URL`** so the database is not tied to your web host’s lifecycle.
 
 ### Troubleshooting: “Track not found” or admin “Login failed”
 
 Both the public site and **`admin.saintted.com`** call the same API. These issues are usually one of the following:
 
 1. **`VITE_API_URL` is wrong (most common)**  
-   It must be exactly:  
-   `https://<your-render-service>.onrender.com/api`  
+   It must look like **`https://<your-api-host>/api`**.  
    - Include the **`/api`** segment (Django mounts the REST API there).  
    - **No trailing slash** after `api`.  
    - Fix it in **Vercel → Project → Settings → Environment Variables**, then **Redeploy** (Vite bakes this in at build time).
 
 2. **Open the API in the browser**  
-   Visit `https://<your-service>.onrender.com/api/tracks/` — you should see JSON. If you get **404**, the path is wrong (often missing `/api`). If the list is **`[]`**, migrations ran but no tracks — add tracks in Django admin or the SPA admin (after login works).
+   Visit **`https://<your-api-host>/api/tracks/`** — you should see JSON. If you get **404**, the path is wrong (often missing `/api`). If the list is **`[]`**, migrations ran but no tracks — add tracks in Django admin or the SPA admin (after login works).
 
 3. **CORS / CSRF**  
-   On Render, **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** must include **`https://saintted.com`**, **`https://admin.saintted.com`**, and any **`https://*.vercel.app`** URL you use. Redeploy the API after saving.
+   On the API host, **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** must include **`https://saintted.com`**, **`https://admin.saintted.com`**, and any **`https://*.vercel.app`** URL you use. Redeploy the API after saving.
 
 4. **Login**  
-   Create a user on **production**: Render → Web Service → **Shell** → `python manage.py createsuperuser`. Use that username/password on **`admin.saintted.com`**.  
+   Create a user on **production** via the host shell: **`python manage.py createsuperuser`**. Use that username/password on **`admin.saintted.com`**.  
    If login shows **`HTTP 404`**, the token URL is wrong → recheck **`VITE_API_URL`**.
 
 5. **Migrations**  
-   In Render **Logs**, confirm `migrate` runs and finishes. If the DB was recreated, re-run **`createsuperuser`** and re-import or re-add tracks.
+   In the API **deploy logs**, confirm **`migrate`** runs and finishes. If the database was recreated, re-run **`createsuperuser`** and re-import or re-add tracks.
 
 On the live site, open **DevTools → Console**: if **`VITE_API_URL`** doesn’t end with **`/api`**, the app logs a warning.
 
@@ -180,7 +183,7 @@ On the live site, open **DevTools → Console**: if **`VITE_API_URL`** doesn’t
 - **`robots.txt`:** Served from **`frontend/public/robots.txt`**. Update the **`Sitemap:`** line if your production domain is not `saintted.com`.
 - **Draft tracks:** The **`Track.is_published`** flag (default **true**) hides tracks from **anonymous** `GET /api/tracks/` and `GET /api/tracks/<slug>/`. Authenticated admin/API token requests still see all tracks. Run **`python manage.py migrate`** after pulling to apply migration **`0014_track_is_published`**.
 - **Hero prefetch:** `index.html` includes a **`link rel="prefetch"`** for **`/release-countdown/`** when **`VITE_API_URL`** is set at build time; the client also starts that fetch early and caches hero settings in **`sessionStorage`** for faster repeat visits.
-- **Operations (recommended outside the repo):** Use an uptime monitor on your Render API URL; enable **automated Postgres backups** in your host dashboard; tune **Sentry** alerts in the Sentry project.
+- **Operations (recommended outside the repo):** Use an uptime monitor on your public API URL; enable **automated Postgres backups** (e.g. in Neon); tune **Sentry** alerts in the Sentry project.
 
 ## Fonts and styling
 

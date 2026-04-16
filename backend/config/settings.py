@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,9 +28,14 @@ if _extra_hosts:
             ALLOWED_HOSTS + [h.strip() for h in _extra_hosts.split(",") if h.strip()]
         )
     )
-# Render and similar hosts (*.onrender.com) when deploying without custom domain yet
+# Default PaaS hostnames when deploying without a custom API domain yet (DEBUG=0).
 if not DEBUG:
-    ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS + [".onrender.com"]))
+    _paas_suffixes = (
+        ".up.railway.app",
+        ".railway.app",
+        ".fly.dev",
+    )
+    ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS + list(_paas_suffixes)))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -76,11 +82,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Render / production: set DATABASE_URL (PostgreSQL). Local: SQLite if unset.
+# Production: set DATABASE_URL (PostgreSQL: Neon, Supabase, managed RDS, …). Local: SQLite if unset.
 _sqlite_url = "sqlite:///" + str(BASE_DIR / "db.sqlite3").replace("\\", "/")
+_database_url_raw = (os.environ.get("DATABASE_URL") or "").strip()
+if not _database_url_raw:
+    _database_url_effective = _sqlite_url
+else:
+    _lower = _database_url_raw.lower()
+    if not (_lower.startswith("postgres://") or _lower.startswith("postgresql://")):
+        raise ImproperlyConfigured(
+            "DATABASE_URL must start with postgresql:// or postgres://. "
+            "Neon: Project → Connect → copy the full URI (not a fragment after ://). "
+            "Check backend/.env: no line break inside the URL, no leading spaces, "
+            "and no quotes that trim the scheme."
+        )
+    _database_url_effective = _database_url_raw
+
 DATABASES = {
-    "default": dj_database_url.config(
-        default=_sqlite_url,
+    "default": dj_database_url.parse(
+        _database_url_effective,
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -145,7 +165,7 @@ else:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# HTTPS behind Render / Vercel proxies
+# HTTPS behind reverse proxies (Vercel, Railway, Fly, …)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True

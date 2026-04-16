@@ -42,7 +42,7 @@ export async function login(username: string, password: string): Promise<string>
     const err = await res.json().catch(() => ({}));
     const msg = (err as { non_field_errors?: string[] }).non_field_errors?.[0];
     throw new Error(
-      msg || `Login failed (HTTP ${res.status}). Check VITE_API_URL ends with /api and matches your Render URL.`,
+      msg || `Login failed (HTTP ${res.status}). Check VITE_API_URL ends with /api and matches your deployed API base URL.`,
     );
   }
   const data = (await res.json()) as { token: string };
