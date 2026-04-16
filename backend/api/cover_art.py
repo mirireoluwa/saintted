@@ -60,6 +60,8 @@ def fetch_itunes_artwork_url(title: str, artist: str | None = None) -> str:
         logger.debug("iTunes cover lookup failed: %s", e)
         return ""
 
+    if not isinstance(payload, dict):
+        return ""
     results = payload.get("results") or []
     if not results:
         return ""
@@ -129,6 +131,8 @@ def _spotify_client_token() -> str:
         logger.debug("Spotify token failed: %s", e)
         return ""
 
+    if not isinstance(data, dict):
+        return ""
     return (data.get("access_token") or "").strip()
 
 
@@ -153,6 +157,8 @@ def fetch_spotify_artwork_url(title: str, artist: str | None = None) -> str:
         logger.debug("Spotify cover lookup failed: %s", e)
         return ""
 
+    if not isinstance(payload, dict):
+        return ""
     items = (payload.get("tracks") or {}).get("items") or []
     title_norm = title.strip().lower()
     for item in items:
@@ -186,24 +192,28 @@ def resolve_external_cover_url(track) -> str:
     """
     Return HTTPS artwork URL or empty string. Uses cache per track id when available.
     """
-    raw = (getattr(track, "art_url", None) or "").strip()
-    if raw:
-        return raw
+    try:
+        raw = (getattr(track, "art_url", None) or "").strip()
+        if raw:
+            return raw
 
-    cache_key = _cache_key_for_track(track.pk)
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
+        cache_key = _cache_key_for_track(track.pk)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached if isinstance(cached, str) else ""
 
-    title = getattr(track, "title", "") or ""
-    if not title.strip():
+        title = getattr(track, "title", "") or ""
+        if not title.strip():
+            return ""
+
+        artist = cover_art_artist_name()
+        url = fetch_itunes_artwork_url(title, artist)
+        if not url:
+            url = fetch_spotify_artwork_url(title, artist)
+
+        if url:
+            cache.set(cache_key, url, CACHE_TTL_SUCCESS)
+        return url or ""
+    except Exception as e:
+        logger.debug("resolve_external_cover_url failed for track pk=%s: %s", getattr(track, "pk", "?"), e)
         return ""
-
-    artist = cover_art_artist_name()
-    url = fetch_itunes_artwork_url(title, artist)
-    if not url:
-        url = fetch_spotify_artwork_url(title, artist)
-
-    if url:
-        cache.set(cache_key, url, CACHE_TTL_SUCCESS)
-    return url or ""

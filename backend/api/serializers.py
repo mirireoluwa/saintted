@@ -1,9 +1,13 @@
+import logging
+
 from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.fields import empty
 
 from .cover_art import resolve_external_cover_url
 from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
+
+logger = logging.getLogger(__name__)
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -23,15 +27,24 @@ class TrackSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get("request")
-        if instance.art_file:
-            url = instance.art_file.url
-            data["art_url"] = request.build_absolute_uri(url) if request else url
-            return data
-        if (data.get("art_url") or "").strip():
-            return data
-        external = resolve_external_cover_url(instance)
-        if external:
-            data["art_url"] = external
+        try:
+            if instance.art_file:
+                url = instance.art_file.url
+                if url.startswith("http://") or url.startswith("https://"):
+                    data["art_url"] = url
+                elif request:
+                    data["art_url"] = request.build_absolute_uri(url)
+                else:
+                    data["art_url"] = url
+                return data
+            if (data.get("art_url") or "").strip():
+                return data
+            external = resolve_external_cover_url(instance)
+            if external:
+                data["art_url"] = external
+        except Exception as e:
+            # One bad row (storage URL, iTunes/Spotify payload, etc.) must not 500 the whole list.
+            logger.warning("TrackSerializer.to_representation pk=%s: %s", instance.pk, e)
         return data
 
     def validate(self, attrs):
