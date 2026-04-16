@@ -125,7 +125,7 @@ This repo ships **`backend/Dockerfile`** + **`backend/railway.toml`**: the image
 
 **Optional:** If the service root is **not** `backend`, set **Settings → Config-as-code path** to **`/backend/railway.toml`** so Railway still loads this file.
 
-**Other hosts:** **`backend/Procfile`** defines **`release`** (collectstatic + migrate) and **`web`** (Gunicorn) for Heroku-style platforms. Values in **`railway.toml`** override dashboard defaults on Railway.
+**Other hosts:** **`backend/Procfile`** defines only **`web`** (Gunicorn). There is **no** `release:` line: Railway can run Procfile `release` **outside** the Docker image, which breaks with **`python: command not found`**. **`collectstatic`** is in the **Dockerfile**; **`migrate`** via **`railway ssh`** (see above). Heroku users can use a [release phase](https://devcenter.heroku.com/articles/procfile#the-release-process) separately if needed.
 
 Production stack: **Gunicorn**, **WhiteNoise**, **PostgreSQL** via **`DATABASE_URL`**. Local dev uses SQLite when **`DATABASE_URL`** is unset.
 
