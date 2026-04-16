@@ -1,10 +1,11 @@
-# Railway config-as-code. Set the service Root Directory to `backend`.
-# Do NOT set a custom [build].buildCommand here: it replaces Railpack's install step,
-# so `pip` is never on PATH. Railpack auto-installs from requirements.txt when it
-# sees manage.py + requirements.txt in this directory.
+# Railway: use Docker so builds do not depend on Railpack + a dashboard "Build Command".
+# In the service UI, clear any custom Build Command (empty = use this file + Dockerfile).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-preDeployCommand = ["python manage.py collectstatic --noinput && python manage.py migrate --noinput"]
-startCommand = "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+preDeployCommand = ["python manage.py migrate --noinput"]
 healthcheckPath = "/api/tracks/"
 healthcheckTimeout = 100
