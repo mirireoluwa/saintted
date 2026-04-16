@@ -15,5 +15,7 @@ COPY . .
 RUN DJANGO_SECRET_KEY=collectstatic-only python manage.py collectstatic --noinput
 
 EXPOSE 8000
-# Run migrate inside this image (Railway pre-deploy can run without the image's PATH / python).
-CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+# Do not run migrate here: Railway's HTTP health check hits the port before migrate finishes,
+# so the deploy is marked unhealthy ("Application failed to respond"). Run migrate once from
+# Railway → Shell (or a one-off) after deploy, and again whenever you change models.
+CMD ["sh", "-c", "exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120"]
