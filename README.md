@@ -75,7 +75,7 @@ The frontend uses the same layout and copy as the Framer site. Tracks are loaded
 ```
 saintted/
 ├── backend/                 # Django API
-│   ├── railway.toml         # Railway build / migrate / start (config-as-code)
+│   ├── railway.toml         # Railway pre-deploy + start (Railpack installs deps)
 │   ├── Procfile             # release + web (Heroku-style; optional on Railway)
 │   ├── config/              # Project settings & URLs
 │   ├── api/                 # Tracks app (model, serializers, views)
@@ -107,7 +107,7 @@ Create a project, create a database, and copy **`DATABASE_URL`**. Prefer Neon’
 
 ### B. API on [Railway](https://railway.app)
 
-This repo ships **`backend/railway.toml`** (build, **pre-deploy** `migrate`, **start** Gunicorn, health check on **`/api/tracks/`**). Railway defaults to **Railpack** for Python; **`backend/runtime.txt`** pins **Python 3.12.8**.
+This repo ships **`backend/railway.toml`** (**pre-deploy** `collectstatic` + `migrate`, **start** Gunicorn, health check on **`/api/tracks/`**). With **Root Directory** `backend`, **Railpack** installs **`requirements.txt`** automatically—do not override the build with a raw `pip` command (that skips Railpack’s Python setup and causes `pip: not found`). **`backend/runtime.txt`** pins **Python 3.12.8**.
 
 1. [Railway](https://railway.app) → **New project** → **Deploy from GitHub repo** → select this repository.  
 2. Open the new **web service** → **Settings** → **Root Directory** → set to **`backend`** (required so Railway finds **`railway.toml`**, **`manage.py`**, and **`requirements.txt`**).  
@@ -124,7 +124,7 @@ This repo ships **`backend/railway.toml`** (build, **pre-deploy** `migrate`, **s
 
 **Optional:** If the service root is **not** `backend`, set **Settings → Config-as-code path** to **`/backend/railway.toml`** so Railway still loads this file.
 
-**Other hosts:** **`backend/Procfile`** defines **`release`** (migrate) and **`web`** (Gunicorn) for Heroku-style platforms. Values in **`railway.toml`** override dashboard defaults on Railway.
+**Other hosts:** **`backend/Procfile`** defines **`release`** (collectstatic + migrate) and **`web`** (Gunicorn) for Heroku-style platforms. Values in **`railway.toml`** override dashboard defaults on Railway.
 
 Production stack: **Gunicorn**, **WhiteNoise**, **PostgreSQL** via **`DATABASE_URL`**. Local dev uses SQLite when **`DATABASE_URL`** is unset.
 
