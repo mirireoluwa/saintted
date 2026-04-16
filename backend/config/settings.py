@@ -3,6 +3,7 @@ Django settings for saintted backend.
 """
 import logging
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -89,12 +90,14 @@ _database_url_raw = (os.environ.get("DATABASE_URL") or "").strip()
 if not _database_url_raw:
     _database_url_effective = _sqlite_url
     if not DEBUG:
-        logging.getLogger(__name__).warning(
-            "DATABASE_URL is unset: using SQLite at %s. On Railway, set DATABASE_URL on the web "
-            "service (reference your Postgres plugin) or /api/* will 500 after deploy. "
-            "Check GET /api/diagnostic/db/ on the API host.",
-            _sqlite_url,
+        # Railway captures stderr; logging may be quiet until LOGGING is configured.
+        msg = (
+            "WARNING: DATABASE_URL is unset — using SQLite. "
+            "Set DATABASE_URL on this **web** service (copy or reference from your Postgres service) "
+            "then redeploy; open GET /api/diagnostic/db/ to verify."
         )
+        print(msg, file=sys.stderr, flush=True)
+        logging.getLogger(__name__).warning("%s SQLite path: %s", msg, _sqlite_url)
 else:
     _lower = _database_url_raw.lower()
     if not (_lower.startswith("postgres://") or _lower.startswith("postgresql://")):
