@@ -1,3 +1,5 @@
+from django.db import connection
+from django.http import JsonResponse
 from rest_framework import generics, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
@@ -10,6 +12,24 @@ from .serializers import (
     TrackDetailSerializer,
     TrackSerializer,
 )
+
+
+def api_db_diagnostic(_request):
+    """
+    Plain Django view (not DRF) — GET /api/diagnostic/db/
+    Helps when every DRF list returns 500: usually DB URL / missing migrations.
+    """
+    out: dict = {"select1": False, "track_table": False}
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT 1")
+        out["select1"] = True
+        out["track_count"] = Track.objects.count()
+        out["track_table"] = True
+    except Exception as e:
+        out["error"] = str(e)
+        out["error_type"] = type(e).__name__
+    return JsonResponse(out)
 
 
 class TrackViewSet(viewsets.ModelViewSet):
