@@ -170,6 +170,9 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # DB-backed sessions require `django_session` (migrate). Until then, every request 500s.
+    # Signed cookies avoid that for healthchecks and anonymous GET / while Postgres is empty.
+    SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 def _split_csv_origins(raw: str) -> list[str]:
     """Comma-separated https origins; strips whitespace, quotes, and invisible chars from env paste."""
