@@ -3,6 +3,7 @@ import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { getApiBase } from "../utils/apiBase";
+import { fetchLive } from "./fetchLive";
 
 const API_BASE = getApiBase();
 
@@ -33,7 +34,7 @@ function authHeaders(token: string): HeadersInit {
 }
 
 export async function login(username: string, password: string): Promise<string> {
-  const res = await fetch(`${API_BASE}/auth/token/`, {
+  const res = await fetchLive(`${API_BASE}/auth/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -53,7 +54,7 @@ export async function resetAdminPassword(
   username: string,
   resetSecret?: string
 ): Promise<{ username: string; new_password: string; detail: string }> {
-  const res = await fetch(`${API_BASE}/auth/reset-password/`, {
+  const res = await fetchLive(`${API_BASE}/auth/reset-password/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -70,8 +71,9 @@ export async function resetAdminPassword(
   return res.json();
 }
 
-export async function fetchTracksAuth(token: string): Promise<Track[]> {
-  const res = await fetch(`${API_BASE}/tracks/`, {
+export async function fetchTracksAuth(token: string, req?: RequestInit): Promise<Track[]> {
+  const res = await fetchLive(`${API_BASE}/tracks/`, {
+    ...req,
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to load tracks");
@@ -79,7 +81,7 @@ export async function fetchTracksAuth(token: string): Promise<Track[]> {
 }
 
 export async function createTrack(token: string, body: Partial<Track>): Promise<Track> {
-  const res = await fetch(`${API_BASE}/tracks/`, {
+  const res = await fetchLive(`${API_BASE}/tracks/`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(body),
@@ -96,7 +98,7 @@ export async function updateTrack(
   slug: string,
   body: Partial<Track>
 ): Promise<Track> {
-  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
     method: "PATCH",
     headers: authHeaders(token),
     body: JSON.stringify(body),
@@ -112,7 +114,7 @@ export async function updateTrack(
 export async function patchTrackCoverArt(token: string, slug: string, file: File): Promise<Track> {
   const body = new FormData();
   body.set("art_file", file);
-  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
     method: "PATCH",
     headers: { Authorization: `Token ${token}` },
     body,
@@ -127,7 +129,7 @@ export async function patchTrackCoverArt(token: string, slug: string, file: File
 export async function clearTrackCoverArt(token: string, slug: string): Promise<Track> {
   const body = new FormData();
   body.set("clear_art_file", "true");
-  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
     method: "PATCH",
     headers: { Authorization: `Token ${token}` },
     body,
@@ -140,15 +142,19 @@ export async function clearTrackCoverArt(token: string, slug: string): Promise<T
 }
 
 export async function deleteTrack(token: string, slug: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
     method: "DELETE",
     headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error("Delete failed");
 }
 
-export async function fetchFeaturedVideosAuth(token: string): Promise<FeaturedVideo[]> {
-  const res = await fetch(`${API_BASE}/featured-videos/`, {
+export async function fetchFeaturedVideosAuth(
+  token: string,
+  req?: RequestInit,
+): Promise<FeaturedVideo[]> {
+  const res = await fetchLive(`${API_BASE}/featured-videos/`, {
+    ...req,
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to load featured videos");
@@ -159,7 +165,7 @@ export async function createFeaturedVideo(
   token: string,
   body: Pick<FeaturedVideo, "title" | "youtube_id" | "order">
 ): Promise<FeaturedVideo> {
-  const res = await fetch(`${API_BASE}/featured-videos/`, {
+  const res = await fetchLive(`${API_BASE}/featured-videos/`, {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(body),
@@ -176,7 +182,7 @@ export async function updateFeaturedVideo(
   id: number,
   body: Partial<Pick<FeaturedVideo, "title" | "youtube_id" | "order">>
 ): Promise<FeaturedVideo> {
-  const res = await fetch(`${API_BASE}/featured-videos/${id}/`, {
+  const res = await fetchLive(`${API_BASE}/featured-videos/${id}/`, {
     method: "PATCH",
     headers: authHeaders(token),
     body: JSON.stringify(body),
@@ -189,23 +195,31 @@ export async function updateFeaturedVideo(
 }
 
 export async function deleteFeaturedVideo(token: string, id: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/featured-videos/${id}/`, {
+  const res = await fetchLive(`${API_BASE}/featured-videos/${id}/`, {
     method: "DELETE",
     headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error("Delete failed");
 }
 
-export async function fetchReleaseCountdownAuth(token: string): Promise<ReleaseCountdown> {
-  const res = await fetch(`${API_BASE}/release-countdown/`, {
+export async function fetchReleaseCountdownAuth(
+  token: string,
+  req?: RequestInit,
+): Promise<ReleaseCountdown> {
+  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
+    ...req,
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to load release countdown");
   return res.json();
 }
 
-export async function fetchGalleryImagesAuth(token: string): Promise<GalleryImage[]> {
-  const res = await fetch(`${API_BASE}/gallery-images/`, {
+export async function fetchGalleryImagesAuth(
+  token: string,
+  req?: RequestInit,
+): Promise<GalleryImage[]> {
+  const res = await fetchLive(`${API_BASE}/gallery-images/`, {
+    ...req,
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to load gallery images");
@@ -216,7 +230,7 @@ export async function updateReleaseCountdown(
   token: string,
   body: Partial<Pick<ReleaseCountdown, "enabled" | "song_title" | "release_at" | "presave_url">>
 ): Promise<ReleaseCountdown> {
-  const res = await fetch(`${API_BASE}/release-countdown/`, {
+  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
     method: "PATCH",
     headers: authHeaders(token),
     body: JSON.stringify(body),
@@ -271,7 +285,7 @@ export async function updateHeroHeader(
     body.set("clear_header_video_file", "true");
   }
 
-  const res = await fetch(`${API_BASE}/release-countdown/`, {
+  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
     method: "PATCH",
     headers: { Authorization: `Token ${token}` },
     body,
@@ -291,7 +305,7 @@ export async function createGalleryImage(
   body.set("image", payload.image);
   body.set("caption", payload.caption ?? "");
   body.set("order", String(payload.order ?? 0));
-  const res = await fetch(`${API_BASE}/gallery-images/`, {
+  const res = await fetchLive(`${API_BASE}/gallery-images/`, {
     method: "POST",
     headers: { Authorization: `Token ${token}` },
     body,
@@ -312,7 +326,7 @@ export async function updateGalleryImage(
   if (payload.image) body.set("image", payload.image);
   if (payload.caption !== undefined) body.set("caption", payload.caption);
   if (payload.order !== undefined) body.set("order", String(payload.order));
-  const res = await fetch(`${API_BASE}/gallery-images/${id}/`, {
+  const res = await fetchLive(`${API_BASE}/gallery-images/${id}/`, {
     method: "PATCH",
     headers: { Authorization: `Token ${token}` },
     body,
@@ -325,7 +339,7 @@ export async function updateGalleryImage(
 }
 
 export async function deleteGalleryImage(token: string, id: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/gallery-images/${id}/`, {
+  const res = await fetchLive(`${API_BASE}/gallery-images/${id}/`, {
     method: "DELETE",
     headers: { Authorization: `Token ${token}` },
   });

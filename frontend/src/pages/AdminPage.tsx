@@ -29,6 +29,7 @@ import {
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
+import { getApiBase } from "../utils/apiBase";
 import "./AdminPage.css";
 
 function AdminSubdomainCallout() {
@@ -225,17 +226,19 @@ export function AdminPage() {
     };
   }, [heroImageFile, heroImagePreviewUrl, heroVideoFile, heroVideoPreviewUrl]);
 
-  const loadData = useCallback(async (t: string) => {
+  const loadData = useCallback(async (t: string, signal?: AbortSignal) => {
     setLoading(true);
     setMessage(null);
     const [tr, fv, cd, gi] = await Promise.allSettled([
-      fetchTracksAuth(t),
-      fetchFeaturedVideosAuth(t),
-      fetchReleaseCountdownAuth(t),
-      fetchGalleryImagesAuth(t),
+      fetchTracksAuth(t, { signal }),
+      fetchFeaturedVideosAuth(t, { signal }),
+      fetchReleaseCountdownAuth(t, { signal }),
+      fetchGalleryImagesAuth(t, { signal }),
     ]);
 
     try {
+      if (signal?.aborted) return;
+
       if (tr.status === "fulfilled") setTracks(tr.value);
       else setTracks([]);
 
@@ -258,12 +261,28 @@ export function AdminPage() {
       setClearHeroImageUpload(false);
       setClearHeroVideoUpload(false);
 
-      const failures = [tr, fv, cd, gi].filter((x) => x.status === "rejected");
+      const isAbortRejection = (x: PromiseSettledResult<unknown>) => {
+        if (x.status !== "rejected") return false;
+        const r = x.reason;
+        return (
+          (typeof r === "object" &&
+            r !== null &&
+            "name" in r &&
+            (r as { name: string }).name === "AbortError") ||
+          String(r).includes("AbortError")
+        );
+      };
+      const failures = [tr, fv, cd, gi].filter(
+        (x) => x.status === "rejected" && !isAbortRejection(x),
+      );
       if (failures.length > 0) {
         const firstErr = String((failures[0] as PromiseRejectedResult).reason);
+        const apiBase = getApiBase();
+        const origin =
+          typeof window !== "undefined" ? window.location.origin : "this origin";
         setMessage({
           type: "error",
-          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr}`,
+          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. “Failed to fetch” usually means CORS or the API URL is unreachable — check DevTools → Network. On Railway, include ${origin} in CORS_ORIGINS and CSRF_TRUSTED_ORIGINS (production also merges CSRF into CORS). Redeploy the API after env changes; if you change VITE_API_URL on Vercel, redeploy the frontend.`,
         });
       }
     } finally {
@@ -272,7 +291,10 @@ export function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (token) void loadData(token);
+    if (!token) return;
+    const ac = new AbortController();
+    void loadData(token, ac.signal);
+    return () => ac.abort();
   }, [token, loadData]);
 
   async function handleLogin(e: React.FormEvent) {

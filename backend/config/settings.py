@@ -172,7 +172,8 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
 
 def _split_csv_origins(raw: str) -> list[str]:
-    """Comma-separated https origins; strips whitespace and stray quotes from env paste."""
+    """Comma-separated https origins; strips whitespace, quotes, and invisible chars from env paste."""
+    raw = raw.replace("\u200b", "").replace("\u200c", "").replace("\u200d", "").replace("\ufeff", "")
     out: list[str] = []
     for part in raw.split(","):
         o = part.strip().strip('"').strip("'")
@@ -194,6 +195,13 @@ _cors_extra = os.environ.get("CORS_ORIGINS", "").strip()
 if _cors_extra:
     CORS_ALLOWED_ORIGINS = list(
         dict.fromkeys(CORS_ALLOWED_ORIGINS + _split_csv_origins(_cors_extra))
+    )
+if not DEBUG and _csrf_origins:
+    # Union CSRF origins into CORS: teams often list every frontend on CSRF_TRUSTED_ORIGINS but
+    # omit admin (or the whole CORS_ORIGINS var), which yields "TypeError: Failed to fetch" for
+    # all admin SPA requests (Authorization triggers a preflight).
+    CORS_ALLOWED_ORIGINS = list(
+        dict.fromkeys(CORS_ALLOWED_ORIGINS + _split_csv_origins(_csrf_origins))
     )
 
 REST_FRAMEWORK = {

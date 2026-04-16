@@ -76,7 +76,7 @@ The frontend uses the same layout and copy as the Framer site. Tracks are loaded
 saintted/
 ├── backend/                 # Django API
 │   ├── Dockerfile           # Railway / Docker image (explicit pip + collectstatic)
-│   ├── railway.toml         # Railway: Docker builder + pre-deploy migrate + healthcheck
+│   ├── railway.toml         # Railway: Docker builder + healthcheck path (start via Dockerfile CMD)
 │   ├── Procfile             # release + web (Heroku-style; optional on Railway)
 │   ├── config/              # Project settings & URLs
 │   ├── api/                 # Tracks app (model, serializers, views)
@@ -108,7 +108,7 @@ Create a project, create a database, and copy **`DATABASE_URL`**. Prefer Neon’
 
 ### B. API on [Railway](https://railway.app)
 
-This repo ships **`backend/Dockerfile`** + **`backend/railway.toml`**: the image runs **`pip install`** and **`collectstatic`** during the Docker build; the container **CMD** starts **Gunicorn** on **`$PORT`** only. **Do not chain `migrate` into the same CMD** on Railway: the platform’s HTTP health check runs against **`/api/tracks/`** while the process is still migrating, so the service never becomes healthy and the edge shows **“Application failed to respond.”** After each deploy (or when you change models), open **Railway → your service → Shell** and run **`python manage.py migrate --noinput`** once. With **Root Directory** `backend`, Railway uses the **Dockerfile** builder (clear any old **custom Build Command** in the Railway UI). **`backend/runtime.txt`** still documents **Python 3.12.8** for local / other hosts.
+This repo ships **`backend/Dockerfile`** + **`backend/railway.toml`**: the image runs **`pip install`** and **`collectstatic`** during the Docker build; the container **CMD** (in the Dockerfile) starts **Gunicorn** on **`$PORT`** via a shell so the port is always bound correctly. **Do not chain `migrate` into the same CMD** on Railway: the platform’s HTTP health check runs against **`/api/tracks/`** while the process is still migrating, so the service never becomes healthy and the edge shows **“Application failed to respond.”** After each deploy (or when you change models), open **Railway → your service → Shell** and run **`python manage.py migrate --noinput`** once. With **Root Directory** `backend`, Railway uses the **Dockerfile** builder (clear any old **custom Build Command** in the Railway UI). **`backend/runtime.txt`** still documents **Python 3.12.8** for local / other hosts.
 
 1. [Railway](https://railway.app) → **New project** → **Deploy from GitHub repo** → select this repository.  
 2. Open the new **web service** → **Settings** → **Root Directory** → set to **`backend`** (required so Railway finds **`railway.toml`**, **`manage.py`**, and **`requirements.txt`**).  
@@ -154,7 +154,7 @@ That line almost never comes from this repo’s **Dockerfile** (build-time `pyth
 On the **API** service → **Settings**, clear or fix every custom command so the repo drives deploy:
 
 - **Build Command** — empty (use **Dockerfile** only).
-- **Start Command** — empty **or** leave empty and rely on **`backend/railway.toml`** `startCommand` (committed: `gunicorn …`).
+- **Start Command** — empty so the image **Dockerfile `CMD`** runs (Gunicorn with shell-expanded `PORT`). Do not paste a raw `gunicorn … $PORT` here unless it is wrapped in `sh -c` with a real port.
 - **Custom install / release / deploy hooks** — remove any line that starts with `python `.
 
 Redeploy after saving. Migrations: **`railway ssh`** (not `railway shell`) into the **same service that runs Gunicorn** (not Postgres/Redis). Then:
@@ -181,10 +181,13 @@ Both the public site and **`admin.saintted.com`** call the same API. These issue
    - Fix it in **Vercel → Project → Settings → Environment Variables**, then **Redeploy** (Vite bakes this in at build time).
 
 2. **Open the API in the browser**  
-   Visit **`https://<your-api-host>/api/tracks/`** — you should see JSON. If you get **404**, the path is wrong (often missing `/api`). If the list is **`[]`**, migrations ran but no tracks — add tracks in Django admin or the SPA admin (after login works).
+   Visit **`https://<your-api-host>/api/tracks/`** — you should see **JSON** (a list or `[]`).  
+   - If you see a **blank white page** or **HTTP 404** with an **empty body**, that hostname is **not** your Django service. On Railway, each **service** has its own **Networking → Public URL** (e.g. `something.up.railway.app`). A name like `…-api-…` is only a label: the domain might still point at a **static site** or another service. Open the **backend** service (Root Directory **`backend`**, deploy shows **Gunicorn** / **`/api/tracks/`** health checks passing), copy its **public URL** from **Networking**, append **`/api/tracks/`**, and confirm you get JSON — then set **`VITE_API_URL`** on Vercel to **`https://<that-host>/api`**.  
+   - If the path is wrong but Django is running, you usually get a Django HTML 404, not an empty page — **missing `/api`** in the URL is the usual mistake.  
+   - If the list is **`[]`**, migrations ran but no published tracks — add tracks in Django admin or the SPA admin (after login works).
 
 3. **CORS / CSRF**  
-   On the API host, **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** must include **`https://saintted.com`**, **`https://admin.saintted.com`**, and any **`https://*.vercel.app`** URL you use. Redeploy the API after saving.
+   On the API host, **`CORS_ORIGINS`** and **`CSRF_TRUSTED_ORIGINS`** must include **`https://saintted.com`**, **`https://admin.saintted.com`**, and any **`https://*.vercel.app`** URL you use. Redeploy the API after saving. With **`DJANGO_DEBUG=0`**, **`CSRF_TRUSTED_ORIGINS`** is **merged into** **`CORS_ALLOWED_ORIGINS`** so a complete CSRF list still allows the browser admin SPA even if **`CORS_ORIGINS`** forgot the admin host.
 
 4. **Login**  
    Create a user on **production** via the host shell: **`python manage.py createsuperuser`**. Use that username/password on **`admin.saintted.com`**.  
