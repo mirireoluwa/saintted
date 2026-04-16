@@ -108,7 +108,7 @@ Create a project, create a database, and copy **`DATABASE_URL`**. Prefer Neon’
 
 ### B. API on [Railway](https://railway.app)
 
-This repo ships **`backend/Dockerfile`** + **`backend/railway.toml`**: the image runs **`pip install`** and **`collectstatic`** during the Docker build; **pre-deploy** runs **`migrate`**; the container **CMD** starts Gunicorn on **`$PORT`**. With **Root Directory** `backend`, Railway uses the **Dockerfile** builder (avoids **`pip: not found`** if an old **custom Build Command** was set in the Railway UI—**clear that field** so it does not override the image). **`backend/runtime.txt`** still documents **Python 3.12.8** for local / other hosts.
+This repo ships **`backend/Dockerfile`** + **`backend/railway.toml`**: the image runs **`pip install`** and **`collectstatic`** during the Docker build; the container **CMD** runs **`migrate`** then **Gunicorn** on **`$PORT`** (migrations are not in Railway **pre-deploy** for Docker services—pre-deploy can run in an environment where **`python`** is missing). With **Root Directory** `backend`, Railway uses the **Dockerfile** builder (clear any old **custom Build Command** in the Railway UI). **`backend/runtime.txt`** still documents **Python 3.12.8** for local / other hosts.
 
 1. [Railway](https://railway.app) → **New project** → **Deploy from GitHub repo** → select this repository.  
 2. Open the new **web service** → **Settings** → **Root Directory** → set to **`backend`** (required so Railway finds **`railway.toml`**, **`manage.py`**, and **`requirements.txt`**).  

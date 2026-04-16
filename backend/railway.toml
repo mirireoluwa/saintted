@@ -1,11 +1,12 @@
 # Railway: use Docker so builds do not depend on Railpack + a dashboard "Build Command".
 # In the service UI, clear any custom Build Command (empty = use this file + Dockerfile).
+# Do not use preDeployCommand for migrate with Dockerfile: it can run outside the image
+# where `python` is not on PATH. Migrations run in Dockerfile CMD before Gunicorn.
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-preDeployCommand = ["python manage.py migrate --noinput"]
 healthcheckPath = "/api/tracks/"
 healthcheckTimeout = 100
