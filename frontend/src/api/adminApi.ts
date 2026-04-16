@@ -33,6 +33,25 @@ function authHeaders(token: string): HeadersInit {
   };
 }
 
+/** Parse list/detail responses; surface HTTP status (e.g. 401 stale token after DB reset). */
+async function guardAuthJson<T>(res: Response, resource: string): Promise<T> {
+  if (res.ok) return res.json() as Promise<T>;
+  const text = (await res.text()).trim();
+  let detail = text.slice(0, 400);
+  try {
+    const j = JSON.parse(text) as { detail?: string };
+    if (typeof j.detail === "string" && j.detail) detail = j.detail;
+  } catch {
+    /* keep slice */
+  }
+  if (res.status === 401) {
+    throw new Error(
+      `Unauthorized (HTTP 401) loading ${resource}. Your saved token is no longer valid (common after a database reset or migrate). Use Log out, then sign in again.`,
+    );
+  }
+  throw new Error(`Failed to load ${resource} (HTTP ${res.status}): ${detail || res.statusText}`);
+}
+
 export async function login(username: string, password: string): Promise<string> {
   const res = await fetchLive(`${API_BASE}/auth/token/`, {
     method: "POST",
@@ -76,8 +95,7 @@ export async function fetchTracksAuth(token: string, req?: RequestInit): Promise
     ...req,
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to load tracks");
-  return res.json();
+  return guardAuthJson<Track[]>(res, "tracks");
 }
 
 export async function createTrack(token: string, body: Partial<Track>): Promise<Track> {
@@ -157,8 +175,7 @@ export async function fetchFeaturedVideosAuth(
     ...req,
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to load featured videos");
-  return res.json();
+  return guardAuthJson<FeaturedVideo[]>(res, "featured videos");
 }
 
 export async function createFeaturedVideo(
@@ -210,8 +227,7 @@ export async function fetchReleaseCountdownAuth(
     ...req,
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to load release countdown");
-  return res.json();
+  return guardAuthJson<ReleaseCountdown>(res, "release countdown");
 }
 
 export async function fetchGalleryImagesAuth(
@@ -222,8 +238,7 @@ export async function fetchGalleryImagesAuth(
     ...req,
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to load gallery images");
-  return res.json();
+  return guardAuthJson<GalleryImage[]>(res, "gallery images");
 }
 
 export async function updateReleaseCountdown(

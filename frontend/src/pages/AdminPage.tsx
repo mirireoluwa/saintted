@@ -280,9 +280,12 @@ export function AdminPage() {
         const apiBase = getApiBase();
         const origin =
           typeof window !== "undefined" ? window.location.origin : "this origin";
+        const netHint = firstErr.includes("HTTP")
+          ? "If you see HTTP 401, use Log out then sign in again (token invalid after DB/migrate)."
+          : "“Failed to fetch” usually means CORS or the API URL is wrong — check DevTools → Network.";
         setMessage({
           type: "error",
-          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. “Failed to fetch” usually means CORS or the API URL is unreachable — check DevTools → Network. On Railway, include ${origin} in CORS_ORIGINS and CSRF_TRUSTED_ORIGINS (production also merges CSRF into CORS). Redeploy the API after env changes; if you change VITE_API_URL on Vercel, redeploy the frontend.`,
+          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. ${netHint} Include ${origin} in CORS_ORIGINS / CSRF_TRUSTED_ORIGINS on the API if needed; redeploy the frontend after changing VITE_API_URL.`,
         });
       }
     } finally {
