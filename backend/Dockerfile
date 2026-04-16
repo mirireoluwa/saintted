@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Fail fast if the Docker build context is not `backend/` (Railway Root Directory must be `backend`).
+RUN test -f manage.py
+
 # No DB required; settings fall back to SQLite when DATABASE_URL is unset at build time.
 RUN DJANGO_SECRET_KEY=collectstatic-only python3 manage.py collectstatic --noinput
 

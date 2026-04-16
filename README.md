@@ -157,7 +157,13 @@ On the **API** service → **Settings**, clear or fix every custom command so th
 - **Start Command** — empty **or** leave empty and rely on **`backend/railway.toml`** `startCommand` (committed: `gunicorn …`).
 - **Custom install / release / deploy hooks** — remove any line that starts with `python `.
 
-Redeploy after saving. Migrations: **`railway ssh`** (not `railway shell`), `cd /app` if needed, then **`python3 manage.py migrate --noinput`**. If you still see `python: command not found`, use **`/usr/local/bin/python3 manage.py migrate --noinput`** (official image path).
+Redeploy after saving. Migrations: **`railway ssh`** (not `railway shell`) into the **same service that runs Gunicorn** (not Postgres/Redis). Then:
+
+```bash
+cd /app && ls manage.py && python3 manage.py migrate --noinput
+```
+
+If **`manage.py` is missing**, you are almost certainly SSH’d into the **wrong service**, or the service **Root Directory** is not **`backend`** (so the image never received the Django project). Fix **Settings → Root Directory → `backend`**, redeploy, and SSH again. If `python` is missing, use **`/usr/local/bin/python3`** as in the previous section.
 
 ### Host + database notes
 
