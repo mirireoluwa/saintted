@@ -86,6 +86,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 _sqlite_url = "sqlite:///" + str(BASE_DIR / "db.sqlite3").replace("\\", "/")
 _database_url_raw = (os.environ.get("DATABASE_URL") or "").strip()
 if not _database_url_raw:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "DATABASE_URL is unset while DJANGO_DEBUG=0. On Railway, add DATABASE_URL on the **web** "
+            "service (e.g. `${{saintted-db.DATABASE_URL}}` referencing your Postgres plugin). "
+            "If it is missing, Django falls back to SQLite on ephemeral disk and you get "
+            "`no such table: api_track` / 500 on every `/api/` route."
+        )
     _database_url_effective = _sqlite_url
 else:
     _lower = _database_url_raw.lower()
