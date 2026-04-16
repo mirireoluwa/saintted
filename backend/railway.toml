@@ -11,5 +11,7 @@ dockerfilePath = "Dockerfile"
 # Do not set startCommand here: Railway may run it without a shell, so `$PORT` is not expanded
 # and Gunicorn never binds (healthcheck → "service unavailable"). The image CMD uses `sh -c`
 # with `${PORT:-8000}` — see backend/Dockerfile.
-healthcheckPath = "/api/tracks/"
+# Use `/` not `/api/tracks/`: the tracks list hits the DB; unmigrated Postgres makes that 500 and
+# the deploy never becomes healthy ("service unavailable"). Root is cheap JSON (see config/urls.py).
+healthcheckPath = "/"
 healthcheckTimeout = 180
