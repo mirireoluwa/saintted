@@ -1,6 +1,6 @@
 # Railway: use Docker so builds do not depend on Railpack + a dashboard "Build Command".
 # In the service UI, clear any custom Build Command (empty = use this file + Dockerfile).
-# Migrations: run manually in Railway → Shell → `python manage.py migrate --noinput`
+# Migrations: `railway ssh` then `python3 manage.py migrate --noinput` (see README).
 # (pre-deploy may lack `python`; migrate-in-CMD breaks HTTP health checks during startup.)
 
 [build]

@@ -157,7 +157,7 @@ On the **API** service → **Settings**, clear or fix every custom command so th
 - **Start Command** — empty **or** leave empty and rely on **`backend/railway.toml`** `startCommand` (committed: `gunicorn …`).
 - **Custom install / release / deploy hooks** — remove any line that starts with `python `.
 
-Redeploy after saving. Migrations: **`railway ssh`** then **`python manage.py migrate --noinput`** (that `python` runs **inside** the container).
+Redeploy after saving. Migrations: **`railway ssh`** (not `railway shell`), `cd /app` if needed, then **`python3 manage.py migrate --noinput`**. If you still see `python: command not found`, use **`/usr/local/bin/python3 manage.py migrate --noinput`** (official image path).
 
 ### Host + database notes
 
