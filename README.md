@@ -147,6 +147,18 @@ Production stack: **Gunicorn**, **WhiteNoise**, **PostgreSQL** via **`DATABASE_U
 
 **If `admin.saintted.com` opens the public homepage (as `saintted.com`):** The browser is being **redirected to your primary domain** before the SPA runs, so the app never sees the `admin` hostname. On Vercel → your project → **Settings → Domains**, add **`admin.saintted.com`** as a domain on the **same** project as the main site. Ensure it is **not** configured to “redirect” to the apex domain (each hostname should serve the deployment directly). DNS should point the `admin` host at Vercel (e.g. **CNAME** to `cname.vercel-dns.com` as shown in the dashboard). Optional: set **`VITE_ADMIN_HOSTS`** in the Vercel env to a comma-separated list of extra hostnames that should use admin-only routing (e.g. a preview URL).
 
+### Railway: `python: command not found` in deploy logs
+
+That line almost never comes from this repo’s **Dockerfile** (build-time `python` is the official image). It usually means Railway is still running a **saved service command** that calls `python` **outside** your container (for example an old **Start**, **Release**, or **Build** field).
+
+On the **API** service → **Settings**, clear or fix every custom command so the repo drives deploy:
+
+- **Build Command** — empty (use **Dockerfile** only).
+- **Start Command** — empty **or** leave empty and rely on **`backend/railway.toml`** `startCommand` (committed: `gunicorn …`).
+- **Custom install / release / deploy hooks** — remove any line that starts with `python `.
+
+Redeploy after saving. Migrations: **`railway ssh`** then **`python manage.py migrate --noinput`** (that `python` runs **inside** the container).
+
 ### Host + database notes
 
 - Do not rely on SQLite in production; most PaaS disks are ephemeral.  

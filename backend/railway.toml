@@ -8,5 +8,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
+# Force start inside the image (gunicorn is on PATH from pip). Overrides a stale
+# dashboard "Start Command" that still says `python manage.py …` (no python on Railway’s outer runner).
+startCommand = "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
 healthcheckPath = "/api/tracks/"
 healthcheckTimeout = 180
