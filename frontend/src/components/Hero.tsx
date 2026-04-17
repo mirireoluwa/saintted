@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { readHeroCache } from "../utils/heroCache";
+import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 
 type HeroProps = {
   releaseConfig: ReleaseCountdown | null;
@@ -41,8 +42,10 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     if (!releaseLoaded) {
       const cached = readHeroCache();
       if (cached) {
-        setHeaderImageUrl(cached.imageUrl);
-        setHeaderVideoUrl(cached.videoUrl || null);
+        const img = cached.imageUrl ? resolvePublicMediaUrl(cached.imageUrl) : "";
+        const vid = cached.videoUrl ? resolvePublicMediaUrl(cached.videoUrl) : "";
+        setHeaderImageUrl(img || null);
+        setHeaderVideoUrl(vid || null);
         setHeaderImageFocus(cached.focus);
       }
       return;
@@ -59,8 +62,10 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     const customVideo = (releaseConfig.header_video_url || "").trim();
     const uploadedUrl = (releaseConfig.header_image_file_url || "").trim();
     const customUrl = (releaseConfig.header_image_url || "").trim();
-    const imageUrl = uploadedUrl || customUrl || null;
-    const videoUrl = uploadedVideo || customVideo || null;
+    const imageUrlRaw = uploadedUrl || customUrl;
+    const videoUrlRaw = uploadedVideo || customVideo;
+    const imageUrl = imageUrlRaw ? resolvePublicMediaUrl(imageUrlRaw) : null;
+    const videoUrl = videoUrlRaw ? resolvePublicMediaUrl(videoUrlRaw) : null;
     const focus = {
       x: typeof releaseConfig.header_image_focus_x === "number" ? releaseConfig.header_image_focus_x : 50,
       y: typeof releaseConfig.header_image_focus_y === "number" ? releaseConfig.header_image_focus_y : 50,

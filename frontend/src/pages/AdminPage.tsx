@@ -30,6 +30,7 @@ import {
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
 import { getApiBase } from "../utils/apiBase";
+import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 import "./AdminPage.css";
 
 function AdminSubdomainCallout() {
@@ -188,7 +189,10 @@ export function AdminPage() {
 
   const trackCoverPreviewUrl =
     trackCoverBlobUrl ||
-    (editingSlug ? tracks.find((x) => x.slug === editingSlug)?.art_url?.trim() ?? "" : "");
+    (() => {
+      const fromApi = editingSlug ? tracks.find((x) => x.slug === editingSlug)?.art_url?.trim() ?? "" : "";
+      return fromApi ? resolvePublicMediaUrl(fromApi) : "";
+    })();
 
   const [videoForm, setVideoForm] = useState({ title: "", youtube_id: "", order: 0 });
   const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
@@ -204,14 +208,16 @@ export function AdminPage() {
   const [clearHeroVideoUpload, setClearHeroVideoUpload] = useState(false);
   const heroImagePreviewUrl = useMemo(() => {
     if (heroImageFile) return URL.createObjectURL(heroImageFile);
-    if (heroImageForm.header_image_file_url.trim()) return heroImageForm.header_image_file_url.trim();
-    if (heroImageForm.header_image_url.trim()) return heroImageForm.header_image_url.trim();
+    if (heroImageForm.header_image_file_url.trim())
+      return resolvePublicMediaUrl(heroImageForm.header_image_file_url.trim());
+    if (heroImageForm.header_image_url.trim()) return resolvePublicMediaUrl(heroImageForm.header_image_url.trim());
     return "";
   }, [heroImageFile, heroImageForm.header_image_file_url, heroImageForm.header_image_url]);
   const heroVideoPreviewUrl = useMemo(() => {
     if (heroVideoFile) return URL.createObjectURL(heroVideoFile);
-    if (heroImageForm.header_video_file_url.trim()) return heroImageForm.header_video_file_url.trim();
-    if (heroImageForm.header_video_url.trim()) return heroImageForm.header_video_url.trim();
+    if (heroImageForm.header_video_file_url.trim())
+      return resolvePublicMediaUrl(heroImageForm.header_video_file_url.trim());
+    if (heroImageForm.header_video_url.trim()) return resolvePublicMediaUrl(heroImageForm.header_video_url.trim());
     return "";
   }, [heroVideoFile, heroImageForm.header_video_file_url, heroImageForm.header_video_url]);
 

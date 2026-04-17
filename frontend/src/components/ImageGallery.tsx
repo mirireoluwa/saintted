@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchGalleryImages } from "../api/client";
 import type { GalleryImage } from "../types/galleryImage";
 import { staggerChildren, sectionTransition } from "../utils/motion";
+import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 export function ImageGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,7 @@ export function ImageGallery() {
               transition={sectionTransition(reduceMotion)}
             >
               <motion.img
-                src={img.image_url || img.image}
+                src={resolvePublicMediaUrl(img.image_url || img.image || "")}
                 alt={img.caption || "Saintted gallery image"}
                 className="image-gallery__img"
                 loading="lazy"

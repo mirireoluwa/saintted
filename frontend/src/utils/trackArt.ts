@@ -1,4 +1,5 @@
 import type { Track } from "../types/track";
+import { resolvePublicMediaUrl } from "./mediaUrl";
 
 /** Local cover art paths (from project public folder). */
 const LOCAL_COVER_BY_SLUG: Record<string, string> = {
@@ -15,6 +16,6 @@ const LOCAL_COVER_BY_SLUG: Record<string, string> = {
  * haven’t uploaded art). Otherwise use bundled public images by slug.
  */
 export function getTrackArtUrl(track: Track): string {
-  if (track.art_url?.trim()) return track.art_url.trim();
+  if (track.art_url?.trim()) return resolvePublicMediaUrl(track.art_url.trim());
   return LOCAL_COVER_BY_SLUG[track.slug] ?? "";
 }

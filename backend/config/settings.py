@@ -134,6 +134,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Optional: public origin for uploaded files (no path), e.g. https://your-api.up.railway.app
+# When set, API JSON uses this for /media/... URLs so SPA + reverse-proxy setups stay correct.
+MEDIA_PUBLIC_ORIGIN = (os.environ.get("MEDIA_PUBLIC_ORIGIN") or "").strip().rstrip("/")
+
 # Media storage:
 # - Local dev/default: filesystem under MEDIA_ROOT
 # - Production option: S3-compatible object storage (AWS S3, Cloudflare R2, etc.)
@@ -179,6 +183,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # HTTPS behind reverse proxies (Vercel, Railway, Fly, …)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Correct Host / absolute URLs from X-Forwarded-Host when the platform sets it.
+    USE_X_FORWARDED_HOST = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     # DB-backed sessions require `django_session` (migrate). Until then, every request 500s.
