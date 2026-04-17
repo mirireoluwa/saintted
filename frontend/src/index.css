@@ -41,7 +41,8 @@
   --page-gradient: radial-gradient(circle at top, #fafafa 0, #e4e4e7 55%, #d4d4d8 100%);
   --bg: #fafafa;
   --text: #18181b;
-  --accent-green: #065f35;
+  /* Light mode: former “green” accents → love, saintted red (same as --accent-saintted) */
+  --accent-green: var(--accent-saintted);
   /* Stronger contrast for small labels (WCAG-friendly vs gray on light gray) */
   --text-muted: #3f3f46;
   --border: rgba(0, 0, 0, 0.1);
@@ -53,9 +54,9 @@
   --footer-border: rgba(0, 0, 0, 0.08);
   --surface: rgba(255, 255, 255, 0.92);
   --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.08);
-  --hover-green-text: #065f35;
-  --hover-green-border: rgba(6, 95, 53, 0.7);
-  --hover-green-bg: rgba(16, 185, 129, 0.24);
+  --hover-green-text: #be123c;
+  --hover-green-border: rgba(255, 75, 99, 0.58);
+  --hover-green-bg: rgba(255, 75, 99, 0.12);
 }
 
 [data-theme="dark"] .footer__social-icon img,
@@ -495,15 +496,14 @@ a {
 }
 
 [data-theme="light"] .not-found__action--green {
-  /* Darker green for light backgrounds while staying on-brand. */
-  color: #0a8a45;
-  border-color: rgba(10, 138, 69, 0.52);
+  color: var(--accent-saintted);
+  border-color: rgba(255, 75, 99, 0.52);
 }
 
 [data-theme="light"] .not-found__action--green:hover {
-  color: #0b6f3a;
-  border-color: rgba(11, 111, 58, 0.66);
-  background: rgba(11, 111, 58, 0.08);
+  color: #be123c;
+  border-color: rgba(190, 18, 60, 0.55);
+  background: rgba(255, 75, 99, 0.08);
 }
 
 /* Music section */
@@ -563,11 +563,11 @@ a {
 }
 
 [data-theme="light"] .music-highlighted__label-text {
-  color: #1f7a49;
+  color: var(--accent-saintted);
 }
 
 [data-theme="light"] .music-highlighted__label-line {
-  background: linear-gradient(90deg, rgba(31, 122, 73, 0.62), var(--section-line) 55%, transparent);
+  background: linear-gradient(90deg, rgba(255, 75, 99, 0.55), var(--section-line) 55%, transparent);
 }
 
 .music-highlighted__list {
@@ -1108,7 +1108,13 @@ a {
 }
 
 [data-theme="light"] .track-card-link--highlighted {
-  box-shadow: 0 0 0 1px rgba(13, 138, 74, 0.24);
+  border-color: rgba(255, 75, 99, 0.42);
+  box-shadow: 0 0 0 1px rgba(255, 75, 99, 0.2), 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .track-card-link--highlighted:hover {
+  border-color: rgba(255, 75, 99, 0.65);
+  box-shadow: 0 0 0 1px rgba(255, 75, 99, 0.28), var(--shadow-soft);
 }
 
 .track-card__title-row {
@@ -1122,43 +1128,284 @@ a {
   margin: 0;
 }
 
+/* “Dead neon” — hold + micro-gaps so linear easing reads as snaps, not a smooth blend */
 @keyframes track-new-pill-flicker {
   0%,
+  5% {
+    color: #4e9f5f;
+    text-shadow: 0 0 6px rgba(78, 159, 95, 0.35);
+    opacity: 1;
+    border-color: rgba(44, 122, 68, 0.85);
+  }
+  5.4%,
+  5.9% {
+    color: #1f3d28;
+    text-shadow: none;
+    opacity: 0.35;
+    border-color: rgba(44, 122, 68, 0.25);
+  }
+  6.2%,
+  12% {
+    color: #86efac;
+    text-shadow: 0 0 14px rgba(134, 239, 172, 0.55);
+    opacity: 1;
+    border-color: rgba(110, 231, 183, 0.55);
+  }
+  12.15%,
+  12.35% {
+    color: #4e9f5f;
+    text-shadow: none;
+    opacity: 0.55;
+    border-color: rgba(44, 122, 68, 0.4);
+  }
+  13%,
+  21% {
+    color: #34d399;
+    text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    opacity: 1;
+    border-color: rgba(52, 211, 153, 0.5);
+  }
+  21.2%,
+  21.45% {
+    color: #0f2918;
+    text-shadow: none;
+    opacity: 0.25;
+    border-color: rgba(44, 122, 68, 0.2);
+  }
+  22%,
+  31% {
+    color: #6ee7b7;
+    text-shadow: 0 0 12px rgba(110, 231, 183, 0.48);
+    opacity: 0.92;
+    border-color: rgba(44, 122, 68, 0.75);
+  }
+  31.08%,
+  31.2% {
+    opacity: 0.15;
+    color: #4e9f5f;
+    text-shadow: none;
+    border-color: rgba(44, 122, 68, 0.3);
+  }
+  32%,
+  44% {
+    color: #22c55e;
+    text-shadow: 0 0 16px rgba(34, 197, 94, 0.55);
+    opacity: 1;
+    border-color: rgba(34, 197, 94, 0.55);
+  }
+  44.1%,
+  44.25% {
+    color: #bbf7d0;
+    text-shadow: 0 0 18px rgba(187, 247, 208, 0.65);
+    opacity: 1;
+    border-color: rgba(134, 239, 172, 0.65);
+  }
+  44.35%,
+  44.5% {
+    color: #163822;
+    text-shadow: none;
+    opacity: 0.4;
+    border-color: rgba(44, 122, 68, 0.22);
+  }
+  45%,
+  58% {
+    color: #4ade80;
+    text-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
+    opacity: 1;
+    border-color: rgba(44, 122, 68, 0.9);
+  }
+  58.4%,
+  58.55% {
+    opacity: 0.08;
+    text-shadow: none;
+    border-color: rgba(44, 122, 68, 0.15);
+  }
+  59%,
+  71% {
+    color: #4e9f5f;
+    text-shadow: 0 0 6px rgba(78, 159, 95, 0.32);
+    opacity: 1;
+    border-color: rgba(44, 122, 68, 0.88);
+  }
+  71.06%,
+  71.12% {
+    color: #86efac;
+    text-shadow: 0 0 20px rgba(134, 239, 172, 0.7);
+    opacity: 1;
+    border-color: rgba(167, 243, 208, 0.5);
+  }
+  72%,
+  86% {
+    color: #34d399;
+    text-shadow: 0 0 9px rgba(52, 211, 153, 0.42);
+    opacity: 0.88;
+    border-color: rgba(52, 211, 153, 0.45);
+  }
+  86.2%,
+  86.35% {
+    color: #142818;
+    text-shadow: none;
+    opacity: 0.3;
+    border-color: rgba(44, 122, 68, 0.28);
+  }
+  87%,
+  94% {
+    color: #6ee7b7;
+    text-shadow: 0 0 11px rgba(110, 231, 183, 0.5);
+    opacity: 1;
+    border-color: rgba(44, 122, 68, 0.82);
+  }
+  94.4%,
+  94.55% {
+    opacity: 0.5;
+    text-shadow: none;
+  }
+  95%,
   100% {
     color: #4e9f5f;
     text-shadow: 0 0 6px rgba(78, 159, 95, 0.35);
-  }
-  20% {
-    color: #6ee7b7;
-    text-shadow: 0 0 10px rgba(110, 231, 183, 0.55);
-  }
-  40% {
-    color: #34d399;
-    text-shadow: 0 0 8px rgba(52, 211, 153, 0.45);
-  }
-  60% {
-    color: #22c55e;
-    text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-  }
-  80% {
-    color: #86efac;
-    text-shadow: 0 0 9px rgba(134, 239, 172, 0.5);
+    opacity: 1;
+    border-color: rgba(44, 122, 68, 0.9);
   }
 }
 
 @keyframes track-new-pill-flicker-light {
   0%,
+  5% {
+    color: #be123c;
+    text-shadow: 0 0 5px rgba(255, 75, 99, 0.28);
+    opacity: 1;
+    border-color: rgba(190, 18, 60, 0.55);
+  }
+  5.4%,
+  5.9% {
+    color: #881337;
+    text-shadow: none;
+    opacity: 0.32;
+    border-color: rgba(190, 18, 60, 0.2);
+  }
+  6.2%,
+  12% {
+    color: #fb7185;
+    text-shadow: 0 0 12px rgba(251, 113, 133, 0.45);
+    opacity: 1;
+    border-color: rgba(251, 113, 133, 0.45);
+  }
+  12.15%,
+  12.35% {
+    color: #9f1239;
+    text-shadow: none;
+    opacity: 0.5;
+    border-color: rgba(190, 18, 60, 0.35);
+  }
+  13%,
+  21% {
+    color: #e11d48;
+    text-shadow: 0 0 9px rgba(225, 29, 72, 0.42);
+    opacity: 1;
+    border-color: rgba(225, 29, 72, 0.5);
+  }
+  21.2%,
+  21.45% {
+    color: #4c0519;
+    text-shadow: none;
+    opacity: 0.22;
+    border-color: rgba(127, 29, 29, 0.18);
+  }
+  22%,
+  31% {
+    color: #fda4af;
+    text-shadow: 0 0 11px rgba(253, 164, 175, 0.48);
+    opacity: 0.9;
+    border-color: rgba(255, 75, 99, 0.5);
+  }
+  31.08%,
+  31.2% {
+    opacity: 0.12;
+    color: #be123c;
+    text-shadow: none;
+    border-color: rgba(190, 18, 60, 0.25);
+  }
+  32%,
+  44% {
+    color: #f43f5e;
+    text-shadow: 0 0 14px rgba(244, 63, 94, 0.5);
+    opacity: 1;
+    border-color: rgba(244, 63, 94, 0.48);
+  }
+  44.1%,
+  44.25% {
+    color: #ffe4e6;
+    text-shadow: 0 0 16px rgba(255, 228, 230, 0.55);
+    opacity: 1;
+    border-color: rgba(255, 75, 99, 0.55);
+  }
+  44.35%,
+  44.5% {
+    color: #881337;
+    text-shadow: none;
+    opacity: 0.38;
+    border-color: rgba(190, 18, 60, 0.22);
+  }
+  45%,
+  58% {
+    color: #fb7185;
+    text-shadow: 0 0 7px rgba(251, 113, 133, 0.38);
+    opacity: 1;
+    border-color: rgba(190, 18, 60, 0.58);
+  }
+  58.4%,
+  58.55% {
+    opacity: 0.06;
+    text-shadow: none;
+    border-color: rgba(190, 18, 60, 0.12);
+  }
+  59%,
+  71% {
+    color: #be123c;
+    text-shadow: 0 0 5px rgba(255, 75, 99, 0.26);
+    opacity: 1;
+    border-color: rgba(190, 18, 60, 0.55);
+  }
+  71.06%,
+  71.12% {
+    color: #fda4af;
+    text-shadow: 0 0 18px rgba(255, 75, 99, 0.55);
+    opacity: 1;
+    border-color: rgba(255, 75, 99, 0.48);
+  }
+  72%,
+  86% {
+    color: #e11d48;
+    text-shadow: 0 0 8px rgba(225, 29, 72, 0.4);
+    opacity: 0.85;
+    border-color: rgba(225, 29, 72, 0.42);
+  }
+  86.2%,
+  86.35% {
+    color: #4c0519;
+    text-shadow: none;
+    opacity: 0.28;
+    border-color: rgba(190, 18, 60, 0.2);
+  }
+  87%,
+  94% {
+    color: #fb7185;
+    text-shadow: 0 0 10px rgba(251, 113, 133, 0.44);
+    opacity: 1;
+    border-color: rgba(255, 75, 99, 0.52);
+  }
+  94.4%,
+  94.55% {
+    opacity: 0.48;
+    text-shadow: none;
+  }
+  95%,
   100% {
-    color: #166534;
-    text-shadow: 0 0 5px rgba(22, 101, 52, 0.25);
-  }
-  33% {
-    color: #15803d;
-    text-shadow: 0 0 8px rgba(21, 128, 61, 0.35);
-  }
-  66% {
-    color: #22c55e;
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+    color: #be123c;
+    text-shadow: 0 0 5px rgba(255, 75, 99, 0.28);
+    opacity: 1;
+    border-color: rgba(190, 18, 60, 0.55);
   }
 }
 
@@ -1175,14 +1422,14 @@ a {
   border-radius: 6px;
   background: rgba(35, 96, 52, 0.2);
   border: 1px solid rgba(44, 122, 68, 0.9);
-  animation: track-new-pill-flicker 1.35s ease-in-out infinite;
+  animation: track-new-pill-flicker 2.15s linear infinite;
 }
 
 [data-theme="light"] .track-card__new-pill {
-  color: #1f6a34;
-  background: rgba(34, 117, 58, 0.14);
-  border-color: rgba(29, 102, 50, 0.78);
-  animation: track-new-pill-flicker-light 1.35s ease-in-out infinite;
+  color: #be123c;
+  background: rgba(255, 75, 99, 0.12);
+  border-color: rgba(190, 18, 60, 0.55);
+  animation: track-new-pill-flicker-light 2.15s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -425,8 +425,9 @@ a.track-detail__nav-btn:hover {
 }
 
 [data-theme="light"] .track-detail__stream-link--spotify:hover {
-  color: #169c46;
-  background: rgba(29, 185, 84, 0.1);
+  color: var(--accent-saintted);
+  background: rgba(255, 75, 99, 0.1);
+  border-color: rgba(255, 75, 99, 0.38);
 }
 
 .track-detail__footer {

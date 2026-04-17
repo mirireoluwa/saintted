@@ -35,12 +35,12 @@
 }
 
 [data-theme="light"] .admin-callout--subdomain {
-  border-color: rgba(10, 138, 69, 0.45);
-  background: rgba(10, 138, 69, 0.08);
+  border-color: rgba(255, 75, 99, 0.42);
+  background: rgba(255, 75, 99, 0.08);
 }
 
 [data-theme="light"] .admin-callout--subdomain a {
-  color: #0a8a45;
+  color: var(--accent-saintted);
 }
 
 .admin-page {
@@ -300,9 +300,9 @@
 }
 
 [data-theme="light"] .admin-btn--primary:hover {
-  background: var(--hover-green-bg, rgba(16, 185, 129, 0.24));
-  color: var(--hover-green-text, #065f35);
-  border-color: var(--hover-green-border, rgba(6, 95, 53, 0.7));
+  background: var(--hover-green-bg, rgba(255, 75, 99, 0.12));
+  color: var(--hover-green-text, #be123c);
+  border-color: var(--hover-green-border, rgba(255, 75, 99, 0.58));
 }
 
 .admin-btn--danger {
@@ -383,8 +383,9 @@
 }
 
 [data-theme="light"] .admin-msg--ok {
-  color: rgb(21, 128, 61);
-  background: rgba(34, 197, 94, 0.15);
+  color: #be123c;
+  background: rgba(255, 75, 99, 0.12);
+  border-color: rgba(255, 75, 99, 0.28);
 }
 
 .admin-password-wrap {
@@ -496,7 +497,7 @@
 }
 
 [data-theme="light"] .admin-crop-editor input[type="range"]:focus-visible {
-  outline-color: #0a8a45;
+  outline-color: var(--accent-saintted);
 }
 
 .admin-crop-editor input[type="range"]::-webkit-slider-runnable-track {
@@ -537,16 +538,16 @@
 }
 
 [data-theme="light"] .admin-crop-editor input[type="range"]::-webkit-slider-thumb {
-  background: #0a8a45;
+  background: var(--accent-saintted);
   border-color: #fff;
   box-shadow:
-    0 0 0 1px rgba(10, 138, 69, 0.4),
+    0 0 0 1px rgba(255, 75, 99, 0.45),
     0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 [data-theme="light"] .admin-crop-editor input[type="range"]:active::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 2px rgba(10, 138, 69, 0.2),
+    0 0 0 2px rgba(255, 75, 99, 0.22),
     0 4px 16px rgba(0, 0, 0, 0.14);
 }
 
@@ -574,7 +575,7 @@
 }
 
 [data-theme="light"] .admin-crop-editor input[type="range"]::-moz-range-thumb {
-  background: #0a8a45;
+  background: var(--accent-saintted);
   border-color: #fff;
 }
 
