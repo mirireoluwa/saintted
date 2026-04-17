@@ -1,4 +1,4 @@
 # Heroku-style process. Do not add a `release:` line when deploying with Docker on Railway:
 # Railway may run release outside the image, causing "python: command not found".
 # collectstatic runs in Dockerfile; migrate via `railway ssh` (see README).
-web: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --worker-class gthread --threads 4 --timeout 600 --graceful-timeout 120 --keep-alive 5
