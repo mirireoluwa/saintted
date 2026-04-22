@@ -157,7 +157,17 @@ function emptyGalleryForm() {
   return { caption: "", order: 0 };
 }
 
-type MoveDirection = "up" | "down";
+function arrayMove<T>(arr: readonly T[], from: number, to: number): T[] {
+  if (from === to) return [...arr];
+  const result = arr.slice();
+  const [moved] = result.splice(from, 1);
+  result.splice(to, 0, moved);
+  return result;
+}
+
+const DND_TYPE_TRACK = "application/x-saintted-admin-track";
+const DND_TYPE_VIDEO = "application/x-saintted-admin-video";
+const DND_TYPE_GALLERY = "application/x-saintted-admin-gallery";
 
 export function AdminPage() {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
@@ -201,6 +211,13 @@ export function AdminPage() {
   const [galleryForm, setGalleryForm] = useState(emptyGalleryForm);
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
   const [editingGalleryId, setEditingGalleryId] = useState<number | null>(null);
+
+  const [dndDragging, setDndDragging] = useState<
+    | { kind: "track"; key: string }
+    | { kind: "video"; id: number }
+    | { kind: "gallery"; id: number }
+    | null
+  >(null);
 
   const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
   const [heroImageForm, setHeroImageForm] = useState(emptyHeroImageForm);
@@ -552,20 +569,23 @@ export function AdminPage() {
     }
   }
 
-  async function moveTrackOrder(slug: string, direction: MoveDirection) {
-    if (!token) return;
-    const idx = sortedTracks.findIndex((item) => item.slug === slug);
-    if (idx < 0) return;
-    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= sortedTracks.length) return;
-    const current = sortedTracks[idx];
-    const target = sortedTracks[targetIdx];
+  async function reorderTrackRowsBySlug(draggedSlug: string, targetSlug: string) {
+    if (!token || draggedSlug === targetSlug) return;
+    const from = sortedTracks.findIndex((item) => item.slug === draggedSlug);
+    const to = sortedTracks.findIndex((item) => item.slug === targetSlug);
+    if (from < 0 || to < 0) return;
+    if (from === to) return;
+    const reordered = arrayMove(sortedTracks, from, to);
+    const patches: Promise<Track>[] = [];
+    reordered.forEach((item, i) => {
+      if (item.order !== i) {
+        patches.push(updateTrack(token, item.slug, { order: i }));
+      }
+    });
+    if (patches.length === 0) return;
     try {
       setMessage(null);
-      await Promise.all([
-        updateTrack(token, current.slug, { order: target.order }),
-        updateTrack(token, target.slug, { order: current.order }),
-      ]);
+      await Promise.all(patches);
       await loadData(token);
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -629,20 +649,23 @@ export function AdminPage() {
     }
   }
 
-  async function moveVideoOrder(id: number, direction: MoveDirection) {
-    if (!token) return;
-    const idx = sortedVideos.findIndex((item) => item.id === id);
-    if (idx < 0) return;
-    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= sortedVideos.length) return;
-    const current = sortedVideos[idx];
-    const target = sortedVideos[targetIdx];
+  async function reorderVideosById(draggedId: number, targetId: number) {
+    if (!token || draggedId === targetId) return;
+    const from = sortedVideos.findIndex((item) => item.id === draggedId);
+    const to = sortedVideos.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0) return;
+    if (from === to) return;
+    const reordered = arrayMove(sortedVideos, from, to);
+    const patches: Promise<FeaturedVideo>[] = [];
+    reordered.forEach((item, i) => {
+      if (item.order !== i) {
+        patches.push(updateFeaturedVideo(token, item.id, { order: i }));
+      }
+    });
+    if (patches.length === 0) return;
     try {
       setMessage(null);
-      await Promise.all([
-        updateFeaturedVideo(token, current.id, { order: target.order }),
-        updateFeaturedVideo(token, target.id, { order: current.order }),
-      ]);
+      await Promise.all(patches);
       await loadData(token);
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -704,20 +727,23 @@ export function AdminPage() {
     }
   }
 
-  async function moveGalleryOrder(id: number, direction: MoveDirection) {
-    if (!token) return;
-    const idx = sortedGalleryImages.findIndex((item) => item.id === id);
-    if (idx < 0) return;
-    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= sortedGalleryImages.length) return;
-    const current = sortedGalleryImages[idx];
-    const target = sortedGalleryImages[targetIdx];
+  async function reorderGalleryById(draggedId: number, targetId: number) {
+    if (!token || draggedId === targetId) return;
+    const from = sortedGalleryImages.findIndex((item) => item.id === draggedId);
+    const to = sortedGalleryImages.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0) return;
+    if (from === to) return;
+    const reordered = arrayMove(sortedGalleryImages, from, to);
+    const patches: Promise<GalleryImage>[] = [];
+    reordered.forEach((item, i) => {
+      if (item.order !== i) {
+        patches.push(updateGalleryImage(token, item.id, { order: i }));
+      }
+    });
+    if (patches.length === 0) return;
     try {
       setMessage(null);
-      await Promise.all([
-        updateGalleryImage(token, current.id, { order: target.order }),
-        updateGalleryImage(token, target.id, { order: current.order }),
-      ]);
+      await Promise.all(patches);
       await loadData(token);
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -1307,20 +1333,52 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedTracks.map((t, idx) => (
-                <tr key={t.id}>
+              {sortedTracks.map((t) => (
+                <tr
+                  key={t.id}
+                  className={
+                    dndDragging?.kind === "track" && dndDragging.key === t.slug
+                      ? "admin-table__row--dragging"
+                      : undefined
+                  }
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDropCapture={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const dragged = e.dataTransfer.getData(DND_TYPE_TRACK) || e.dataTransfer.getData("text/plain");
+                    if (!dragged) return;
+                    if (dragged === t.slug) return;
+                    void reorderTrackRowsBySlug(dragged, t.slug);
+                  }}
+                >
                   <td>
-                    <div
-                      className="admin-table__orderCell"
-                      title="Use the Up/Down actions on this row to change order."
-                    >
-                      <span className="admin-drag-handle" aria-hidden="true" />
+                    <div className="admin-table__orderCell">
+                      <span
+                        className="admin-drag-handle"
+                        aria-label="Drag to reorder"
+                        title="Drag to reorder"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(DND_TYPE_TRACK, t.slug);
+                          e.dataTransfer.setData("text/plain", t.slug);
+                          e.dataTransfer.effectAllowed = "move";
+                          setDndDragging({ kind: "track", key: t.slug });
+                        }}
+                        onDragEnd={() => {
+                          setDndDragging(null);
+                        }}
+                      />
                       <span>{t.order}</span>
                     </div>
                   </td>
                   <td>{t.title}</td>
                   <td>
-                    <Link to={`/music/${t.slug}`}>{t.slug}</Link>
+                    <Link draggable={false} to={`/music/${t.slug}`}>
+                      {t.slug}
+                    </Link>
                   </td>
                   <td>{t.year ?? "—"}</td>
                   <td>{t.is_published === false ? "draft" : "live"}</td>
@@ -1334,24 +1392,6 @@ export function AdminPage() {
                       onClick={() => startEditTrack(t)}
                     >
                       Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveTrackOrder(t.slug, "up")}
-                      disabled={idx === 0}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveTrackOrder(t.slug, "down")}
-                      disabled={idx === sortedTracks.length - 1}
-                    >
-                      Down
                     </button>
                     <button
                       type="button"
@@ -1436,14 +1476,46 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedVideos.map((v, idx) => (
-                <tr key={v.id}>
+              {sortedVideos.map((v) => (
+                <tr
+                  key={v.id}
+                  className={
+                    dndDragging?.kind === "video" && dndDragging.id === v.id
+                      ? "admin-table__row--dragging"
+                      : undefined
+                  }
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDropCapture={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const raw =
+                      e.dataTransfer.getData(DND_TYPE_VIDEO) || e.dataTransfer.getData("text/plain");
+                    const draggedId = parseInt(String(raw), 10);
+                    if (!Number.isFinite(draggedId)) return;
+                    if (draggedId === v.id) return;
+                    void reorderVideosById(draggedId, v.id);
+                  }}
+                >
                   <td>
-                    <div
-                      className="admin-table__orderCell"
-                      title="Use the Up/Down actions on this row to change order."
-                    >
-                      <span className="admin-drag-handle" aria-hidden="true" />
+                    <div className="admin-table__orderCell">
+                      <span
+                        className="admin-drag-handle"
+                        aria-label="Drag to reorder"
+                        title="Drag to reorder"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(DND_TYPE_VIDEO, String(v.id));
+                          e.dataTransfer.setData("text/plain", String(v.id));
+                          e.dataTransfer.effectAllowed = "move";
+                          setDndDragging({ kind: "video", id: v.id });
+                        }}
+                        onDragEnd={() => {
+                          setDndDragging(null);
+                        }}
+                      />
                       <span>{v.order}</span>
                     </div>
                   </td>
@@ -1457,24 +1529,6 @@ export function AdminPage() {
                       onClick={() => startEditVideo(v)}
                     >
                       Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveVideoOrder(v.id, "up")}
-                      disabled={idx === 0}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveVideoOrder(v.id, "down")}
-                      disabled={idx === sortedVideos.length - 1}
-                    >
-                      Down
                     </button>
                     <button
                       type="button"
@@ -1559,19 +1613,51 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedGalleryImages.map((img, idx) => (
-                <tr key={img.id}>
+              {sortedGalleryImages.map((img) => (
+                <tr
+                  key={img.id}
+                  className={
+                    dndDragging?.kind === "gallery" && dndDragging.id === img.id
+                      ? "admin-table__row--dragging"
+                      : undefined
+                  }
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDropCapture={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const raw =
+                      e.dataTransfer.getData(DND_TYPE_GALLERY) || e.dataTransfer.getData("text/plain");
+                    const draggedId = parseInt(String(raw), 10);
+                    if (!Number.isFinite(draggedId)) return;
+                    if (draggedId === img.id) return;
+                    void reorderGalleryById(draggedId, img.id);
+                  }}
+                >
                   <td>
-                    <div
-                      className="admin-table__orderCell"
-                      title="Use the Up/Down actions on this row to change order."
-                    >
-                      <span className="admin-drag-handle" aria-hidden="true" />
+                    <div className="admin-table__orderCell">
+                      <span
+                        className="admin-drag-handle"
+                        aria-label="Drag to reorder"
+                        title="Drag to reorder"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(DND_TYPE_GALLERY, String(img.id));
+                          e.dataTransfer.setData("text/plain", String(img.id));
+                          e.dataTransfer.effectAllowed = "move";
+                          setDndDragging({ kind: "gallery", id: img.id });
+                        }}
+                        onDragEnd={() => {
+                          setDndDragging(null);
+                        }}
+                      />
                       <span>{img.order}</span>
                     </div>
                   </td>
                   <td>
-                    <a href={img.image_url || img.image} target="_blank" rel="noreferrer">
+                    <a href={img.image_url || img.image} target="_blank" rel="noreferrer" draggable={false}>
                       open
                     </a>
                   </td>
@@ -1584,24 +1670,6 @@ export function AdminPage() {
                       onClick={() => startEditGalleryImage(img)}
                     >
                       Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveGalleryOrder(img.id, "up")}
-                      disabled={idx === 0}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
-                      onClick={() => void moveGalleryOrder(img.id, "down")}
-                      disabled={idx === sortedGalleryImages.length - 1}
-                    >
-                      Down
                     </button>
                     <button
                       type="button"

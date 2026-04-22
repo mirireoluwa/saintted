@@ -360,6 +360,11 @@
   border-bottom: none;
 }
 
+.admin-table tr.admin-table__row--dragging td {
+  opacity: 0.5;
+  background: color-mix(in srgb, var(--bg-hover), transparent 40%);
+}
+
 .admin-table a {
   color: var(--accent-green);
   text-decoration: none;
