@@ -119,6 +119,15 @@ class TrackDetailSerializer(TrackSerializer):
         return qs.filter(is_published=True)
 
     def get_previous_slug(self, obj):
+        # For an unreleased detail page, navigation should move through released tracks.
+        if obj.is_unreleased:
+            return (
+                self._visible_queryset()
+                .filter(is_unreleased=False)
+                .order_by("-order", "-id")
+                .values_list("slug", flat=True)
+                .first()
+            )
         return (
             self._visible_queryset()
             .filter(order__lt=obj.order)
@@ -128,6 +137,15 @@ class TrackDetailSerializer(TrackSerializer):
         )
 
     def get_next_slug(self, obj):
+        # From unreleased -> "next" should land on the first released track.
+        if obj.is_unreleased:
+            return (
+                self._visible_queryset()
+                .filter(is_unreleased=False)
+                .order_by("order", "id")
+                .values_list("slug", flat=True)
+                .first()
+            )
         return (
             self._visible_queryset()
             .filter(order__gt=obj.order)
