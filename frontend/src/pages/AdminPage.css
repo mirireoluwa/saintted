@@ -370,6 +370,53 @@
   text-underline-offset: 3px;
 }
 
+/* Reorder affordance: grip next to order number (Up/Down controls apply the move) */
+.admin-table__orderCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+}
+
+.admin-drag-handle {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  opacity: 0.55;
+  user-select: none;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.admin-drag-handle::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    4px 0 0 0 currentColor,
+    0 5px 0 0 currentColor,
+    4px 5px 0 0 currentColor,
+    0 10px 0 0 currentColor,
+    4px 10px 0 0 currentColor;
+}
+
+.admin-table__orderCell:hover .admin-drag-handle,
+.admin-table__orderCell:focus-within .admin-drag-handle {
+  opacity: 0.9;
+}
+
+.admin-drag-handle:active {
+  cursor: grabbing;
+}
+
 .admin-msg {
   font-family: var(--font-mono);
   font-size: 11px;

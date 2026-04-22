@@ -1309,7 +1309,15 @@ export function AdminPage() {
             <tbody>
               {sortedTracks.map((t, idx) => (
                 <tr key={t.id}>
-                  <td>{t.order}</td>
+                  <td>
+                    <div
+                      className="admin-table__orderCell"
+                      title="Use the Up/Down actions on this row to change order."
+                    >
+                      <span className="admin-drag-handle" aria-hidden="true" />
+                      <span>{t.order}</span>
+                    </div>
+                  </td>
                   <td>{t.title}</td>
                   <td>
                     <Link to={`/music/${t.slug}`}>{t.slug}</Link>
@@ -1430,7 +1438,15 @@ export function AdminPage() {
             <tbody>
               {sortedVideos.map((v, idx) => (
                 <tr key={v.id}>
-                  <td>{v.order}</td>
+                  <td>
+                    <div
+                      className="admin-table__orderCell"
+                      title="Use the Up/Down actions on this row to change order."
+                    >
+                      <span className="admin-drag-handle" aria-hidden="true" />
+                      <span>{v.order}</span>
+                    </div>
+                  </td>
                   <td>{v.title || "—"}</td>
                   <td>{v.youtube_id}</td>
                   <td>
@@ -1545,7 +1561,15 @@ export function AdminPage() {
             <tbody>
               {sortedGalleryImages.map((img, idx) => (
                 <tr key={img.id}>
-                  <td>{img.order}</td>
+                  <td>
+                    <div
+                      className="admin-table__orderCell"
+                      title="Use the Up/Down actions on this row to change order."
+                    >
+                      <span className="admin-drag-handle" aria-hidden="true" />
+                      <span>{img.order}</span>
+                    </div>
+                  </td>
                   <td>
                     <a href={img.image_url || img.image} target="_blank" rel="noreferrer">
                       open
