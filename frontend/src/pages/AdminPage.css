@@ -375,7 +375,7 @@
   text-underline-offset: 3px;
 }
 
-/* Reorder affordance: grip next to order number (Up/Down controls apply the move) */
+/* Reorder affordance: grip to drag a row in the list */
 .admin-table__orderCell {
   display: inline-flex;
   align-items: center;
@@ -452,6 +452,109 @@
   color: #be123c;
   background: rgba(255, 75, 99, 0.12);
   border-color: rgba(255, 75, 99, 0.28);
+}
+
+/* Fixed slide-in toasts (save / errors / load issues) */
+.admin-toast-stack {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10050;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 1.5rem));
+  pointer-events: none;
+}
+
+.admin-toast-stack .admin-toast {
+  pointer-events: auto;
+}
+
+.admin-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 0.75rem 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  animation: admin-toast-in 0.32s ease;
+}
+
+@keyframes admin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-toast {
+    animation: none;
+  }
+}
+
+.admin-toast__text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.admin-toast--ok {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: color-mix(in srgb, rgba(34, 197, 94, 0.18) 30%, var(--surface));
+}
+
+.admin-toast--error {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: color-mix(in srgb, rgba(248, 113, 113, 0.2) 35%, var(--surface));
+  color: rgb(252, 165, 165);
+}
+
+[data-theme="light"] .admin-toast--ok {
+  border-color: rgba(255, 75, 99, 0.4);
+  background: color-mix(in srgb, rgba(255, 75, 99, 0.12) 40%, #fff);
+  color: #18181b;
+}
+
+[data-theme="light"] .admin-toast--error {
+  color: rgb(127, 29, 29);
+  border-color: rgba(220, 38, 38, 0.45);
+  background: color-mix(in srgb, rgba(248, 113, 113, 0.2) 25%, #fff);
+}
+
+.admin-toast__close {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 0.15rem;
+  line-height: 1;
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.admin-toast__close:hover {
+  opacity: 1;
+  color: var(--text);
 }
 
 .admin-password-wrap {
