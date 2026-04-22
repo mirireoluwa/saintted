@@ -148,8 +148,9 @@ export function TrackDetailPage() {
     displayTrack && tracks.length > 0
       ? neighborSlugsFromList(tracks, displayTrack.slug, !!displayTrack.is_unreleased)
       : { prev: undefined as string | undefined, next: undefined as string | undefined };
-  const prevSlug = displayTrack?.previous_slug || listNeighbors.prev || null;
-  const nextSlug = displayTrack?.next_slug || listNeighbors.next || null;
+  // Prefer list-derived neighbors so detail navigation matches homepage ordering.
+  const prevSlug = listNeighbors.prev || displayTrack?.previous_slug || null;
+  const nextSlug = listNeighbors.next || displayTrack?.next_slug || null;
 
   const trackJsonLd = useMemo(() => {
     if (!track || !resolved || track.is_unreleased) return "";
