@@ -124,7 +124,7 @@ class TrackDetailSerializer(TrackSerializer):
             return (
                 self._visible_queryset()
                 .filter(is_unreleased=False)
-                .order_by("-order", "-id")
+                .order_by("is_highlighted", "-order", "-id")
                 .values_list("slug", flat=True)
                 .first()
             )
@@ -137,12 +137,13 @@ class TrackDetailSerializer(TrackSerializer):
         )
 
     def get_next_slug(self, obj):
-        # From unreleased -> "next" should land on the first released track.
+        # From unreleased -> "next" should land on the first released track in homepage flow
+        # (highlighted release first, then regular released tracks by order).
         if obj.is_unreleased:
             return (
                 self._visible_queryset()
                 .filter(is_unreleased=False)
-                .order_by("order", "id")
+                .order_by("-is_highlighted", "order", "id")
                 .values_list("slug", flat=True)
                 .first()
             )

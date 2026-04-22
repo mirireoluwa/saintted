@@ -22,10 +22,27 @@ function pickUrl(stored: string | undefined | null, fallback: string): string {
   return t || fallback;
 }
 
-function neighborSlugsFromList(list: Track[], order: number) {
-  const prev = list.find((x) => x.order === order - 1)?.slug;
-  const next = list.find((x) => x.order === order + 1)?.slug;
-  return { prev, next };
+function neighborSlugsFromList(list: Track[], currentSlug: string, isUnreleased: boolean) {
+  const released = list.filter((t) => !t.is_unreleased);
+  if (released.length === 0) return { prev: undefined, next: undefined };
+
+  if (isUnreleased) {
+    // Mirror homepage release flow: highlighted release(s) first, then the rest.
+    const releasedInDisplayOrder = [
+      ...released.filter((t) => t.is_highlighted),
+      ...released.filter((t) => !t.is_highlighted),
+    ];
+    const next = releasedInDisplayOrder[0]?.slug;
+    const prev = releasedInDisplayOrder[releasedInDisplayOrder.length - 1]?.slug;
+    return { prev, next };
+  }
+
+  const idx = released.findIndex((t) => t.slug === currentSlug);
+  if (idx < 0) return { prev: undefined, next: undefined };
+  return {
+    prev: idx > 0 ? released[idx - 1].slug : undefined,
+    next: idx < released.length - 1 ? released[idx + 1].slug : undefined,
+  };
 }
 
 function TrackDetailSkeletonBlocks() {
@@ -129,7 +146,7 @@ export function TrackDetailPage() {
 
   const listNeighbors =
     displayTrack && tracks.length > 0
-      ? neighborSlugsFromList(tracks, displayTrack.order)
+      ? neighborSlugsFromList(tracks, displayTrack.slug, !!displayTrack.is_unreleased)
       : { prev: undefined as string | undefined, next: undefined as string | undefined };
   const prevSlug = displayTrack?.previous_slug || listNeighbors.prev || null;
   const nextSlug = displayTrack?.next_slug || listNeighbors.next || null;
