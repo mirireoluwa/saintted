@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
@@ -169,6 +169,31 @@ const DND_TYPE_TRACK = "application/x-saintted-admin-track";
 const DND_TYPE_VIDEO = "application/x-saintted-admin-video";
 const DND_TYPE_GALLERY = "application/x-saintted-admin-gallery";
 
+/** How long to wait with no new reorder success before showing one “order updated” toast (per list). */
+const REORDER_SUCCESS_TOAST_QUIET_MS = 2500;
+
+type AdminToast = { id: number; type: "ok" | "error"; text: string };
+
+function AdminToastStack({ toasts, onDismiss }: { toasts: AdminToast[]; onDismiss: (id: number) => void }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="admin-toast-stack" aria-label="Notifications">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`admin-toast admin-toast--${t.type}`}
+          role={t.type === "error" ? "alert" : "status"}
+        >
+          <p className="admin-toast__text">{t.text}</p>
+          <button type="button" className="admin-toast__close" onClick={() => onDismiss(t.id)} aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AdminPage() {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
   const [loginUser, setLoginUser] = useState("");
@@ -176,7 +201,7 @@ export function AdminPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [resetSecret, setResetSecret] = useState("");
   const [resetInfo, setResetInfo] = useState<{ username: string; new_password: string } | null>(null);
-  const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [toasts, setToasts] = useState<AdminToast[]>([]);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [videos, setVideos] = useState<FeaturedVideo[]>([]);
@@ -288,9 +313,59 @@ export function AdminPage() {
     });
   }, [editingGalleryId, galleryForm.order, galleryImages]);
 
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const notify = useCallback((type: "ok" | "error", text: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev.slice(-4), { id, type, text }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5200);
+  }, []);
+
+  const reorderSuccessTimersRef = useRef<{
+    track: number | null;
+    video: number | null;
+    gallery: number | null;
+  }>({ track: null, video: null, gallery: null });
+
+  const clearReorderSuccessTimer = useCallback((kind: "track" | "video" | "gallery") => {
+    const ref = reorderSuccessTimersRef.current;
+    const t = ref[kind];
+    if (t != null) {
+      window.clearTimeout(t);
+      ref[kind] = null;
+    }
+  }, []);
+
+  const scheduleReorderSuccessNotify = useCallback(
+    (kind: "track" | "video" | "gallery", text: string) => {
+      const ref = reorderSuccessTimersRef.current;
+      const prevT = ref[kind];
+      if (prevT != null) window.clearTimeout(prevT);
+      ref[kind] = window.setTimeout(() => {
+        ref[kind] = null;
+        notify("ok", text);
+      }, REORDER_SUCCESS_TOAST_QUIET_MS);
+    },
+    [notify],
+  );
+
+  useEffect(() => {
+    return () => {
+      const m = reorderSuccessTimersRef.current;
+      (["track", "video", "gallery"] as const).forEach((k) => {
+        const t = m[k];
+        if (t != null) window.clearTimeout(t);
+        m[k] = null;
+      });
+    };
+  }, []);
+
   const loadData = useCallback(async (t: string, signal?: AbortSignal) => {
     setLoading(true);
-    setMessage(null);
     const [tr, fv, cd, gi] = await Promise.allSettled([
       fetchTracksAuth(t, { signal }),
       fetchFeaturedVideosAuth(t, { signal }),
@@ -345,15 +420,15 @@ export function AdminPage() {
         const netHint = firstErr.includes("HTTP")
           ? "If you see HTTP 401, use Log out then sign in again (token invalid after DB/migrate)."
           : "“Failed to fetch” usually means CORS or the API URL is wrong — check DevTools → Network.";
-        setMessage({
-          type: "error",
-          text: `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. ${netHint} Include ${origin} in CORS_ORIGINS / CSRF_TRUSTED_ORIGINS on the API if needed; redeploy the frontend after changing VITE_API_URL.`,
-        });
+        notify(
+          "error",
+          `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. ${netHint} Include ${origin} in CORS_ORIGINS / CSRF_TRUSTED_ORIGINS on the API if needed; redeploy the frontend after changing VITE_API_URL.`,
+        );
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [notify]);
 
   useEffect(() => {
     if (!token) return;
@@ -364,7 +439,6 @@ export function AdminPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
     try {
       const tok = await login(loginUser, loginPass);
       setStoredToken(tok);
@@ -372,27 +446,26 @@ export function AdminPage() {
       setLoginPass("");
       setResetInfo(null);
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
     setResetInfo(null);
     try {
       const username = loginUser.trim();
       if (!username) {
-        setMessage({ type: "error", text: "Enter your username first." });
+        notify("error", "Enter your username first.");
         return;
       }
       const data = await resetAdminPassword(username, resetSecret.trim() || undefined);
       setResetInfo({ username: data.username, new_password: data.new_password });
       setLoginPass(data.new_password);
       setShowLoginPassword(true);
-      setMessage({ type: "ok", text: "Password reset. Use the generated password to sign in." });
+      notify("ok", "Password reset. Use the generated password to sign in.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -414,12 +487,12 @@ export function AdminPage() {
     setHeroVideoFile(null);
     setClearHeroImageUpload(false);
     setClearHeroVideoUpload(false);
+    setToasts([]);
   }
 
   async function saveReleaseCountdown(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setMessage(null);
     try {
       const release_at = countdownForm.release_at_local.trim()
         ? new Date(countdownForm.release_at_local).toISOString()
@@ -431,16 +504,15 @@ export function AdminPage() {
         presave_url: countdownForm.presave_url.trim(),
       });
       setCountdownForm(countdownFormFromApi(updated));
-      setMessage({ type: "ok", text: "Release countdown saved." });
+      notify("ok", "Release countdown saved.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
   async function saveHeroImageSettings(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setMessage(null);
     try {
       const updated = await updateHeroHeader(token, {
         header_image_url: heroImageForm.header_image_url.trim(),
@@ -453,16 +525,15 @@ export function AdminPage() {
       setHeroImageForm(heroImageFormFromApi(updated));
       setHeroImageFile(null);
       setClearHeroImageUpload(false);
-      setMessage({ type: "ok", text: "Hero image settings saved." });
+      notify("ok", "Hero image settings saved.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
   async function saveHeroVideoSettings(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setMessage(null);
     try {
       const updated = await updateHeroHeader(token, {
         header_video_url: heroImageForm.header_video_url.trim(),
@@ -472,9 +543,9 @@ export function AdminPage() {
       setHeroImageForm(heroImageFormFromApi(updated));
       setHeroVideoFile(null);
       setClearHeroVideoUpload(false);
-      setMessage({ type: "ok", text: "Hero video settings saved." });
+      notify("ok", "Hero video settings saved.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -495,7 +566,6 @@ export function AdminPage() {
   async function saveTrack(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setMessage(null);
     const isUnreleased = Number(trackForm.is_unreleased) !== 0;
     const releaseAtLocal = String(trackForm.release_at_local || "").trim();
     const release_at =
@@ -520,11 +590,11 @@ export function AdminPage() {
       presave_url: String(trackForm.presave_url).trim(),
     };
     if (!payload.title) {
-      setMessage({ type: "error", text: "Title is required." });
+      notify("error", "Title is required.");
       return;
     }
     if (isUnreleased && !release_at) {
-      setMessage({ type: "error", text: "Unreleased tracks need a release date and time." });
+      notify("error", "Unreleased tracks need a release date and time.");
       return;
     }
     const coverFile = trackCoverFile;
@@ -540,7 +610,7 @@ export function AdminPage() {
         } else if (shouldClearCover) {
           await clearTrackCoverArt(token, editingSlug);
         }
-        setMessage({ type: "ok", text: "Track updated." });
+        notify("ok", "Track updated.");
       } else {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
@@ -548,12 +618,12 @@ export function AdminPage() {
         if (coverFile) {
           await patchTrackCoverArt(token, created.slug, coverFile);
         }
-        setMessage({ type: "ok", text: "Track created." });
+        notify("ok", "Track created.");
       }
       await loadData(token);
       startNewTrack();
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -561,11 +631,11 @@ export function AdminPage() {
     if (!token || !window.confirm(`Delete track “${slug}”?`)) return;
     try {
       await deleteTrack(token, slug);
-      setMessage({ type: "ok", text: "Track deleted." });
+      notify("ok", "Track deleted.");
       if (editingSlug === slug) startNewTrack();
       await loadData(token);
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -576,19 +646,24 @@ export function AdminPage() {
     if (from < 0 || to < 0) return;
     if (from === to) return;
     const reordered = arrayMove(sortedTracks, from, to);
+    const withOrders: Track[] = reordered.map((item, i) => ({ ...item, order: i }));
+    const previous = tracks.map((t) => ({ ...t }));
+    setTracks(withOrders);
     const patches: Promise<Track>[] = [];
-    reordered.forEach((item, i) => {
-      if (item.order !== i) {
+    withOrders.forEach((item, i) => {
+      const prev = previous.find((p) => p.slug === item.slug);
+      if (prev && prev.order !== i) {
         patches.push(updateTrack(token, item.slug, { order: i }));
       }
     });
     if (patches.length === 0) return;
     try {
-      setMessage(null);
       await Promise.all(patches);
-      await loadData(token);
+      scheduleReorderSuccessNotify("track", "Track order updated.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      clearReorderSuccessTimer("track");
+      setTracks(previous);
+      notify("error", String(err));
     }
   }
 
@@ -611,7 +686,7 @@ export function AdminPage() {
     if (!token) return;
     const youtube_id = String(videoForm.youtube_id).trim();
     if (!youtube_id) {
-      setMessage({ type: "error", text: "YouTube video ID is required." });
+      notify("error", "YouTube video ID is required.");
       return;
     }
     try {
@@ -621,19 +696,19 @@ export function AdminPage() {
           youtube_id,
           order: Number(videoForm.order) || 0,
         });
-        setMessage({ type: "ok", text: "Video updated." });
+        notify("ok", "Video updated.");
       } else {
         await createFeaturedVideo(token, {
           title: String(videoForm.title).trim(),
           youtube_id,
           order: Number(videoForm.order) || 0,
         });
-        setMessage({ type: "ok", text: "Video added." });
+        notify("ok", "Video added.");
       }
       await loadData(token);
       startNewVideo();
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -641,11 +716,11 @@ export function AdminPage() {
     if (!token || !window.confirm("Delete this featured video?")) return;
     try {
       await deleteFeaturedVideo(token, id);
-      setMessage({ type: "ok", text: "Video removed." });
+      notify("ok", "Video removed.");
       if (editingVideoId === id) startNewVideo();
       await loadData(token);
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -656,19 +731,24 @@ export function AdminPage() {
     if (from < 0 || to < 0) return;
     if (from === to) return;
     const reordered = arrayMove(sortedVideos, from, to);
+    const withOrders: FeaturedVideo[] = reordered.map((item, i) => ({ ...item, order: i }));
+    const previous = videos.map((v) => ({ ...v }));
+    setVideos(withOrders);
     const patches: Promise<FeaturedVideo>[] = [];
-    reordered.forEach((item, i) => {
-      if (item.order !== i) {
+    withOrders.forEach((item, i) => {
+      const prev = previous.find((p) => p.id === item.id);
+      if (prev && prev.order !== i) {
         patches.push(updateFeaturedVideo(token, item.id, { order: i }));
       }
     });
     if (patches.length === 0) return;
     try {
-      setMessage(null);
       await Promise.all(patches);
-      await loadData(token);
+      scheduleReorderSuccessNotify("video", "Featured video order updated.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      clearReorderSuccessTimer("video");
+      setVideos(previous);
+      notify("error", String(err));
     }
   }
 
@@ -687,7 +767,6 @@ export function AdminPage() {
   async function saveGalleryImage(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
-    setMessage(null);
     try {
       if (editingGalleryId != null) {
         await updateGalleryImage(token, editingGalleryId, {
@@ -695,10 +774,10 @@ export function AdminPage() {
           order: Number(galleryForm.order) || 0,
           image: galleryFile,
         });
-        setMessage({ type: "ok", text: "Image updated." });
+        notify("ok", "Image updated.");
       } else {
         if (!galleryFile) {
-          setMessage({ type: "error", text: "Select an image file to upload." });
+          notify("error", "Select an image file to upload.");
           return;
         }
         await createGalleryImage(token, {
@@ -706,12 +785,12 @@ export function AdminPage() {
           caption: galleryForm.caption.trim(),
           order: Number(galleryForm.order) || 0,
         });
-        setMessage({ type: "ok", text: "Image uploaded." });
+        notify("ok", "Image uploaded.");
       }
       await loadData(token);
       startNewGalleryImage();
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -719,11 +798,11 @@ export function AdminPage() {
     if (!token || !window.confirm("Delete this image?")) return;
     try {
       await deleteGalleryImage(token, id);
-      setMessage({ type: "ok", text: "Image deleted." });
+      notify("ok", "Image deleted.");
       if (editingGalleryId === id) startNewGalleryImage();
       await loadData(token);
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      notify("error", String(err));
     }
   }
 
@@ -734,30 +813,34 @@ export function AdminPage() {
     if (from < 0 || to < 0) return;
     if (from === to) return;
     const reordered = arrayMove(sortedGalleryImages, from, to);
+    const withOrders: GalleryImage[] = reordered.map((item, i) => ({ ...item, order: i }));
+    const previous = galleryImages.map((g) => ({ ...g }));
+    setGalleryImages(withOrders);
     const patches: Promise<GalleryImage>[] = [];
-    reordered.forEach((item, i) => {
-      if (item.order !== i) {
+    withOrders.forEach((item, i) => {
+      const prev = previous.find((p) => p.id === item.id);
+      if (prev && prev.order !== i) {
         patches.push(updateGalleryImage(token, item.id, { order: i }));
       }
     });
     if (patches.length === 0) return;
     try {
-      setMessage(null);
       await Promise.all(patches);
-      await loadData(token);
+      scheduleReorderSuccessNotify("gallery", "Gallery order updated.");
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      clearReorderSuccessTimer("gallery");
+      setGalleryImages(previous);
+      notify("error", String(err));
     }
   }
 
   if (!token) {
     return (
-      <div className="admin-page">
+      <>
+        <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
+        <div className="admin-page">
         <AdminSiteHeader />
         <AdminSubdomainCallout />
-        {message && (
-          <div className={`admin-msg admin-msg--${message.type}`}>{message.text}</div>
-        )}
         <div className="admin-card">
           <h2 className="admin-card__title">Log in</h2>
           <p className="admin-card__lead">
@@ -823,10 +906,13 @@ export function AdminPage() {
           </form>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+      <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
     <div className="admin-page">
       <AdminSiteHeader />
       <AdminSubdomainCallout />
@@ -846,9 +932,6 @@ export function AdminPage() {
         </div>
       </div>
 
-      {message && (
-        <div className={`admin-msg admin-msg--${message.type}`}>{message.text}</div>
-      )}
       {loading && <p className="admin-page__loading">Loading…</p>}
 
       <div className="admin-card">
@@ -1691,5 +1774,6 @@ export function AdminPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
