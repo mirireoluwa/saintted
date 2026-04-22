@@ -312,6 +312,23 @@ a.track-detail__nav-btn:hover {
   color: var(--text);
 }
 
+.track-detail__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.7rem;
+  margin: 1.5rem 0 1.75rem;
+  flex-wrap: wrap;
+}
+
+.track-detail__title-row .track-detail__title {
+  margin: 0;
+}
+
+.track-detail__title-row .track-card__new-pill {
+  align-self: center;
+}
+
 .track-detail__right {
   display: flex;
   flex-direction: column;

@@ -333,7 +333,10 @@ export function TrackDetailPage() {
             </div>
           </nav>
 
-          <h1 className="track-detail__title">{displayTrack!.title}</h1>
+          <div className="track-detail__title-row">
+            <h1 className="track-detail__title">{displayTrack!.title}</h1>
+            {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
+          </div>
 
           <div className="track-detail__main">
             <div className="track-detail__left">
