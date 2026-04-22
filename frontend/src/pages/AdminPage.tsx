@@ -157,6 +157,8 @@ function emptyGalleryForm() {
   return { caption: "", order: 0 };
 }
 
+type MoveDirection = "up" | "down";
+
 export function AdminPage() {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
   const [loginUser, setLoginUser] = useState("");
@@ -231,6 +233,43 @@ export function AdminPage() {
       }
     };
   }, [heroImageFile, heroImagePreviewUrl, heroVideoFile, heroVideoPreviewUrl]);
+
+  const sortedTracks = useMemo(
+    () => [...tracks].sort((a, b) => a.order - b.order || a.id - b.id),
+    [tracks],
+  );
+  const sortedVideos = useMemo(
+    () => [...videos].sort((a, b) => a.order - b.order || a.id - b.id),
+    [videos],
+  );
+  const sortedGalleryImages = useMemo(
+    () => [...galleryImages].sort((a, b) => a.order - b.order || a.id - b.id),
+    [galleryImages],
+  );
+
+  const trackOrderConflict = useMemo(() => {
+    const currentOrder = Number(trackForm.order) || 0;
+    return tracks.some((item) => {
+      if (editingSlug && item.slug === editingSlug) return false;
+      return item.order === currentOrder;
+    });
+  }, [editingSlug, trackForm.order, tracks]);
+
+  const videoOrderConflict = useMemo(() => {
+    const currentOrder = Number(videoForm.order) || 0;
+    return videos.some((item) => {
+      if (editingVideoId != null && item.id === editingVideoId) return false;
+      return item.order === currentOrder;
+    });
+  }, [editingVideoId, videoForm.order, videos]);
+
+  const galleryOrderConflict = useMemo(() => {
+    const currentOrder = Number(galleryForm.order) || 0;
+    return galleryImages.some((item) => {
+      if (editingGalleryId != null && item.id === editingGalleryId) return false;
+      return item.order === currentOrder;
+    });
+  }, [editingGalleryId, galleryForm.order, galleryImages]);
 
   const loadData = useCallback(async (t: string, signal?: AbortSignal) => {
     setLoading(true);
@@ -513,6 +552,26 @@ export function AdminPage() {
     }
   }
 
+  async function moveTrackOrder(slug: string, direction: MoveDirection) {
+    if (!token) return;
+    const idx = sortedTracks.findIndex((item) => item.slug === slug);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sortedTracks.length) return;
+    const current = sortedTracks[idx];
+    const target = sortedTracks[targetIdx];
+    try {
+      setMessage(null);
+      await Promise.all([
+        updateTrack(token, current.slug, { order: target.order }),
+        updateTrack(token, target.slug, { order: current.order }),
+      ]);
+      await loadData(token);
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
   function startNewVideo() {
     setEditingVideoId(null);
     setVideoForm({ title: "", youtube_id: "", order: 0 });
@@ -570,6 +629,26 @@ export function AdminPage() {
     }
   }
 
+  async function moveVideoOrder(id: number, direction: MoveDirection) {
+    if (!token) return;
+    const idx = sortedVideos.findIndex((item) => item.id === id);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sortedVideos.length) return;
+    const current = sortedVideos[idx];
+    const target = sortedVideos[targetIdx];
+    try {
+      setMessage(null);
+      await Promise.all([
+        updateFeaturedVideo(token, current.id, { order: target.order }),
+        updateFeaturedVideo(token, target.id, { order: current.order }),
+      ]);
+      await loadData(token);
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
   function startNewGalleryImage() {
     setEditingGalleryId(null);
     setGalleryForm(emptyGalleryForm());
@@ -619,6 +698,26 @@ export function AdminPage() {
       await deleteGalleryImage(token, id);
       setMessage({ type: "ok", text: "Image deleted." });
       if (editingGalleryId === id) startNewGalleryImage();
+      await loadData(token);
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    }
+  }
+
+  async function moveGalleryOrder(id: number, direction: MoveDirection) {
+    if (!token) return;
+    const idx = sortedGalleryImages.findIndex((item) => item.id === id);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sortedGalleryImages.length) return;
+    const current = sortedGalleryImages[idx];
+    const target = sortedGalleryImages[targetIdx];
+    try {
+      setMessage(null);
+      await Promise.all([
+        updateGalleryImage(token, current.id, { order: target.order }),
+        updateGalleryImage(token, target.id, { order: current.order }),
+      ]);
       await loadData(token);
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -996,11 +1095,17 @@ export function AdminPage() {
               <input
                 id="t-order"
                 type="number"
+                className={trackOrderConflict ? "admin-input--error" : undefined}
                 value={trackForm.order}
                 onChange={(e) =>
                   setTrackForm((f) => ({ ...f, order: parseInt(e.target.value, 10) || 0 }))
                 }
               />
+              {trackOrderConflict ? (
+                <p className="admin-form__hint admin-form__hint--error">
+                  This order number is already used by another track.
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="admin-form__row">
@@ -1202,7 +1307,7 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {tracks.map((t) => (
+              {sortedTracks.map((t, idx) => (
                 <tr key={t.id}>
                   <td>{t.order}</td>
                   <td>{t.title}</td>
@@ -1221,6 +1326,24 @@ export function AdminPage() {
                       onClick={() => startEditTrack(t)}
                     >
                       Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveTrackOrder(t.slug, "up")}
+                      disabled={idx === 0}
+                    >
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveTrackOrder(t.slug, "down")}
+                      disabled={idx === sortedTracks.length - 1}
+                    >
+                      Down
                     </button>
                     <button
                       type="button"
@@ -1263,6 +1386,7 @@ export function AdminPage() {
               <input
                 id="v-order"
                 type="number"
+                className={videoOrderConflict ? "admin-input--error" : undefined}
                 value={videoForm.order}
                 onChange={(e) =>
                   setVideoForm((f) => ({
@@ -1271,6 +1395,11 @@ export function AdminPage() {
                   }))
                 }
               />
+              {videoOrderConflict ? (
+                <p className="admin-form__hint admin-form__hint--error">
+                  This order number is already used by another featured video.
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="admin-page__actions">
@@ -1299,7 +1428,7 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {videos.map((v) => (
+              {sortedVideos.map((v, idx) => (
                 <tr key={v.id}>
                   <td>{v.order}</td>
                   <td>{v.title || "—"}</td>
@@ -1312,6 +1441,24 @@ export function AdminPage() {
                       onClick={() => startEditVideo(v)}
                     >
                       Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveVideoOrder(v.id, "up")}
+                      disabled={idx === 0}
+                    >
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveVideoOrder(v.id, "down")}
+                      disabled={idx === sortedVideos.length - 1}
+                    >
+                      Down
                     </button>
                     <button
                       type="button"
@@ -1357,11 +1504,17 @@ export function AdminPage() {
               <input
                 id="g-order"
                 type="number"
+                className={galleryOrderConflict ? "admin-input--error" : undefined}
                 value={galleryForm.order}
                 onChange={(e) =>
                   setGalleryForm((f) => ({ ...f, order: parseInt(e.target.value, 10) || 0 }))
                 }
               />
+              {galleryOrderConflict ? (
+                <p className="admin-form__hint admin-form__hint--error">
+                  This order number is already used by another gallery image.
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="admin-page__actions">
@@ -1390,7 +1543,7 @@ export function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {galleryImages.map((img) => (
+              {sortedGalleryImages.map((img, idx) => (
                 <tr key={img.id}>
                   <td>{img.order}</td>
                   <td>
@@ -1407,6 +1560,24 @@ export function AdminPage() {
                       onClick={() => startEditGalleryImage(img)}
                     >
                       Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveGalleryOrder(img.id, "up")}
+                      disabled={idx === 0}
+                    >
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn"
+                      style={{ marginRight: "0.35rem" }}
+                      onClick={() => void moveGalleryOrder(img.id, "down")}
+                      disabled={idx === sortedGalleryImages.length - 1}
+                    >
+                      Down
                     </button>
                     <button
                       type="button"
