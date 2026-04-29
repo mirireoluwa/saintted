@@ -75,7 +75,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     setHeaderImageFocus(focus);
   }, [releaseLoaded, releaseConfig]);
 
-  const activeVideoUrl = headerVideoUrl;
+  const activeVideoUrl = headerVideoUrl || "/hero-bg.mp4";
 
   useEffect(() => {
     const mediaKey = activeVideoUrl || headerImageUrl || "";
