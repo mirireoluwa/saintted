@@ -34,15 +34,6 @@
   text-decoration: none;
 }
 
-[data-theme="light"] .admin-callout--subdomain {
-  border-color: rgba(255, 75, 99, 0.42);
-  background: rgba(255, 75, 99, 0.08);
-}
-
-[data-theme="light"] .admin-callout--subdomain a {
-  color: var(--accent-saintted);
-}
-
 .admin-page {
   min-height: 100vh;
   padding: 0 1rem 3rem;
@@ -105,10 +96,6 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-[data-theme="light"] .admin-card {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-}
-
 .admin-card__title {
   font-family: var(--font-body);
   font-size: 1rem;
@@ -133,10 +120,6 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-}
-
-[data-theme="light"] .admin-card__lead code {
-  background: rgba(0, 0, 0, 0.06);
 }
 
 .admin-form {
@@ -214,12 +197,6 @@
   border-radius: var(--radius-sm);
   background: rgba(9, 9, 12, 0.55);
   color: var(--text);
-}
-
-[data-theme="light"] .admin-form input,
-[data-theme="light"] .admin-form select,
-[data-theme="light"] .admin-form textarea {
-  background: rgba(255, 255, 255, 0.75);
 }
 
 .admin-form__row--checkbox {
@@ -305,18 +282,6 @@
   background: var(--hover-green-bg, rgba(0, 255, 119, 0.08));
   color: var(--hover-green-text, var(--accent-green));
   border-color: var(--hover-green-border, rgba(0, 255, 119, 0.45));
-}
-
-[data-theme="light"] .admin-btn--primary {
-  background: #18181b;
-  color: #fafafa;
-  border-color: #18181b;
-}
-
-[data-theme="light"] .admin-btn--primary:hover {
-  background: var(--hover-green-bg, rgba(255, 75, 99, 0.12));
-  color: var(--hover-green-text, #be123c);
-  border-color: var(--hover-green-border, rgba(255, 75, 99, 0.58));
 }
 
 .admin-btn--danger {
@@ -443,17 +408,6 @@
   border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
-[data-theme="light"] .admin-msg--error {
-  color: rgb(185, 28, 28);
-  background: rgba(248, 113, 113, 0.15);
-}
-
-[data-theme="light"] .admin-msg--ok {
-  color: #be123c;
-  background: rgba(255, 75, 99, 0.12);
-  border-color: rgba(255, 75, 99, 0.28);
-}
-
 /* Fixed slide-in toasts (save / errors / load issues) */
 .admin-toast-stack {
   position: fixed;
@@ -524,18 +478,6 @@
   color: rgb(252, 165, 165);
 }
 
-[data-theme="light"] .admin-toast--ok {
-  border-color: rgba(255, 75, 99, 0.4);
-  background: color-mix(in srgb, rgba(255, 75, 99, 0.12) 40%, #fff);
-  color: #18181b;
-}
-
-[data-theme="light"] .admin-toast--error {
-  color: rgb(127, 29, 29);
-  border-color: rgba(220, 38, 38, 0.45);
-  background: color-mix(in srgb, rgba(248, 113, 113, 0.2) 25%, #fff);
-}
-
 .admin-toast__close {
   flex-shrink: 0;
   margin: 0;
@@ -565,10 +507,6 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: rgba(9, 9, 12, 0.55);
-}
-
-[data-theme="light"] .admin-password-wrap {
-  background: rgba(255, 255, 255, 0.75);
 }
 
 .admin-password-wrap:focus-within {
@@ -665,19 +603,11 @@
   outline-offset: 3px;
 }
 
-[data-theme="light"] .admin-crop-editor input[type="range"]:focus-visible {
-  outline-color: var(--accent-saintted);
-}
-
 .admin-crop-editor input[type="range"]::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 999px;
   background: var(--border);
   border: 1px solid rgba(128, 128, 128, 0.12);
-}
-
-[data-theme="light"] .admin-crop-editor input[type="range"]::-webkit-slider-runnable-track {
-  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .admin-crop-editor input[type="range"]::-webkit-slider-thumb {
@@ -706,29 +636,11 @@
     0 4px 18px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="light"] .admin-crop-editor input[type="range"]::-webkit-slider-thumb {
-  background: var(--accent-saintted);
-  border-color: #fff;
-  box-shadow:
-    0 0 0 1px rgba(255, 75, 99, 0.45),
-    0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .admin-crop-editor input[type="range"]:active::-webkit-slider-thumb {
-  box-shadow:
-    0 0 0 2px rgba(255, 75, 99, 0.22),
-    0 4px 16px rgba(0, 0, 0, 0.14);
-}
-
 .admin-crop-editor input[type="range"]::-moz-range-track {
   height: 6px;
   border-radius: 999px;
   background: var(--border);
   border: 1px solid rgba(128, 128, 128, 0.12);
-}
-
-[data-theme="light"] .admin-crop-editor input[type="range"]::-moz-range-track {
-  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .admin-crop-editor input[type="range"]::-moz-range-thumb {
@@ -741,11 +653,6 @@
     0 0 0 1px rgba(0, 255, 119, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.35);
   cursor: grab;
-}
-
-[data-theme="light"] .admin-crop-editor input[type="range"]::-moz-range-thumb {
-  background: var(--accent-saintted);
-  border-color: #fff;
 }
 
 .admin-crop-editor input[type="range"]:active::-moz-range-thumb {

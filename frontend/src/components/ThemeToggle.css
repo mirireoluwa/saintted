@@ -59,26 +59,6 @@
 }
 
 /* Light theme active → button reads “dark” (dark mode inactive): muted, no yellow */
-[data-theme="light"] .theme-toggle {
-  color: #71717a;
-  border-color: rgba(0, 0, 0, 0.12);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-[data-theme="light"] .theme-toggle:hover {
-  color: #3f3f46;
-  border-color: rgba(0, 0, 0, 0.18);
-  background: rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="light"] .theme-toggle .theme-toggle__icon {
-  color: #a1a1aa;
-}
-
-[data-theme="light"] .theme-toggle:hover .theme-toggle__icon {
-  color: #52525b;
-}
-
 .theme-toggle__label {
   line-height: 1;
 }

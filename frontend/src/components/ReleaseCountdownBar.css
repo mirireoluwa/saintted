@@ -95,26 +95,6 @@
   }
 }
 
-[data-theme="light"] .release-countdown-bar__ticker-wrap {
-  /* Same black glass strip as dark mode; light theme only changes page chrome, not this headline bar */
-  border-top-color: rgba(255, 255, 255, 0.28);
-  border-bottom-color: rgba(255, 255, 255, 0.28);
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0.58)),
-    radial-gradient(circle at 10% 50%, rgba(0, 255, 119, 0.22), transparent 42%);
-}
-
-[data-theme="light"] .release-countdown-bar__ticker-track span {
-  color: #fecdd3;
-  text-shadow: 0 0 10px rgba(255, 75, 99, 0.32);
-  animation: release-ticker-color-light 3.6s ease-in-out infinite alternate;
-}
-
-[data-theme="light"] .release-countdown-bar__ticker--link:hover .release-countdown-bar__ticker-track span {
-  color: #fff1f2;
-  text-shadow: 0 0 12px rgba(255, 75, 99, 0.48);
-}
-
 @keyframes release-ticker-color-light {
   0% {
     color: #fda4af;

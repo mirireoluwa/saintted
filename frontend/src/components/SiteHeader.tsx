@@ -1,7 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ThemeToggle } from "./ThemeToggle";
 import { sectionTransition } from "../utils/motion";
 import "./SiteHeader.css";
 
@@ -59,7 +58,6 @@ export function SiteHeader() {
             </nav>
 
             <div className="site-header__tools">
-              <ThemeToggle embedded />
               <button
                 type="button"
                 className="site-header__menu-btn"

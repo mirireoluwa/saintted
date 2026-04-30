@@ -2,28 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Match system theme before React (see ThemeContext saintted-theme-mode) -->
-    <script>
-      (function () {
-        try {
-          var k = "saintted-theme-mode";
-          var m = localStorage.getItem(k);
-          if (m === "light" || m === "dark") {
-            document.documentElement.setAttribute("data-theme", m);
-            return;
-          }
-          var legacy = localStorage.getItem("saintted-theme");
-          if (legacy === "light" || legacy === "dark") {
-            document.documentElement.setAttribute("data-theme", legacy);
-            return;
-          }
-          document.documentElement.setAttribute(
-            "data-theme",
-            window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"
-          );
-        } catch (e) {}
-      })();
-    </script>
+    <script>document.documentElement.setAttribute("data-theme", "dark");</script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta

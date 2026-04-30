@@ -134,19 +134,11 @@
   user-select: none;
 }
 
-[data-theme="light"] .track-detail__nav-btn {
-  background: rgba(255, 255, 255, 0.5);
-}
-
 a.track-detail__nav-btn:hover {
   color: var(--text);
   border-color: rgba(255, 255, 255, 0.2);
   background: var(--bg-hover);
   text-decoration: none;
-}
-
-[data-theme="light"] a.track-detail__nav-btn:hover {
-  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .track-detail__breadcrumb {
@@ -169,10 +161,6 @@ a.track-detail__nav-btn:hover {
 .track-detail__breadcrumb a:hover {
   color: var(--accent-green);
   text-decoration: none;
-}
-
-[data-theme="light"] .track-detail__breadcrumb a:hover {
-  color: var(--accent-saintted);
 }
 
 .track-detail__breadcrumb-sep {
@@ -283,10 +271,6 @@ a.track-detail__nav-btn:hover {
   background: rgba(0, 0, 0, 0.35);
 }
 
-[data-theme="light"] .track-detail__cover {
-  box-shadow: none;
-}
-
 .track-detail__cover-img {
   position: absolute;
   inset: 0;
@@ -351,10 +335,6 @@ a.track-detail__nav-btn:hover {
   color: #ffffff;
   margin: 0;
   white-space: pre-line;
-}
-
-[data-theme="light"] .track-detail__about-text {
-  color: var(--text);
 }
 
 .track-detail__meta {
@@ -429,22 +409,6 @@ a.track-detail__nav-btn:hover {
   color: #1db954;
   background: rgba(29, 185, 84, 0.12);
   border-color: rgba(29, 185, 84, 0.4);
-}
-
-[data-theme="light"] .track-detail__stream-link--youtube:hover {
-  color: #cc0000;
-  background: rgba(255, 0, 51, 0.08);
-}
-
-[data-theme="light"] .track-detail__stream-link--apple:hover {
-  color: #d41f33;
-  background: rgba(250, 36, 60, 0.08);
-}
-
-[data-theme="light"] .track-detail__stream-link--spotify:hover {
-  color: var(--accent-saintted);
-  background: rgba(255, 75, 99, 0.1);
-  border-color: rgba(255, 75, 99, 0.38);
 }
 
 .track-detail__footer {
@@ -547,16 +511,6 @@ a.track-detail__nav-btn:hover {
   );
   background-size: 200% 100%;
   animation: track-skel-shimmer 1.2s ease-in-out infinite;
-}
-
-[data-theme="light"] .track-detail__skeleton-nav {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.06) 0%,
-    rgba(0, 0, 0, 0.1) 50%,
-    rgba(0, 0, 0, 0.06) 100%
-  );
-  background-size: 200% 100%;
 }
 
 .track-detail__skeleton-title {

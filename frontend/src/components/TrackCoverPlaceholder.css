@@ -20,11 +20,6 @@
   filter: invert(1) grayscale(1) brightness(0.88);
 }
 
-[data-theme="light"] .track-cover-placeholder__disc {
-  opacity: 0.28;
-  filter: grayscale(1) brightness(0.35);
-}
-
 .track-cover-placeholder--detail .track-cover-placeholder__disc {
   width: min(36%, 7.5rem);
 }
@@ -34,7 +29,3 @@
   filter: invert(1) grayscale(1) brightness(0.9);
 }
 
-[data-theme="light"] .track-cover-placeholder--detail .track-cover-placeholder__disc {
-  opacity: 0.3;
-  filter: grayscale(1) brightness(0.4);
-}

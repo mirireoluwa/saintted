@@ -72,10 +72,6 @@
   background: rgba(0, 0, 0, 0.58);
 }
 
-[data-theme="light"] .unreleased-fs a.track-detail__nav-btn:hover {
-  border-color: var(--hover-green-border, rgba(255, 75, 99, 0.55));
-}
-
 .unreleased-fs__badge {
   font-family: var(--font-mono);
   font-size: 9px;
