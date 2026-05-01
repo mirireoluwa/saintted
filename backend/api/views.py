@@ -93,12 +93,22 @@ def _build_circle_email_html(first: str, subject: str) -> str:
               <p style="margin:0 0 36px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
                 you'll hear from me when it matters: new music, honest updates, and things i only share in here. glad you're here.
               </p>
-              <a href="https://saintted.com" style="display:inline-block;padding:13px 30px;background:#ffffff;color:#000000;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;margin-right:12px;">
-                visit saintted.com
-              </a>
-              <a href="https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF" style="display:inline-block;padding:13px 30px;background:transparent;color:rgba(255,255,255,0.7);font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;border:1px solid rgba(255,255,255,0.2);">
-                join the whatsapp
-              </a>
+              <table cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0 12px;">
+                <tr>
+                  <td>
+                    <a href="https://saintted.com" style="display:block;padding:13px 30px;background:#ffffff;color:#000000;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;text-align:center;">
+                      visit saintted.com
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a href="https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF" style="display:block;padding:13px 30px;background:transparent;color:rgba(255,255,255,0.7);font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;border:1px solid rgba(255,255,255,0.2);text-align:center;">
+                      join the whatsapp
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
