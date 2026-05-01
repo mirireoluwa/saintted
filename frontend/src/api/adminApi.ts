@@ -360,3 +360,37 @@ export async function deleteGalleryImage(token: string, id: number): Promise<voi
   });
   if (!res.ok) throw new Error("Delete failed");
 }
+
+export type MailingListSubscriber = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  subscribed_at: string;
+};
+
+export async function fetchMailingListSubscribers(
+  token: string,
+): Promise<{ count: number; subscribers: MailingListSubscriber[] }> {
+  const res = await fetchLive(`${API_BASE}/mailing-list/subscribers/`, {
+    headers: authHeaders(token),
+  });
+  return guardAuthJson<{ count: number; subscribers: MailingListSubscriber[] }>(res, "subscribers");
+}
+
+export async function broadcastEmail(
+  token: string,
+  payload: { subject: string; html: string; text?: string },
+): Promise<{ sent: number }> {
+  const res = await fetchLive(`${API_BASE}/mailing-list/broadcast/`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = (err as { error?: string }).error || `Broadcast failed (HTTP ${res.status})`;
+    throw new Error(msg);
+  }
+  return res.json();
+}

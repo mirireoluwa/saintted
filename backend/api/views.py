@@ -4,14 +4,12 @@ import threading
 import urllib.request
 from urllib.error import URLError
 
-from django.core.mail import EmailMultiAlternatives
-
 from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
 from rest_framework import generics, status, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -50,27 +48,9 @@ def _send_to_sheets(webhook_url: str, subscriber: MailingListSubscriber) -> None
         logger.warning("Google Sheets webhook failed for %s: %s", subscriber.email, exc)
 
 
-def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
-    """Fire-and-forget: send a confirmation email to a new subscriber."""
-    from django.conf import settings as _settings  # local import avoids circular at module load
-
-    subject = getattr(_settings, "MAILING_LIST_CONFIRMATION_SUBJECT", "you're on the list.")
-    from_email = getattr(_settings, "DEFAULT_FROM_EMAIL", "saintted <noreply@saintted.com>")
-    first = subscriber.first_name
-
-    text_body = (
-        f"hey {first},\n\n"
-        "welcome to The Circle.\n\n"
-        "you're now part of something i hold close — a small, intentional community "
-        "of people who actually care about the music.\n\n"
-        "you'll hear from me when it matters: new music, honest updates, "
-        "and things i only share in here.\n\n"
-        "glad you're here.\n\n"
-        "love, saintted\n"
-        "saintted.com\n"
-    )
-
-    html_body = f"""<!DOCTYPE html>
+def _build_circle_email_html(first: str, subject: str) -> str:
+    """Return the HTML body for The Circle welcome / confirmation email."""
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -113,8 +93,11 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
               <p style="margin:0 0 36px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
                 you'll hear from me when it matters: new music, honest updates, and things i only share in here. glad you're here.
               </p>
-              <a href="https://saintted.com" style="display:inline-block;padding:13px 30px;background:#ffffff;color:#000000;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;">
+              <a href="https://saintted.com" style="display:inline-block;padding:13px 30px;background:#ffffff;color:#000000;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;margin-right:12px;">
                 visit saintted.com
+              </a>
+              <a href="https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF" style="display:inline-block;padding:13px 30px;background:transparent;color:rgba(255,255,255,0.7);font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;border:1px solid rgba(255,255,255,0.2);">
+                join the whatsapp
               </a>
             </td>
           </tr>
@@ -141,16 +124,54 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
 </body>
 </html>"""
 
+
+def _send_via_resend(*, from_email: str, to: list[str], subject: str, html: str, text: str) -> None:
+    """Send a single email via the Resend SDK. Raises on failure."""
+    import resend as _resend  # installed via requirements.txt
+    _resend.api_key = settings.RESEND_API_KEY
+    _resend.Emails.send({
+        "from": from_email,
+        "to": to,
+        "subject": subject,
+        "html": html,
+        "text": text,
+    })
+
+
+def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
+    """Fire-and-forget: send a welcome email to a new subscriber via Resend."""
+    api_key = getattr(settings, "RESEND_API_KEY", "").strip()
+    if not api_key:
+        logger.info("RESEND_API_KEY not set — skipping confirmation email for %s", subscriber.email)
+        return
+
+    subject = getattr(settings, "MAILING_LIST_CONFIRMATION_SUBJECT", "you're on the list.")
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "saintted <noreply@saintted.com>")
+    first = subscriber.first_name
+
+    text_body = (
+        f"hey {first},\n\n"
+        "welcome to The Circle.\n\n"
+        "you're now part of something i hold close — a small, intentional community "
+        "of people who actually care about the music.\n\n"
+        "you'll hear from me when it matters: new music, honest updates, "
+        "and things i only share in here.\n\n"
+        "glad you're here.\n\n"
+        "join the whatsapp channel: https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF\n\n"
+        "love, saintted\n"
+        "saintted.com\n"
+    )
+    html_body = _build_circle_email_html(first, subject)
+
     try:
-        logger.info("Sending confirmation email to %s via backend=%s", subscriber.email, _settings.EMAIL_BACKEND)
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_body,
+        logger.info("Sending confirmation email to %s via Resend", subscriber.email)
+        _send_via_resend(
             from_email=from_email,
             to=[subscriber.email],
+            subject=subject,
+            html=html_body,
+            text=text_body,
         )
-        msg.attach_alternative(html_body, "text/html")
-        msg.send(fail_silently=False)
         logger.info("Confirmation email sent OK to %s", subscriber.email)
     except Exception as exc:
         logger.error("Confirmation email FAILED for %s: %s", subscriber.email, exc, exc_info=True)
@@ -159,12 +180,9 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
 def api_email_diagnostic(request):
     """
     GET /api/diagnostic/email/?to=you@example.com
-    Sends a test email and reports success or the exact error.
+    Sends a test email via Resend and reports success or the exact error.
     Requires token auth so it is not publicly abusable.
     """
-    from django.conf import settings as _s
-    from django.core.mail import send_mail
-
     user = getattr(request, "user", None)
     if not (user and user.is_authenticated):
         return JsonResponse({"error": "authentication required"}, status=401)
@@ -173,21 +191,23 @@ def api_email_diagnostic(request):
     if not to:
         return JsonResponse({"error": "pass ?to=your@email.com"}, status=400)
 
+    api_key = getattr(settings, "RESEND_API_KEY", "").strip()
     out: dict = {
-        "backend": _s.EMAIL_BACKEND,
-        "host": getattr(_s, "EMAIL_HOST", "(not set)"),
-        "port": getattr(_s, "EMAIL_PORT", "(not set)"),
-        "user": getattr(_s, "EMAIL_HOST_USER", "(not set)"),
-        "from": getattr(_s, "DEFAULT_FROM_EMAIL", "(not set)"),
+        "provider": "resend",
+        "resend_api_key_set": bool(api_key),
+        "from": getattr(settings, "DEFAULT_FROM_EMAIL", "(not set)"),
         "sent": False,
     }
+    if not api_key:
+        out["error"] = "RESEND_API_KEY is not set"
+        return JsonResponse(out)
     try:
-        send_mail(
+        _send_via_resend(
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to],
             subject="saintted email diagnostic",
-            message="If you received this, email sending is working correctly.",
-            from_email=_s.DEFAULT_FROM_EMAIL,
-            recipient_list=[to],
-            fail_silently=False,
+            html="<p>If you received this, Resend email sending is working correctly.</p>",
+            text="If you received this, Resend email sending is working correctly.",
         )
         out["sent"] = True
     except Exception as exc:
@@ -327,3 +347,92 @@ class MailingListSubscribeView(APIView):
             {"message": "You're on the list!", "already_subscribed": False},
             status=status.HTTP_201_CREATED,
         )
+
+
+class MailingListSubscribersView(APIView):
+    """
+    GET /api/mailing-list/subscribers/
+    Admin-only: return subscriber count + list (newest first).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        subscribers = MailingListSubscriber.objects.all().order_by("-subscribed_at")
+        data = [
+            {
+                "id": s.id,
+                "first_name": s.first_name,
+                "last_name": s.last_name,
+                "email": s.email,
+                "subscribed_at": s.subscribed_at.isoformat(),
+            }
+            for s in subscribers
+        ]
+        return Response({"count": len(data), "subscribers": data})
+
+
+class BroadcastEmailView(APIView):
+    """
+    POST /api/mailing-list/broadcast/
+    Admin-only: send a custom HTML email to every subscriber via Resend batch API.
+
+    Request body (JSON):
+      { "subject": "...", "html": "...", "text": "..." (optional) }
+
+    Resend batch limit is 100 per call — we chunk automatically.
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser]
+
+    def post(self, request):
+        subject = (request.data.get("subject") or "").strip()
+        html = (request.data.get("html") or "").strip()
+        text = (request.data.get("text") or "").strip()
+
+        if not subject:
+            return Response({"error": "subject is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not html:
+            return Response({"error": "html is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        api_key = getattr(settings, "RESEND_API_KEY", "").strip()
+        if not api_key:
+            return Response(
+                {"error": "RESEND_API_KEY is not configured on the server."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "saintted <noreply@saintted.com>")
+        subscribers = list(MailingListSubscriber.objects.all().values_list("email", flat=True))
+        if not subscribers:
+            return Response({"sent": 0, "message": "No subscribers found."})
+
+        try:
+            import resend as _resend
+            _resend.api_key = api_key
+
+            # Resend batch: max 100 per call
+            BATCH_SIZE = 100
+            total_sent = 0
+            for i in range(0, len(subscribers), BATCH_SIZE):
+                batch_emails = subscribers[i: i + BATCH_SIZE]
+                messages = [
+                    {
+                        "from": from_email,
+                        "to": [email],
+                        "subject": subject,
+                        "html": html,
+                        **({"text": text} if text else {}),
+                    }
+                    for email in batch_emails
+                ]
+                _resend.Batch.send(messages)
+                total_sent += len(batch_emails)
+
+            logger.info("Broadcast sent to %d subscribers: %s", total_sent, subject)
+            return Response({"sent": total_sent})
+        except Exception as exc:
+            logger.error("Broadcast email FAILED: %s", exc, exc_info=True)
+            return Response(
+                {"error": str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

@@ -5,6 +5,7 @@ import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
+  broadcastEmail,
   clearTrackCoverArt,
   createFeaturedVideo,
   createGalleryImage,
@@ -14,6 +15,7 @@ import {
   deleteTrack,
   fetchFeaturedVideosAuth,
   fetchGalleryImagesAuth,
+  fetchMailingListSubscribers,
   fetchReleaseCountdownAuth,
   fetchTracksAuth,
   getStoredToken,
@@ -26,6 +28,7 @@ import {
   updateHeroHeader,
   updateReleaseCountdown,
   updateTrack,
+  type MailingListSubscriber,
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
@@ -207,6 +210,14 @@ export function AdminPage() {
   const [videos, setVideos] = useState<FeaturedVideo[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Mailing list
+  const [mlSubscribers, setMlSubscribers] = useState<MailingListSubscriber[]>([]);
+  const [mlCount, setMlCount] = useState<number | null>(null);
+  const [mlLoading, setMlLoading] = useState(false);
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastBody, setBroadcastBody] = useState("");
+  const [broadcastSending, setBroadcastSending] = useState(false);
 
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
@@ -436,6 +447,53 @@ export function AdminPage() {
     void loadData(token, ac.signal);
     return () => ac.abort();
   }, [token, loadData]);
+
+  const loadMailingList = useCallback(async (t: string) => {
+    setMlLoading(true);
+    try {
+      const data = await fetchMailingListSubscribers(t);
+      setMlSubscribers(data.subscribers);
+      setMlCount(data.count);
+    } catch (err) {
+      notify("error", `Failed to load subscribers: ${String(err)}`);
+    } finally {
+      setMlLoading(false);
+    }
+  }, [notify]);
+
+  useEffect(() => {
+    if (!token) return;
+    void loadMailingList(token);
+  }, [token, loadMailingList]);
+
+  async function handleBroadcast(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    if (!broadcastSubject.trim() || !broadcastBody.trim()) {
+      notify("error", "Subject and message are both required.");
+      return;
+    }
+    setBroadcastSending(true);
+    try {
+      // Convert plain text body to simple HTML paragraphs
+      const html = `<!DOCTYPE html><html><body style="background:#000;color:#fff;font-family:system-ui,sans-serif;padding:40px 24px;max-width:600px;margin:0 auto;">${broadcastBody
+        .split(/\n\n+/)
+        .map((p) => `<p style="line-height:1.7;color:rgba(255,255,255,0.8);">${p.replace(/\n/g, "<br/>")}</p>`)
+        .join("")}<p style="margin-top:40px;"><a href="https://saintted.com" style="color:#fff;">saintted.com</a></p></body></html>`;
+      const result = await broadcastEmail(token, {
+        subject: broadcastSubject.trim(),
+        html,
+        text: broadcastBody.trim(),
+      });
+      notify("ok", `Sent to ${result.sent} subscriber${result.sent === 1 ? "" : "s"}.`);
+      setBroadcastSubject("");
+      setBroadcastBody("");
+    } catch (err) {
+      notify("error", `Broadcast failed: ${String(err)}`);
+    } finally {
+      setBroadcastSending(false);
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -1771,6 +1829,109 @@ export function AdminPage() {
               ) : null}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* ── Mailing list ───────────────────────────────────────────── */}
+      <div className="admin-page__toolbar" style={{ marginTop: "2.5rem" }}>
+        <div className="admin-page__toolbar-label">
+          <p>.mailing list</p>
+          <span className="admin-page__toolbar-line" aria-hidden />
+        </div>
+        <div className="admin-page__actions">
+          <button
+            type="button"
+            className="admin-btn"
+            onClick={() => token && void loadMailingList(token)}
+            disabled={mlLoading}
+          >
+            {mlLoading ? "Loading…" : "Refresh"}
+          </button>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ marginTop: "1rem" }}>
+        <div className="admin-card__header">
+          <h2 className="admin-card__title">
+            Subscribers{mlCount !== null ? ` (${mlCount})` : ""}
+          </h2>
+        </div>
+        <div className="admin-card__body">
+          <div className="admin-table-wrap" style={{ maxHeight: "320px", overflowY: "auto" }}>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mlSubscribers.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.first_name} {s.last_name}</td>
+                    <td>{s.email}</td>
+                    <td>{new Date(s.subscribed_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {mlSubscribers.length === 0 && !mlLoading ? (
+                  <tr>
+                    <td colSpan={3}>No subscribers yet.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ marginTop: "1rem" }}>
+        <div className="admin-card__header">
+          <h2 className="admin-card__title">Broadcast Email</h2>
+          <p className="admin-card__subtitle" style={{ fontSize: "0.8rem", opacity: 0.6, marginTop: "0.25rem" }}>
+            Sends to all {mlCount !== null ? mlCount : "…"} subscribers via Resend.
+          </p>
+        </div>
+        <div className="admin-card__body">
+          <form onSubmit={(e) => void handleBroadcast(e)} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div className="admin-form__field">
+              <label className="admin-form__label" htmlFor="bc-subject">Subject</label>
+              <input
+                id="bc-subject"
+                className="admin-form__input"
+                type="text"
+                value={broadcastSubject}
+                onChange={(e) => setBroadcastSubject(e.target.value)}
+                placeholder="new music, updates, etc."
+                required
+              />
+            </div>
+            <div className="admin-form__field">
+              <label className="admin-form__label" htmlFor="bc-body">Message</label>
+              <textarea
+                id="bc-body"
+                className="admin-form__input"
+                rows={8}
+                value={broadcastBody}
+                onChange={(e) => setBroadcastBody(e.target.value)}
+                placeholder={"hey everyone,\n\n..."}
+                required
+                style={{ resize: "vertical", fontFamily: "inherit" }}
+              />
+              <p style={{ fontSize: "0.75rem", opacity: 0.5, marginTop: "0.25rem" }}>
+                Plain text — double line breaks become paragraphs. Sent as HTML + plain text.
+              </p>
+            </div>
+            <div>
+              <button
+                type="submit"
+                className="admin-btn admin-btn--primary"
+                disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
+              >
+                {broadcastSending ? "Sending…" : `Send to ${mlCount ?? "…"} subscriber${mlCount === 1 ? "" : "s"}`}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

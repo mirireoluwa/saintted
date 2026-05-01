@@ -235,20 +235,9 @@ REST_FRAMEWORK = {
 # Cover-art fallback (iTunes / Spotify search) — override if stores list you under another spelling
 COVER_ART_ARTIST = (os.environ.get("COVER_ART_ARTIST") or "Saintted").strip() or "Saintted"
 
-# Email — configure via env vars in Railway to send confirmation emails.
-# Works with any SMTP provider (Gmail, Zoho, SendGrid SMTP, etc.).
-# Leave EMAIL_HOST unset to silently skip sending (console backend used in dev).
-_email_host = (os.environ.get("EMAIL_HOST") or "").strip()
-if _email_host:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = _email_host
-    EMAIL_PORT = int(os.environ.get("EMAIL_PORT") or 587)
-    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
-    EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
-    EMAIL_HOST_USER = (os.environ.get("EMAIL_HOST_USER") or "").strip()
-    EMAIL_HOST_PASSWORD = (os.environ.get("EMAIL_HOST_PASSWORD") or "").strip()
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email — Resend (https://resend.com) for transactional and broadcast emails.
+# Set RESEND_API_KEY in Railway env vars. Leave unset to skip sending (dev/console fallback).
+RESEND_API_KEY = (os.environ.get("RESEND_API_KEY") or "").strip()
 
 DEFAULT_FROM_EMAIL = (os.environ.get("DEFAULT_FROM_EMAIL") or "saintted <noreply@saintted.com>").strip()
 MAILING_LIST_CONFIRMATION_SUBJECT = (
