@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
+from .models import FeaturedVideo, GalleryImage, MailingListSubscriber, ReleaseCountdown, Track
+
+
+@admin.register(MailingListSubscriber)
+class MailingListSubscriberAdmin(admin.ModelAdmin):
+    list_display = ["email", "first_name", "last_name", "subscribed_at"]
+    search_fields = ["email", "first_name", "last_name"]
+    readonly_fields = ["subscribed_at"]
+    ordering = ["-subscribed_at"]
+
+    def has_add_permission(self, request):
+        return False  # Subscribers come in via the public form only
 
 
 @admin.register(FeaturedVideo)

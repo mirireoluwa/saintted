@@ -39,3 +39,26 @@ export async function fetchGalleryImages(): Promise<GalleryImage[]> {
   if (!res.ok) return [];
   return res.json();
 }
+
+export type MailingListResult = {
+  message: string;
+  already_subscribed: boolean;
+};
+
+export async function subscribeToMailingList(data: {
+  first_name: string;
+  last_name: string;
+  email: string;
+}): Promise<MailingListResult> {
+  const res = await fetch(`${API_BASE}/mailing-list/subscribe/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    const firstError = Object.values(json as Record<string, string[]>)[0]?.[0];
+    throw new Error(firstError ?? "Something went wrong. Please try again.");
+  }
+  return json as MailingListResult;
+}

@@ -6,7 +6,7 @@ from rest_framework.fields import empty
 
 from .cover_art import resolve_external_cover_url
 from .media_urls import public_media_url
-from .models import FeaturedVideo, GalleryImage, ReleaseCountdown, Track
+from .models import FeaturedVideo, GalleryImage, MailingListSubscriber, ReleaseCountdown, Track
 
 logger = logging.getLogger(__name__)
 
@@ -240,3 +240,13 @@ class ReleaseCountdownSerializer(serializers.ModelSerializer):
                 instance.header_video_file.delete(save=False)
             instance.header_video_file = None
         return super().update(instance, validated_data)
+
+
+class MailingListSubscriberSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(max_length=100, trim_whitespace=True)
+    last_name = serializers.CharField(max_length=100, trim_whitespace=True)
+    email = serializers.EmailField()
+
+    class Meta:
+        model = MailingListSubscriber
+        fields = ["first_name", "last_name", "email"]

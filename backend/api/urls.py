@@ -6,6 +6,7 @@ from .auth_views import AdminPasswordResetView
 from .views import (
     FeaturedVideoViewSet,
     GalleryImageViewSet,
+    MailingListSubscribeView,
     ReleaseCountdownDetailView,
     TrackViewSet,
     api_db_diagnostic,
@@ -21,5 +22,6 @@ urlpatterns = [
     path("auth/token/", obtain_auth_token),
     path("auth/reset-password/", AdminPasswordResetView.as_view(), name="auth-reset-password"),
     path("release-countdown/", ReleaseCountdownDetailView.as_view(), name="release-countdown"),
+    path("mailing-list/subscribe/", MailingListSubscribeView.as_view(), name="mailing-list-subscribe"),
     path("", include(router.urls)),
 ]

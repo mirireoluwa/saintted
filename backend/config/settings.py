@@ -235,6 +235,11 @@ REST_FRAMEWORK = {
 # Cover-art fallback (iTunes / Spotify search) — override if stores list you under another spelling
 COVER_ART_ARTIST = (os.environ.get("COVER_ART_ARTIST") or "Saintted").strip() or "Saintted"
 
+# Mailing list → Google Sheets webhook (Google Apps Script Web App URL).
+# When set, new subscribers are POST-ed to this URL in a background thread.
+# Leave empty to skip Sheets sync (subscribers are always stored in the DB).
+GOOGLE_SHEETS_WEBHOOK_URL = (os.environ.get("GOOGLE_SHEETS_WEBHOOK_URL") or "").strip()
+
 # Optional shared secret for admin password reset endpoint in production.
 # Required when DEBUG=False if you want to use /api/auth/reset-password/.
 RESET_PASSWORD_SECRET = (os.environ.get("RESET_PASSWORD_SECRET") or "").strip()

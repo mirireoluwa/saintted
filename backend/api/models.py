@@ -2,6 +2,22 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
+class MailingListSubscriber(models.Model):
+    """Someone who signed up for the mailing list via the public site."""
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-subscribed_at"]
+        verbose_name = "Mailing list subscriber"
+        verbose_name_plural = "Mailing list subscribers"
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name} <{self.email}>"
+
+
 class Track(models.Model):
     """A music track (single, EP, etc.)."""
     title = models.CharField(max_length=255)

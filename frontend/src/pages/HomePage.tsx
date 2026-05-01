@@ -10,6 +10,7 @@ import { writeHeroCache } from "../utils/heroCache";
 import { MusicSection } from "../components/MusicSection";
 import { Featured } from "../components/Featured";
 import { ImageGallery } from "../components/ImageGallery";
+import { MailingListSection } from "../components/MailingListSection";
 import { Footer } from "../components/Footer";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
@@ -127,6 +128,9 @@ export function HomePage() {
           </AnimatedSection>
           <AnimatedSection>
             <ImageGallery />
+          </AnimatedSection>
+          <AnimatedSection>
+            <MailingListSection />
           </AnimatedSection>
           <AnimatedSection>
             <Footer />
