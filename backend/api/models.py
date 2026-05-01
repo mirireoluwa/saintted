@@ -59,6 +59,10 @@ class Track(models.Model):
         default=False,
         help_text="Highlight this track as a featured/new release on the public site.",
     )
+    release_email_sent = models.BooleanField(
+        default=False,
+        help_text="Set automatically when the release announcement email has been sent to subscribers.",
+    )
 
     class Meta:
         ordering = ["order", "title"]
