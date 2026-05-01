@@ -7,6 +7,7 @@ import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
   broadcastEmail,
   clearTrackCoverArt,
+  deleteSubscriber,
   createFeaturedVideo,
   createGalleryImage,
   createTrack,
@@ -465,6 +466,19 @@ export function AdminPage() {
     if (!token) return;
     void loadMailingList(token);
   }, [token, loadMailingList]);
+
+  async function handleDeleteSubscriber(id: number, email: string) {
+    if (!token) return;
+    if (!window.confirm(`Remove ${email} from the mailing list?`)) return;
+    try {
+      await deleteSubscriber(token, id);
+      setMlSubscribers((prev) => prev.filter((s) => s.id !== id));
+      setMlCount((prev) => (prev !== null ? prev - 1 : null));
+      notify("ok", `${email} removed.`);
+    } catch (err) {
+      notify("error", `Could not delete subscriber: ${String(err)}`);
+    }
+  }
 
   async function handleBroadcast(e: React.FormEvent) {
     e.preventDefault();
@@ -1850,89 +1864,91 @@ export function AdminPage() {
         </div>
       </div>
 
-      <div className="admin-card" style={{ marginTop: "1rem" }}>
-        <div className="admin-card__header">
-          <h2 className="admin-card__title">
-            Subscribers{mlCount !== null ? ` (${mlCount})` : ""}
-          </h2>
-        </div>
-        <div className="admin-card__body">
-          <div className="admin-table-wrap" style={{ maxHeight: "320px", overflowY: "auto" }}>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mlSubscribers.map((s) => (
+      {/* Subscribers table */}
+      <div className="admin-card">
+        <h2 className="admin-card__title">
+          subscribers{mlCount !== null ? ` — ${mlCount}` : ""}
+        </h2>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {mlLoading ? (
+                <tr><td colSpan={4}>Loading…</td></tr>
+              ) : mlSubscribers.length === 0 ? (
+                <tr><td colSpan={4}>No subscribers yet.</td></tr>
+              ) : (
+                mlSubscribers.map((s) => (
                   <tr key={s.id}>
                     <td>{s.first_name} {s.last_name}</td>
                     <td>{s.email}</td>
-                    <td>{new Date(s.subscribed_at).toLocaleDateString()}</td>
+                    <td>{new Date(s.subscribed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--danger"
+                        onClick={() => void handleDeleteSubscriber(s.id, s.email)}
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
-                ))}
-                {mlSubscribers.length === 0 && !mlLoading ? (
-                  <tr>
-                    <td colSpan={3}>No subscribers yet.</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="admin-card" style={{ marginTop: "1rem" }}>
-        <div className="admin-card__header">
-          <h2 className="admin-card__title">Broadcast Email</h2>
-          <p className="admin-card__subtitle" style={{ fontSize: "0.8rem", opacity: 0.6, marginTop: "0.25rem" }}>
-            Sends to all {mlCount !== null ? mlCount : "…"} subscribers via Resend.
-          </p>
-        </div>
-        <div className="admin-card__body">
-          <form onSubmit={(e) => void handleBroadcast(e)} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <div className="admin-form__field">
-              <label className="admin-form__label" htmlFor="bc-subject">Subject</label>
-              <input
-                id="bc-subject"
-                className="admin-form__input"
-                type="text"
-                value={broadcastSubject}
-                onChange={(e) => setBroadcastSubject(e.target.value)}
-                placeholder="new music, updates, etc."
-                required
-              />
-            </div>
-            <div className="admin-form__field">
-              <label className="admin-form__label" htmlFor="bc-body">Message</label>
-              <textarea
-                id="bc-body"
-                className="admin-form__input"
-                rows={8}
-                value={broadcastBody}
-                onChange={(e) => setBroadcastBody(e.target.value)}
-                placeholder={"hey everyone,\n\n..."}
-                required
-                style={{ resize: "vertical", fontFamily: "inherit" }}
-              />
-              <p style={{ fontSize: "0.75rem", opacity: 0.5, marginTop: "0.25rem" }}>
-                Plain text — double line breaks become paragraphs. Sent as HTML + plain text.
-              </p>
-            </div>
-            <div>
-              <button
-                type="submit"
-                className="admin-btn admin-btn--primary"
-                disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
-              >
-                {broadcastSending ? "Sending…" : `Send to ${mlCount ?? "…"} subscriber${mlCount === 1 ? "" : "s"}`}
-              </button>
-            </div>
-          </form>
-        </div>
+      {/* Broadcast form */}
+      <div className="admin-card">
+        <h2 className="admin-card__title">broadcast email</h2>
+        <p className="admin-card__lead">
+          Sends to all {mlCount !== null ? <strong>{mlCount}</strong> : "…"} subscribers via Resend.
+          Write in plain text — double line breaks become paragraphs.
+        </p>
+        <form className="admin-form" onSubmit={(e) => void handleBroadcast(e)}>
+          <div className="admin-form__row">
+            <label htmlFor="bc-subject">Subject</label>
+            <input
+              id="bc-subject"
+              type="text"
+              value={broadcastSubject}
+              onChange={(e) => setBroadcastSubject(e.target.value)}
+              placeholder="new music, updates, etc."
+              required
+            />
+          </div>
+          <div className="admin-form__row">
+            <label htmlFor="bc-body">Message</label>
+            <textarea
+              id="bc-body"
+              rows={10}
+              value={broadcastBody}
+              onChange={(e) => setBroadcastBody(e.target.value)}
+              placeholder={"hey everyone,\n\n..."}
+              required
+            />
+          </div>
+          <div>
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
+            >
+              {broadcastSending
+                ? "Sending…"
+                : `Send to ${mlCount ?? "…"} subscriber${mlCount === 1 ? "" : "s"}`}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
     </>

@@ -394,3 +394,11 @@ export async function broadcastEmail(
   }
   return res.json();
 }
+
+export async function deleteSubscriber(token: string, id: number): Promise<void> {
+  const res = await fetchLive(`${API_BASE}/mailing-list/subscribers/${id}/`, {
+    method: "DELETE",
+    headers: { Authorization: `Token ${token}` },
+  });
+  if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+}

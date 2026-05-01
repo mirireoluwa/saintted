@@ -8,6 +8,7 @@ from .views import (
     FeaturedVideoViewSet,
     GalleryImageViewSet,
     MailingListSubscribeView,
+    MailingListSubscriberDetailView,
     MailingListSubscribersView,
     ReleaseCountdownDetailView,
     TrackViewSet,
@@ -28,6 +29,7 @@ urlpatterns = [
     path("release-countdown/", ReleaseCountdownDetailView.as_view(), name="release-countdown"),
     path("mailing-list/subscribe/", MailingListSubscribeView.as_view(), name="mailing-list-subscribe"),
     path("mailing-list/subscribers/", MailingListSubscribersView.as_view(), name="mailing-list-subscribers"),
+    path("mailing-list/subscribers/<int:pk>/", MailingListSubscriberDetailView.as_view(), name="mailing-list-subscriber-detail"),
     path("mailing-list/broadcast/", BroadcastEmailView.as_view(), name="mailing-list-broadcast"),
     path("", include(router.urls)),
 ]

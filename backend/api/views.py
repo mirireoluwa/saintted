@@ -371,6 +371,22 @@ class MailingListSubscribersView(APIView):
         return Response({"count": len(data), "subscribers": data})
 
 
+class MailingListSubscriberDetailView(APIView):
+    """
+    DELETE /api/mailing-list/subscribers/<pk>/
+    Admin-only: remove a single subscriber.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk: int):
+        try:
+            subscriber = MailingListSubscriber.objects.get(pk=pk)
+        except MailingListSubscriber.DoesNotExist:
+            return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        subscriber.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class BroadcastEmailView(APIView):
     """
     POST /api/mailing-list/broadcast/
