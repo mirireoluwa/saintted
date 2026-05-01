@@ -301,16 +301,21 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                     <div className="track-card__art-frame">
                       <div className="track-art">
                         {artUrl ? (
-                          <motion.img
-                            src={artUrl}
-                            alt={`${track.title} cover art`}
-                            className="track-art__img"
-                            loading="lazy"
-                            decoding="async"
-                            initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
-                          />
+                          <>
+                            <motion.img
+                              src={artUrl}
+                              alt={`${track.title} cover art`}
+                              className="track-art__img"
+                              loading="lazy"
+                              decoding="async"
+                              initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                            <div className="track-art__reflection" aria-hidden>
+                              <img src={artUrl} alt="" className="track-art__reflection-img" />
+                            </div>
+                          </>
                         ) : (
                           <TrackCoverPlaceholder variant="card" />
                         )}
@@ -378,16 +383,21 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                     <div className="track-card__art-frame">
                       <div className="track-art">
                         {artUrl ? (
-                          <motion.img
-                            src={artUrl}
-                            alt={`${track.title} cover art`}
-                            className="track-art__img"
-                            loading="lazy"
-                            decoding="async"
-                            initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
-                          />
+                          <>
+                            <motion.img
+                              src={artUrl}
+                              alt={`${track.title} cover art`}
+                              className="track-art__img"
+                              loading="lazy"
+                              decoding="async"
+                              initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                            <div className="track-art__reflection" aria-hidden>
+                              <img src={artUrl} alt="" className="track-art__reflection-img" />
+                            </div>
+                          </>
                         ) : (
                           <TrackCoverPlaceholder variant="card" />
                         )}
