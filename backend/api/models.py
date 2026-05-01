@@ -82,7 +82,12 @@ class FeaturedVideo(models.Model):
 
 class GalleryImage(models.Model):
     """Uploaded gallery image shown on the public home page."""
-    image = models.ImageField(upload_to="gallery/")
+    image = models.ImageField(upload_to="gallery/", blank=True, null=True)
+    external_url = models.URLField(
+        blank=True,
+        default="",
+        help_text="External image URL (used when no file is uploaded, e.g. Vercel-hosted /public assets)",
+    )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Display order (lower first)")
     created_at = models.DateTimeField(auto_now_add=True)

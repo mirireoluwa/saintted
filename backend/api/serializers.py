@@ -167,14 +167,14 @@ class GalleryImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GalleryImage
-        fields = ["id", "image", "image_url", "caption", "order", "created_at"]
+        fields = ["id", "image", "image_url", "external_url", "caption", "order", "created_at"]
         read_only_fields = ["created_at"]
 
     def get_image_url(self, obj):
-        if not obj.image:
-            return ""
-        request = self.context.get("request")
-        return public_media_url(request, obj.image.url)
+        if obj.image:
+            request = self.context.get("request")
+            return public_media_url(request, obj.image.url)
+        return (obj.external_url or "").strip()
 
 
 class ReleaseCountdownSerializer(serializers.ModelSerializer):
