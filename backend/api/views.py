@@ -60,8 +60,12 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
 
     text_body = (
         f"hey {first},\n\n"
-        "you're officially on the saintted mailing list.\n\n"
-        "expect new music, events, and updates straight to your inbox.\n\n"
+        "welcome to The Circle.\n\n"
+        "you're now part of something i hold close — a small, intentional community "
+        "of people who actually care about the music.\n\n"
+        "you'll hear from me when it matters: new music, honest updates, "
+        "and things i only share in here.\n\n"
+        "glad you're here.\n\n"
         "love, saintted\n"
         "saintted.com\n"
     )
@@ -72,33 +76,44 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{subject}</title>
+  <style>
+    @font-face {{
+      font-family: 'Saintted Regular';
+      src: url('https://framerusercontent.com/assets/LimSbtxVlVTxPCPPurHl7ZiNzU.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }}
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#050509;font-family:'Space Grotesk',system-ui,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050509;padding:48px 0;">
+<body style="margin:0;padding:0;background:#000000;font-family:'Space Grotesk',system-ui,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#000000;padding:48px 0;">
     <tr>
       <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#0d0d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#000000;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;">
 
           <!-- Header band -->
           <tr>
-            <td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07);">
-              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">saintted</p>
+            <td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.08);">
+              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.3);">saintted's circle</p>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td style="padding:40px 40px 32px;">
-              <h1 style="margin:0 0 16px;font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#f9fafb;line-height:1.2;">
-                you're on the list.
+            <td style="padding:44px 40px 36px;">
+              <h1 style="margin:0 0 28px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:38px;font-weight:400;letter-spacing:-0.01em;color:#ffffff;line-height:1.15;">
+                welcome to<br/>The Circle.
               </h1>
-              <p style="margin:0 0 12px;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.65;">
+              <p style="margin:0 0 16px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
                 hey {first},
               </p>
-              <p style="margin:0 0 24px;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.65;">
-                you're officially on the saintted mailing list. expect new music, events, and updates straight to your inbox.
+              <p style="margin:0 0 16px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
+                you're now part of something i hold close — a small, intentional community of people who actually care about the music.
               </p>
-              <a href="https://saintted.com" style="display:inline-block;padding:12px 28px;background:#f9fafb;color:#050509;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;">
+              <p style="margin:0 0 36px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
+                you'll hear from me when it matters: new music, honest updates, and things i only share in here. glad you're here.
+              </p>
+              <a href="https://saintted.com" style="display:inline-block;padding:13px 30px;background:#ffffff;color:#000000;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;">
                 visit saintted.com
               </a>
             </td>
@@ -106,14 +121,14 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
 
           <!-- Footer / signature -->
           <tr>
-            <td style="padding:28px 40px;border-top:1px solid rgba(255,255,255,0.07);">
+            <td style="padding:28px 40px;border-top:1px solid rgba(255,255,255,0.08);">
               <img
                 src="https://saintted.com/love-saintted.png"
                 alt="love, saintted"
                 width="120"
-                style="display:block;height:auto;margin-bottom:16px;opacity:0.85;"
+                style="display:block;height:auto;margin-bottom:16px;opacity:0.8;"
               />
-              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0.1em;text-transform:lowercase;color:rgba(255,255,255,0.25);">
+              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0.1em;text-transform:lowercase;color:rgba(255,255,255,0.2);">
                 © 2026 saintted. all rights reserved.
               </p>
             </td>
