@@ -816,9 +816,9 @@ a {
 
 /* Tighter shell so visual weight matches grid cards (same min column ~200px) */
 .music-upcoming-row .track-card__art-frame {
-  position: relative;
-  inset: unset;
+  flex: none;
   padding: 0.65rem 0.65rem 0;
+  overflow: visible;
 }
 
 .music-upcoming-row .track-art {
@@ -827,14 +827,12 @@ a {
 }
 
 .music-upcoming-row .track-card__body {
-  position: relative;
-  bottom: unset;
-  left: unset;
-  right: unset;
+  flex: 1;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: none;
   padding: 0.7rem 0.8rem 0.95rem;
+  justify-content: flex-start;
 }
 
 .music-upcoming-row .track-name {
@@ -1244,10 +1242,10 @@ a {
 }
 
 .track-art--skeleton {
-  aspect-ratio: 1;
-  border-radius: var(--radius-sm);
   width: 100%;
-  border: 1px solid var(--border);
+  height: 100%;
+  border-radius: 0;
+  border: none;
   box-sizing: border-box;
 }
 
@@ -1267,7 +1265,8 @@ a {
 /* ── Full-bleed card ─────────────────────────────────────────────────────── */
 .track-card-link {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   aspect-ratio: 3 / 4;
   color: inherit;
   border-radius: var(--radius-md);
@@ -1284,11 +1283,12 @@ a {
   text-decoration: none;
 }
 
-/* Art fills the entire card */
+/* Art frame — top 75% of card */
 .track-card__art-frame {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  flex: 0 0 75%;
   padding: 0;
+  overflow: hidden;
 }
 
 .track-art {
@@ -1313,41 +1313,44 @@ a {
   border: none;
 }
 
-/* Gradient: transparent top → dark bottom */
+/* Soft gradient that bleeds from the art into the details strip */
 .track-card__gradient {
   position: absolute;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
   background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.92) 0%,
-    rgba(0, 0, 0, 0.55) 35%,
-    rgba(0, 0, 0, 0.1) 60%,
-    transparent 80%
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.18) 40%,
+    rgba(0, 0, 0, 0.52) 70%,
+    rgba(0, 0, 0, 0.72) 100%
   );
   pointer-events: none;
   z-index: 1;
 }
 
-/* Blurred glass strip at the bottom */
+/* Details strip — bottom 25%, blends into the gradient above */
 .track-card__body {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem 1.1rem 1.2rem;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.3rem;
+  padding: 0.75rem 1rem 0.9rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  position: relative;
   z-index: 2;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
 }
 
 /* Loading skeleton — same full-bleed shape */
 .track-card-link--skeleton {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   aspect-ratio: 3 / 4;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1358,13 +1361,11 @@ a {
 }
 
 .track-card-link--skeleton .track-card__body {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem 1.1rem 1.2rem;
+  flex: 0 0 25%;
+  padding: 0.75rem 1rem;
   gap: 0.5rem;
-  z-index: 2;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .track-name {
