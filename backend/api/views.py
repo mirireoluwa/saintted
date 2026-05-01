@@ -4,6 +4,8 @@ import threading
 import urllib.request
 from urllib.error import URLError
 
+from django.core.mail import EmailMultiAlternatives
+
 from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
@@ -46,6 +48,89 @@ def _send_to_sheets(webhook_url: str, subscriber: MailingListSubscriber) -> None
             pass
     except (URLError, OSError, Exception) as exc:
         logger.warning("Google Sheets webhook failed for %s: %s", subscriber.email, exc)
+
+
+def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
+    """Fire-and-forget: send a confirmation email to a new subscriber."""
+    from django.conf import settings as _settings  # local import avoids circular at module load
+
+    subject = getattr(_settings, "MAILING_LIST_CONFIRMATION_SUBJECT", "you're on the list.")
+    from_email = getattr(_settings, "DEFAULT_FROM_EMAIL", "saintted <noreply@saintted.com>")
+    first = subscriber.first_name
+
+    text_body = (
+        f"hey {first},\n\n"
+        "you're officially on the saintted mailing list.\n\n"
+        "expect new music, events, and updates straight to your inbox.\n\n"
+        "— saintted\n\n"
+        "saintted.com\n"
+    )
+
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#050509;font-family:'Space Grotesk',system-ui,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050509;padding:48px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#0d0d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">
+
+          <!-- Header band -->
+          <tr>
+            <td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07);">
+              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">saintted</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h1 style="margin:0 0 16px;font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#f9fafb;line-height:1.2;">
+                you're on the list.
+              </h1>
+              <p style="margin:0 0 12px;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.65;">
+                hey {first},
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.65;">
+                you're officially on the saintted mailing list. expect new music, events, and updates straight to your inbox.
+              </p>
+              <a href="https://saintted.com" style="display:inline-block;padding:12px 28px;background:#f9fafb;color:#050509;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:8px;">
+                visit saintted.com
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid rgba(255,255,255,0.07);">
+              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0.1em;text-transform:lowercase;color:rgba(255,255,255,0.25);">
+                © 2026 saintted. all rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=from_email,
+            to=[subscriber.email],
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
+    except Exception as exc:
+        logger.warning("Confirmation email failed for %s: %s", subscriber.email, exc)
 
 
 def api_db_diagnostic(_request):
@@ -169,6 +254,12 @@ class MailingListSubscribeView(APIView):
                 args=(webhook_url, subscriber),
                 daemon=True,
             ).start()
+
+        threading.Thread(
+            target=_send_confirmation_email,
+            args=(subscriber,),
+            daemon=True,
+        ).start()
 
         return Response(
             {"message": "You're on the list!", "already_subscribed": False},
