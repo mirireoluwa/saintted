@@ -316,6 +316,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
+                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
                       <div className="track-card__title-row">
                         <h3 className="track-name">{track.title}</h3>
@@ -340,9 +341,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
           {Array.from({ length: 5 }).map((_, idx) => (
             <article key={idx} className="track-card track-card--skeleton">
               <div className="track-card-link track-card-link--skeleton" aria-hidden>
-                <div className="track-card__art-frame">
-                  <div className="track-art track-art--skeleton" />
-                </div>
+                <div className="track-art track-art--skeleton" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", borderRadius: 0 }} />
                 <div className="track-card__body">
                   <div className="track-line track-line--primary" />
                   <div className="track-line track-line--secondary" />
@@ -394,6 +393,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
+                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
                       <h3 className="track-name">{track.title}</h3>
                       <p className="track-meta">{track.meta}</p>
