@@ -65,7 +65,7 @@ def _build_circle_email_html(first: str, subject: str) -> str:
     }}
   </style>
 </head>
-<body style="margin:0;padding:0;background:#000000;font-family:'Space Grotesk',system-ui,sans-serif;">
+<body style="margin:0;padding:0;background:#000000;font-family:'Space Mono',ui-monospace,monospace;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#000000;padding:48px 0;">
     <tr>
       <td align="center">
@@ -74,23 +74,23 @@ def _build_circle_email_html(first: str, subject: str) -> str:
           <!-- Header band -->
           <tr>
             <td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.08);">
-              <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.3);">saintted's circle</p>
+              <p style="margin:0;font-family:'Space Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.3);">saintted's circle</p>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
             <td style="padding:44px 40px 36px;">
-              <h1 style="margin:0 0 28px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:38px;font-weight:400;letter-spacing:-0.01em;color:#ffffff;line-height:1.15;">
+              <h1 style="margin:0 0 28px;font-family:'Saintted Regular','Space Mono',ui-monospace,monospace;font-size:38px;font-weight:400;letter-spacing:-0.01em;color:#ffffff;line-height:1.15;">
                 welcome to<br/>The Circle.
               </h1>
-              <p style="margin:0 0 16px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
+              <p style="margin:0 0 16px;font-family:'Space Mono',ui-monospace,monospace;font-size:15px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.8;">
                 hey {first},
               </p>
-              <p style="margin:0 0 16px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
+              <p style="margin:0 0 16px;font-family:'Space Mono',ui-monospace,monospace;font-size:15px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.8;">
                 you're now part of something i hold close — a small, intentional community of people who actually care about the music.
               </p>
-              <p style="margin:0 0 36px;font-family:'Saintted Regular','Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.7;">
+              <p style="margin:0 0 36px;font-family:'Space Mono',ui-monospace,monospace;font-size:15px;font-weight:400;color:rgba(255,255,255,0.55);line-height:1.8;">
                 you'll hear from me when it matters: new music, honest updates, and things i only share in here. glad you're here.
               </p>
               <table cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0 12px;">
