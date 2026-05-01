@@ -62,7 +62,7 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
         f"hey {first},\n\n"
         "you're officially on the saintted mailing list.\n\n"
         "expect new music, events, and updates straight to your inbox.\n\n"
-        "— saintted\n\n"
+        "love, saintted\n"
         "saintted.com\n"
     )
 
@@ -104,9 +104,15 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
             </td>
           </tr>
 
-          <!-- Footer -->
+          <!-- Footer / signature -->
           <tr>
-            <td style="padding:24px 40px;border-top:1px solid rgba(255,255,255,0.07);">
+            <td style="padding:28px 40px;border-top:1px solid rgba(255,255,255,0.07);">
+              <img
+                src="https://saintted.com/love-saintted.png"
+                alt="love, saintted"
+                width="120"
+                style="display:block;height:auto;margin-bottom:16px;opacity:0.85;"
+              />
               <p style="margin:0;font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0.1em;text-transform:lowercase;color:rgba(255,255,255,0.25);">
                 © 2026 saintted. all rights reserved.
               </p>
