@@ -10,6 +10,7 @@ from .views import (
     ReleaseCountdownDetailView,
     TrackViewSet,
     api_db_diagnostic,
+    api_email_diagnostic,
 )
 
 router = DefaultRouter()
@@ -19,6 +20,7 @@ router.register(r"gallery-images", GalleryImageViewSet, basename="gallery-image"
 
 urlpatterns = [
     path("diagnostic/db/", api_db_diagnostic),
+    path("diagnostic/email/", api_email_diagnostic),
     path("auth/token/", obtain_auth_token),
     path("auth/reset-password/", AdminPasswordResetView.as_view(), name="auth-reset-password"),
     path("release-countdown/", ReleaseCountdownDetailView.as_view(), name="release-countdown"),

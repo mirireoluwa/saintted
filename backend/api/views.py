@@ -142,6 +142,7 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
 </html>"""
 
     try:
+        logger.info("Sending confirmation email to %s via backend=%s", subscriber.email, _settings.EMAIL_BACKEND)
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
@@ -150,8 +151,48 @@ def _send_confirmation_email(subscriber: MailingListSubscriber) -> None:
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=False)
+        logger.info("Confirmation email sent OK to %s", subscriber.email)
     except Exception as exc:
-        logger.warning("Confirmation email failed for %s: %s", subscriber.email, exc)
+        logger.error("Confirmation email FAILED for %s: %s", subscriber.email, exc, exc_info=True)
+
+
+def api_email_diagnostic(request):
+    """
+    GET /api/diagnostic/email/?to=you@example.com
+    Sends a test email and reports success or the exact error.
+    Requires token auth so it is not publicly abusable.
+    """
+    from django.conf import settings as _s
+    from django.core.mail import send_mail
+
+    user = getattr(request, "user", None)
+    if not (user and user.is_authenticated):
+        return JsonResponse({"error": "authentication required"}, status=401)
+
+    to = (request.GET.get("to") or "").strip()
+    if not to:
+        return JsonResponse({"error": "pass ?to=your@email.com"}, status=400)
+
+    out: dict = {
+        "backend": _s.EMAIL_BACKEND,
+        "host": getattr(_s, "EMAIL_HOST", "(not set)"),
+        "port": getattr(_s, "EMAIL_PORT", "(not set)"),
+        "user": getattr(_s, "EMAIL_HOST_USER", "(not set)"),
+        "from": getattr(_s, "DEFAULT_FROM_EMAIL", "(not set)"),
+        "sent": False,
+    }
+    try:
+        send_mail(
+            subject="saintted email diagnostic",
+            message="If you received this, email sending is working correctly.",
+            from_email=_s.DEFAULT_FROM_EMAIL,
+            recipient_list=[to],
+            fail_silently=False,
+        )
+        out["sent"] = True
+    except Exception as exc:
+        out["error"] = str(exc)
+    return JsonResponse(out)
 
 
 def api_db_diagnostic(_request):
