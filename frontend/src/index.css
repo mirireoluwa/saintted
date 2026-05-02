@@ -473,7 +473,7 @@ a {
 
 .music-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1.5rem;
 }
 
@@ -1282,66 +1282,54 @@ a {
   text-decoration: none;
 }
 
-/* Square art frame — full card width, 1:1 ratio */
+/*
+  Art frame — static (not positioned) so .track-art escapes to card-link
+  as its containing block, letting the artwork fill the entire card.
+  Portrait ratio so the card is taller than a square.
+*/
 .track-card__art-frame {
-  position: relative;
   width: 100%;
   aspect-ratio: 1;
   flex-shrink: 0;
-  z-index: 1;
 }
 
+/* Fills the whole card (art-frame + body area) because card-link is the
+   nearest positioned ancestor. */
 .track-art {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   background: rgb(9, 9, 15);
-  overflow: hidden;
 }
 
 .track-art__img {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center top;
   display: block;
-  margin: 0;
-  padding: 0;
-  border: none;
 }
 
 /*
-  Gradient spans the full card (position: absolute; inset: 0) — not clipped
-  to the art frame. Goes from solid dark at the bottom (covering the body)
-  through a soft fade into the art, to transparent at the top.
-  The body text sits above it via z-index.
+  Vibrant glass blur — absolute overlay at the bottom of the card so the
+  artwork fills the entire card behind it. backdrop-filter picks up real
+  artwork colors. Progressive mask: transparent at top (art shows through
+  cleanly) → fully frosted glass at bottom (text zone).
 */
-.track-card__gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgb(9, 9, 15) 0%,
-    rgb(9, 9, 15) 20%,
-    rgba(9, 9, 15, 0.55) 34%,
-    transparent 52%
-  );
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* Info sits below the art in flow, above the gradient */
 .track-card__body {
-  position: relative;
-  z-index: 4;
-  flex-shrink: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.65rem 1rem 0.9rem;
+  padding: 2rem 1rem 1rem;
+  -webkit-backdrop-filter: blur(24px) saturate(2.4) brightness(0.82);
+  backdrop-filter: blur(24px) saturate(2.4) brightness(0.82);
+  background: rgba(0, 0, 0, 0.15);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 38%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 38%);
 }
 
 /* Loading skeleton */
@@ -1358,8 +1346,14 @@ a {
 }
 
 .track-card-link--skeleton .track-card__body {
+  position: relative;
   padding: 0.65rem 1rem 0.9rem;
   gap: 0.45rem;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+  background: transparent;
 }
 
 .track-name {
@@ -1369,7 +1363,7 @@ a {
   text-transform: lowercase;
   letter-spacing: -0.02em;
   color: #ffffff;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.65), 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
 .track-meta {
@@ -1377,8 +1371,8 @@ a {
   font-size: 10px;
   text-transform: lowercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
 }
 
 @keyframes skeleton-shimmer {

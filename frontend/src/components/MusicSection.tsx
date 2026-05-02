@@ -316,7 +316,6 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
-                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
                       <div className="track-card__title-row">
                         <h3 className="track-name">{track.title}</h3>
@@ -393,7 +392,6 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
-                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
                       <h3 className="track-name">{track.title}</h3>
                       <p className="track-meta">{track.meta}</p>
