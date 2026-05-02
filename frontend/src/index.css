@@ -1314,31 +1314,14 @@ a {
   transform: scale(1.04);
 }
 
-/* Body — dynamically tinted with the artwork's own colors via blurred copy.
-   Every card in the grid becomes uniquely colored. */
+/* Body — solid black info section */
 .track-card__body {
   position: relative;
   flex-shrink: 0;
-  overflow: hidden;
-  background: rgb(13, 13, 19);
+  background: #000;
 }
 
-/* Color tint layer: heavily blurred + darkened copy of the art */
-.track-card__body-tint {
-  position: absolute;
-  inset: 0;
-  background: var(--art-url, none) center / cover no-repeat;
-  filter: blur(28px) saturate(1.8) brightness(0.42);
-  transform: scale(1.35);
-  pointer-events: none;
-  transition: filter 0.4s ease;
-}
-
-.track-card:hover .track-card__body-tint {
-  filter: blur(28px) saturate(2.2) brightness(0.5);
-}
-
-/* Editorial content layer — sits above the tint */
+/* Content layer */
 .track-card__body-content {
   position: relative;
   z-index: 1;
@@ -1378,7 +1361,6 @@ a {
   letter-spacing: -0.025em;
   color: #ffffff;
   line-height: 1.2;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 .track-meta {
@@ -1387,8 +1369,7 @@ a {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.72);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 @keyframes skeleton-shimmer {
