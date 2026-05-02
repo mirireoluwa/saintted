@@ -1261,7 +1261,14 @@ a {
   width: 45%;
 }
 
-/* ── Full-bleed card ─────────────────────────────────────────────────────── */
+/* ── Editorial color-tinted card ──────────────────────────────────────────
+   Each card's info section is dynamically tinted with its artwork's own
+   colors via a heavily blurred copy, turning the grid into a chromatic mosaic.
+*/
+.track-card {
+  position: relative;
+}
+
 .track-card-link {
   display: flex;
   flex-direction: column;
@@ -1269,32 +1276,25 @@ a {
   color: inherit;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
   overflow: hidden;
-  background: rgb(9, 9, 15);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
+  background: rgb(15, 15, 22);
+  transition: transform 0.3s ease, border-color 0.25s ease;
 }
 
 .track-card-link:hover {
   transform: translateY(-4px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
   text-decoration: none;
 }
 
-/*
-  Art frame — static (not positioned) so .track-art escapes to card-link
-  as its containing block, letting the artwork fill the entire card.
-  Portrait ratio so the card is taller than a square.
-*/
 .track-card__art-frame {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-/* Fills the whole card (art-frame + body area) because card-link is the
-   nearest positioned ancestor. */
 .track-art {
   position: absolute;
   inset: 0;
@@ -1305,32 +1305,49 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
   display: block;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/*
-  Vibrant glass blur — absolute overlay at the bottom of the card so the
-  artwork fills the entire card behind it. backdrop-filter picks up real
-  artwork colors. Progressive mask: transparent at top (art shows through
-  cleanly) → fully frosted glass at bottom (text zone).
-*/
+.track-card:hover .track-art__img {
+  transform: scale(1.04);
+}
+
+/* Body — dynamically tinted with the artwork's own colors via blurred copy.
+   Every card in the grid becomes uniquely colored. */
 .track-card__body {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgb(13, 13, 19);
+}
+
+/* Color tint layer: heavily blurred + darkened copy of the art */
+.track-card__body-tint {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
+  inset: 0;
+  background: var(--art-url, none) center / cover no-repeat;
+  filter: blur(28px) saturate(1.8) brightness(0.42);
+  transform: scale(1.35);
+  pointer-events: none;
+  transition: filter 0.4s ease;
+}
+
+.track-card:hover .track-card__body-tint {
+  filter: blur(28px) saturate(2.2) brightness(0.5);
+}
+
+/* Editorial content layer — sits above the tint */
+.track-card__body-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 2rem 1rem 1rem;
-  -webkit-backdrop-filter: blur(24px) saturate(2.4) brightness(0.82);
-  backdrop-filter: blur(24px) saturate(2.4) brightness(0.82);
-  background: rgba(0, 0, 0, 0.15);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 38%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 38%);
+  gap: 0.4rem;
+  padding: 0.9rem 1rem 1.05rem;
 }
+
 
 /* Loading skeleton */
 .track-card-link--skeleton {
@@ -1346,33 +1363,32 @@ a {
 }
 
 .track-card-link--skeleton .track-card__body {
-  position: relative;
-  padding: 0.65rem 1rem 0.9rem;
+  padding: 0.9rem 1rem 1.05rem;
+  display: flex;
+  flex-direction: column;
   gap: 0.45rem;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  mask-image: none;
-  -webkit-mask-image: none;
-  background: transparent;
+  background: rgb(13, 13, 19);
 }
 
 .track-name {
   font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   text-transform: lowercase;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: #ffffff;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.65), 0 0 1px rgba(0, 0, 0, 0.4);
+  line-height: 1.2;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 .track-meta {
   font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: lowercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.82);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes skeleton-shimmer {
