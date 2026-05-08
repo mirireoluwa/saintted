@@ -322,14 +322,13 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
+                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
-                      <div className="track-card__body-content">
-                        <div className="track-card__title-row">
-                          <h3 className="track-name">{track.title}</h3>
-                          <span className="track-card__new-pill">NEW</span>
-                        </div>
-                        <p className="track-meta">{track.meta}</p>
+                      <div className="track-card__title-row">
+                        <h3 className="track-name">{track.title}</h3>
+                        <span className="track-card__new-pill">NEW</span>
                       </div>
+                      <p className="track-meta">{track.meta}</p>
                     </div>
                   </Link>
                 </motion.article>
@@ -406,11 +405,10 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
+                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
-                      <div className="track-card__body-content">
-                        <h3 className="track-name">{track.title}</h3>
-                        <p className="track-meta">{track.meta}</p>
-                      </div>
+                      <h3 className="track-name">{track.title}</h3>
+                      <p className="track-meta">{track.meta}</p>
                     </div>
                   </Link>
                 </motion.article>
