@@ -1338,15 +1338,16 @@ a {
   display: block;
 }
 
-/* Subtle blend between the main art and the reflection below */
+/* Vignette + blend between main art and the reflection below */
 .track-card__gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.08) 28%,
-    transparent 45%
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.32) 20%,
+    rgba(0, 0, 0, 0.06) 42%,
+    transparent 58%
   );
   pointer-events: none;
   z-index: 2;
