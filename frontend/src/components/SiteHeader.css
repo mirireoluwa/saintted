@@ -14,9 +14,7 @@
   max-width: 80rem;
   margin: 0 auto;
   pointer-events: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  position: relative;
 }
 
 .site-header__bar {
@@ -151,16 +149,22 @@
 }
 
 .site-header__mobile {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: max-content;
+  min-width: 130px;
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
-  padding: 1.15rem 1.35rem 1.2rem;
-  border-radius: 14px;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 1.05rem;
+  border-radius: 12px;
   border: 1px solid var(--header-border);
   background: var(--header-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--header-float-shadow);
+  pointer-events: auto;
 }
 
 @media (min-width: 640px) {
