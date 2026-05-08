@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
 import { compactCountdownFromMs, pad2, remainingPartsFromMs } from "../utils/countdownParts";
@@ -291,6 +291,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                 <motion.article
                   key={track.id}
                   className="track-card track-card--highlighted"
+                  style={artUrl ? ({ '--art-url': `url(${artUrl})` } as React.CSSProperties) : undefined}
                   variants={{
                     hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
                     visible: { opacity: 1, y: 0 },
@@ -321,13 +322,14 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
-                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
-                      <div className="track-card__title-row">
-                        <h3 className="track-name">{track.title}</h3>
-                        <span className="track-card__new-pill">NEW</span>
+                      <div className="track-card__body-content">
+                        <div className="track-card__title-row">
+                          <h3 className="track-name">{track.title}</h3>
+                          <span className="track-card__new-pill">NEW</span>
+                        </div>
+                        <p className="track-meta">{track.meta}</p>
                       </div>
-                      <p className="track-meta">{track.meta}</p>
                     </div>
                   </Link>
                 </motion.article>
@@ -373,6 +375,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                 <motion.article
                   key={track.id}
                   className="track-card"
+                  style={artUrl ? ({ '--art-url': `url(${artUrl})` } as React.CSSProperties) : undefined}
                   variants={{
                     hidden: reduceMotion ? {} : { opacity: 0, y: 16 },
                     visible: { opacity: 1, y: 0 },
@@ -403,10 +406,11 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                         )}
                       </div>
                     </div>
-                    <div className="track-card__gradient" aria-hidden />
                     <div className="track-card__body">
-                      <h3 className="track-name">{track.title}</h3>
-                      <p className="track-meta">{track.meta}</p>
+                      <div className="track-card__body-content">
+                        <h3 className="track-name">{track.title}</h3>
+                        <p className="track-meta">{track.meta}</p>
+                      </div>
                     </div>
                   </Link>
                 </motion.article>
