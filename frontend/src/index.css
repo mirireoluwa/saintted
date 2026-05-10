@@ -9,9 +9,9 @@
   --font-display: "Saintted Regular", "Space Grotesk", system-ui, sans-serif;
   --font-body: "Space Grotesk", "Manrope", system-ui, sans-serif;
   --font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
   --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.55);
   --surface: rgba(11, 11, 18, 0.88);
   --accent-saintted: #ff4b63;
