@@ -4,71 +4,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { sectionTransition } from "../utils/motion";
 import "./SiteHeader.css";
 
-const SpotifyIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="12" fill="#1DB954" />
-    <path d="M7 9.5c3.5-1.2 7.5-.8 10 1M7 12c3-1 7-.6 10 .8M7.5 14.5c2.5-.8 5.5-.5 8 .8" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-  </svg>
-);
-
-const AppleMusicIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="6" fill="#FC3C44" />
-    <path d="M15 7h-4.5v8a2 2 0 1 0 1.5 1.94V10H15V7z" fill="white" />
-  </svg>
-);
-
-const YouTubeMusicIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="12" fill="#FF0000" />
-    <circle cx="12" cy="12" r="5" fill="white" />
-    <path d="M10.5 9.5l5 2.5-5 2.5V9.5z" fill="#FF0000" />
-  </svg>
-);
-
-const DeezerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="4" fill="#A238FF" />
-    <rect x="4" y="13" width="2.5" height="5" rx="1" fill="white" opacity="0.7" />
-    <rect x="8" y="9" width="2.5" height="9" rx="1" fill="white" />
-    <rect x="12" y="11" width="2.5" height="7" rx="1" fill="white" opacity="0.85" />
-    <rect x="16" y="14" width="2.5" height="4" rx="1" fill="white" opacity="0.6" />
-  </svg>
-);
-
-const AmazonMusicIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="4" fill="#232F3E" />
-    <path d="M6.5 15c2.8 1.8 8.2 1.8 11 0" stroke="#FF9900" strokeWidth="1.8" strokeLinecap="round" />
-    <path d="M17 15.5c.6-.4 1.2-.3 1.5 0" stroke="#FF9900" strokeWidth="1.5" strokeLinecap="round" />
-    <circle cx="12" cy="10" r="3" fill="#FF9900" />
-    <path d="M10 10l1.5 1.5 3-3" stroke="#232F3E" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const TidalIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="4" fill="#000" />
-    <path d="M5 9l3.5 3.5L12 9l3.5 3.5L19 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M8.5 12.5L12 16l3.5-3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const SoundCloudIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="4" fill="#FF5500" />
-    <path d="M3.5 14.5a2.5 2.5 0 0 0 2.5 2.5h10a3 3 0 0 0 .5-5.95 4 4 0 0 0-7.5-1.05A2.5 2.5 0 0 0 3.5 14.5z" fill="white" />
-  </svg>
-);
-
 const PLATFORMS = [
-  { name: "Spotify",       url: "https://open.spotify.com/search/saintted",       Icon: SpotifyIcon },
-  { name: "Apple Music",   url: "https://music.apple.com/search?term=saintted",   Icon: AppleMusicIcon },
-  { name: "YouTube Music", url: "https://music.youtube.com/search?q=saintted",    Icon: YouTubeMusicIcon },
-  { name: "Deezer",        url: "https://www.deezer.com/search/saintted",         Icon: DeezerIcon },
-  { name: "Amazon Music",  url: "https://music.amazon.com/search/saintted",       Icon: AmazonMusicIcon },
-  { name: "Tidal",         url: "https://tidal.com/search?q=saintted",            Icon: TidalIcon },
-  { name: "SoundCloud",    url: "https://soundcloud.com/search?q=saintted",       Icon: SoundCloudIcon },
+  { name: "Spotify",       url: "https://open.spotify.com/search/saintted",       color: "#1DB954" },
+  { name: "Apple Music",   url: "https://music.apple.com/search?term=saintted",   color: "#FC3C44" },
+  { name: "YouTube Music", url: "https://music.youtube.com/search?q=saintted",    color: "#FF0000" },
+  { name: "Deezer",        url: "https://www.deezer.com/search/saintted",         color: "#A238FF" },
+  { name: "Amazon Music",  url: "https://music.amazon.com/search/saintted",       color: "#FF9900" },
+  { name: "Tidal",         url: "https://tidal.com/search?q=saintted",            color: "#00FFFF" },
+  { name: "SoundCloud",    url: "https://soundcloud.com/search?q=saintted",       color: "#FF5500" },
 ];
 
 export function SiteHeader() {
@@ -197,16 +140,16 @@ export function SiteHeader() {
             >
               <p className="listen-modal__label">.listen on</p>
               <ul className="listen-modal__list">
-                {PLATFORMS.map(({ name, url, Icon }) => (
+                {PLATFORMS.map(({ name, url, color }) => (
                   <li key={name}>
                     <a
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="listen-modal__item"
+                      style={{ "--brand-color": color } as React.CSSProperties}
                       onClick={() => setListenOpen(false)}
                     >
-                      <span className="listen-modal__item-icon"><Icon /></span>
                       {name}
                     </a>
                   </li>

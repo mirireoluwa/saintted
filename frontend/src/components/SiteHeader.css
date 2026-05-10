@@ -258,10 +258,8 @@
 }
 
 .listen-modal__item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1rem;
+  display: block;
+  padding: 0.7rem 1rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   background: rgba(255, 255, 255, 0.04);
@@ -271,21 +269,13 @@
   font-weight: 500;
   text-decoration: none;
   letter-spacing: -0.01em;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .listen-modal__item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.listen-modal__item-icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  border-radius: 5px;
-  overflow: hidden;
-  line-height: 0;
+  background: var(--brand-color);
+  border-color: var(--brand-color);
+  color: #fff;
 }
 
 .listen-modal__close {
