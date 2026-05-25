@@ -30,7 +30,7 @@ async function uploadFile(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 
-  const res = await fetchLive("/api/admin/upload", {
+  const res = await fetchLive("/api/admin/gallery-images?action=upload", {
     ...ADMIN_FETCH,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -48,7 +48,7 @@ async function uploadFile(file: File): Promise<string> {
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function login(password: string): Promise<void> {
-  const res = await fetchLive("/api/admin/auth/login", {
+  const res = await fetchLive("/api/admin/auth", {
     ...ADMIN_FETCH,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -61,12 +61,12 @@ export async function login(password: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
-  await fetchLive("/api/admin/auth/logout", { ...ADMIN_FETCH, method: "POST" });
+  await fetchLive("/api/admin/auth", { ...ADMIN_FETCH, method: "DELETE" });
 }
 
 export async function checkSession(): Promise<boolean> {
   try {
-    const res = await fetchLive("/api/admin/auth/session", ADMIN_FETCH);
+    const res = await fetchLive("/api/admin/auth", ADMIN_FETCH);
     return res.ok;
   } catch {
     return false;
@@ -95,7 +95,7 @@ export async function createTrack(body: Partial<Track>): Promise<Track> {
 }
 
 export async function updateTrack(slug: string, body: Partial<Track>): Promise<Track> {
-  const res = await fetchLive(`/api/admin/tracks/${encodeURIComponent(slug)}`, {
+  const res = await fetchLive(`/api/admin/tracks?slug=${encodeURIComponent(slug)}`, {
     ...ADMIN_FETCH,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -118,7 +118,7 @@ export async function clearTrackCoverArt(slug: string): Promise<Track> {
 }
 
 export async function deleteTrack(slug: string): Promise<void> {
-  const res = await fetchLive(`/api/admin/tracks/${encodeURIComponent(slug)}`, {
+  const res = await fetchLive(`/api/admin/tracks?slug=${encodeURIComponent(slug)}`, {
     ...ADMIN_FETCH,
     method: "DELETE",
   });
@@ -152,7 +152,7 @@ export async function updateFeaturedVideo(
   id: number,
   body: Partial<Pick<FeaturedVideo, "title" | "youtube_id" | "order">>
 ): Promise<FeaturedVideo> {
-  const res = await fetchLive(`/api/admin/featured-videos/${id}`, {
+  const res = await fetchLive(`/api/admin/featured-videos?id=${id}`, {
     ...ADMIN_FETCH,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ export async function updateFeaturedVideo(
 }
 
 export async function deleteFeaturedVideo(id: number): Promise<void> {
-  const res = await fetchLive(`/api/admin/featured-videos/${id}`, {
+  const res = await fetchLive(`/api/admin/featured-videos?id=${id}`, {
     ...ADMIN_FETCH,
     method: "DELETE",
   });
@@ -271,7 +271,7 @@ export async function updateGalleryImage(
   if (payload.caption !== undefined) body.caption = payload.caption;
   if (payload.order !== undefined) body.order = payload.order;
 
-  const res = await fetchLive(`/api/admin/gallery-images/${id}`, {
+  const res = await fetchLive(`/api/admin/gallery-images?id=${id}`, {
     ...ADMIN_FETCH,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -285,7 +285,7 @@ export async function updateGalleryImage(
 }
 
 export async function deleteGalleryImage(id: number): Promise<void> {
-  const res = await fetchLive(`/api/admin/gallery-images/${id}`, {
+  const res = await fetchLive(`/api/admin/gallery-images?id=${id}`, {
     ...ADMIN_FETCH,
     method: "DELETE",
   });
@@ -306,14 +306,14 @@ export async function fetchMailingListSubscribers(): Promise<{
   count: number;
   subscribers: MailingListSubscriber[];
 }> {
-  const res = await fetchLive("/api/admin/mailing-list/subscribers", ADMIN_FETCH);
+  const res = await fetchLive("/api/admin/mailing-list", ADMIN_FETCH);
   return guardJson<{ count: number; subscribers: MailingListSubscriber[] }>(res, "subscribers");
 }
 
 export async function broadcastEmail(
   payload: { subject: string; html: string; text?: string }
 ): Promise<{ sent: number }> {
-  const res = await fetchLive("/api/admin/mailing-list/broadcast", {
+  const res = await fetchLive("/api/admin/mailing-list", {
     ...ADMIN_FETCH,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -327,7 +327,7 @@ export async function broadcastEmail(
 }
 
 export async function deleteSubscriber(id: number): Promise<void> {
-  const res = await fetchLive(`/api/admin/mailing-list/subscribers/${id}`, {
+  const res = await fetchLive(`/api/admin/mailing-list?id=${id}`, {
     ...ADMIN_FETCH,
     method: "DELETE",
   });
