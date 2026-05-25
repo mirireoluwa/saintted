@@ -50,110 +50,120 @@ export default async function handler(req: Req, res: Res) {
 
   if (req.method === "POST" && req.query?.action === "seed") {
     try {
-      const existing = parse(await redis.get<string>(TRACKS_KEY));
-      if (existing.length > 0) {
-        return res.status(200).json({ ok: true, seeded: 0, message: "Tracks already exist — seed skipped." });
-      }
       const q = (title: string) => encodeURIComponent(`Saintted ${title}`);
-      const seeds: Track[] = [
+      type SeedEntry = {
+        slug: string;
+        title: string;
+        meta: string;
+        description: string;
+        year: number;
+        order: number;
+        youtube_url: string;
+        apple_music_url: string;
+        spotify_url: string;
+      };
+      const seeds: SeedEntry[] = [
         {
-          id: 1,
-          title: "one chance",
           slug: "one-chance",
+          title: "one chance",
           meta: "Single",
           order: 0,
           description: "the song talks about giving someone a chance to prove themselves after a mistake but realizing that sometimes apologies are not enough.\n\nthe lyrics express the struggle of holding onto special memories and feelings while trying to move on from a relationship that may not be working out, symbolized by the metaphor of giving one dance to prove wrong.",
           year: 2025,
-          art_url: "",
-          link_url: "",
           youtube_url: `https://www.youtube.com/results?search_query=${q("one chance")}`,
           apple_music_url: `https://music.apple.com/us/search?term=${q("one chance")}`,
           spotify_url: `https://open.spotify.com/search/${q("one chance")}`,
-          is_published: true,
-          is_highlighted: false,
-          is_unreleased: false,
-          release_at: null,
-          presave_url: "",
         },
         {
-          id: 2,
-          title: "shimmer",
           slug: "shimmer",
+          title: "shimmer",
           meta: "Single (Sound)",
           order: 1,
           description: "i decided to do something really unconventional. This one has no vocals and I'm sure you all might be wondering, \"why?\". The truth is, it's the best way I could express how i was feeling at the time: \"i've got no words to say\".\n\n\"shimmer\" tells a story of solitude and how i've come to enjoy finding some quiet time alone to think and process life. This song is supposed to help with that. It is designed to help go through those moments of solitude.",
           year: 2025,
-          art_url: "",
-          link_url: "",
           youtube_url: `https://www.youtube.com/results?search_query=${q("shimmer")}`,
           apple_music_url: `https://music.apple.com/us/search?term=${q("shimmer")}`,
           spotify_url: `https://open.spotify.com/search/${q("shimmer")}`,
-          is_published: true,
-          is_highlighted: false,
-          is_unreleased: false,
-          release_at: null,
-          presave_url: "",
         },
         {
-          id: 3,
-          title: "hyperphoria",
           slug: "hyperphoria",
+          title: "hyperphoria",
           meta: "Single",
           order: 2,
           description: "This song was actually written in the summer of 2023. I was at a point where I was just trying to figure out my life. It speaks about my aspirations to be a great person, the challenges I will face to get there, and leaving some pain from my past behind.",
           year: 2024,
-          art_url: "",
-          link_url: "",
           youtube_url: `https://www.youtube.com/results?search_query=${q("hyperphoria")}`,
           apple_music_url: `https://music.apple.com/us/search?term=${q("hyperphoria")}`,
           spotify_url: `https://open.spotify.com/search/${q("hyperphoria")}`,
-          is_published: true,
-          is_highlighted: false,
-          is_unreleased: false,
-          release_at: null,
-          presave_url: "",
         },
         {
-          id: 4,
-          title: "runaway",
           slug: "runaway",
+          title: "runaway",
           meta: "Single",
           order: 3,
           description: "Runaway speaks about a transition period in my life. I wanted things to change so badly and I thought that the best way to express that was by essentially running away from the old to the new.",
           year: 2022,
-          art_url: "",
-          link_url: "",
           youtube_url: `https://www.youtube.com/results?search_query=${q("runaway")}`,
           apple_music_url: `https://music.apple.com/us/search?term=${q("runaway")}`,
           spotify_url: `https://open.spotify.com/search/${q("runaway")}`,
-          is_published: true,
-          is_highlighted: false,
-          is_unreleased: false,
-          release_at: null,
-          presave_url: "",
         },
         {
-          id: 5,
-          title: "home",
           slug: "home",
+          title: "home",
           meta: "Single",
           order: 4,
           description: "this song stems from two perspectives.\n\nthe first, from a quote that says, \"sometimes home is a person\". The idea for this song was developed from this quote.\n\nthe second, a vision for a better world where love is everything we express.",
           year: 2022,
-          art_url: "",
-          link_url: "",
           youtube_url: `https://www.youtube.com/results?search_query=${q("home")}`,
           apple_music_url: `https://music.apple.com/us/search?term=${q("home")}`,
           spotify_url: `https://open.spotify.com/search/${q("home")}`,
-          is_published: true,
-          is_highlighted: false,
-          is_unreleased: false,
-          release_at: null,
-          presave_url: "",
         },
       ];
-      await redis.set(TRACKS_KEY, JSON.stringify(seeds));
-      return res.status(200).json({ ok: true, seeded: seeds.length });
+
+      const tracks = parse(await redis.get<string>(TRACKS_KEY));
+      let created = 0;
+      let updated = 0;
+
+      for (const seed of seeds) {
+        const idx = tracks.findIndex((t) => t.slug === seed.slug);
+        if (idx === -1) {
+          // Track doesn't exist — create it
+          tracks.push({
+            id: Date.now() + created,
+            title: seed.title,
+            slug: seed.slug,
+            meta: seed.meta,
+            order: seed.order,
+            description: seed.description,
+            year: seed.year,
+            art_url: "",
+            link_url: "",
+            youtube_url: seed.youtube_url,
+            apple_music_url: seed.apple_music_url,
+            spotify_url: seed.spotify_url,
+            is_published: true,
+            is_highlighted: false,
+            is_unreleased: false,
+            release_at: null,
+            presave_url: "",
+          });
+          created++;
+        } else {
+          // Track exists — fill in any missing/empty fields without overwriting custom data
+          const t = tracks[idx];
+          let changed = false;
+          if (!t.description?.trim()) { t.description = seed.description; changed = true; }
+          if (t.year == null) { t.year = seed.year; changed = true; }
+          if (!t.meta?.trim()) { t.meta = seed.meta; changed = true; }
+          if (!t.youtube_url?.trim()) { t.youtube_url = seed.youtube_url; changed = true; }
+          if (!t.apple_music_url?.trim()) { t.apple_music_url = seed.apple_music_url; changed = true; }
+          if (!t.spotify_url?.trim()) { t.spotify_url = seed.spotify_url; changed = true; }
+          if (changed) { tracks[idx] = t; updated++; }
+        }
+      }
+
+      await redis.set(TRACKS_KEY, JSON.stringify(tracks));
+      return res.status(200).json({ ok: true, created, updated, seeded: created + updated });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ ok: false, message: "Seed failed" });

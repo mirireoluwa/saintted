@@ -359,9 +359,11 @@ export function TrackDetailPage() {
             <div className="track-detail__right">
               <section className="track-detail__about">
                 <h2 className="track-detail__about-title">About the song</h2>
-                <p className="track-detail__about-text">
-                  {(displayTrack!.description || "").trim() || "—"}
-                </p>
+                {(displayTrack!.description || "").trim()
+                  ? (displayTrack!.description || "").trim().split(/\n\n+/).map((para, i) => (
+                      <p key={i} className="track-detail__about-text">{para}</p>
+                    ))
+                  : <p className="track-detail__about-text">—</p>}
               </section>
             </div>
           </div>

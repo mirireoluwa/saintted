@@ -125,7 +125,7 @@ export async function deleteTrack(slug: string): Promise<void> {
   if (!res.ok) throw new Error("Delete failed");
 }
 
-export async function seedTracks(): Promise<{ seeded: number; message?: string }> {
+export async function seedTracks(): Promise<{ seeded: number; created?: number; updated?: number; message?: string }> {
   const res = await fetchLive("/api/admin/tracks?action=seed", {
     ...ADMIN_FETCH,
     method: "POST",

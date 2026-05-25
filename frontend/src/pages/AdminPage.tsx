@@ -1411,31 +1411,36 @@ export function AdminPage() {
 
       <div className="admin-card">
         <h2 className="admin-card__title">All tracks</h2>
-        {sortedTracks.length === 0 && (
-          <div style={{ marginBottom: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          {sortedTracks.length === 0 && (
             <p style={{ marginBottom: "0.5rem", opacity: 0.7 }}>No tracks yet.</p>
-            <button
-              type="button"
-              className="admin-btn"
-              disabled={seedingTracks}
-              onClick={async () => {
-                setSeedingTracks(true);
-                try {
-                  const result = await seedTracks();
-                  notify("ok", result.message ?? `Loaded ${result.seeded} original tracks`);
-                  const refreshed = await fetchTracksAuth();
-                  setTracks(refreshed);
-                } catch (err) {
-                  notify("error", err instanceof Error ? err.message : "Seed failed");
-                } finally {
-                  setSeedingTracks(false);
-                }
-              }}
-            >
-              {seedingTracks ? "Loading…" : "Load original tracks"}
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            type="button"
+            className="admin-btn"
+            disabled={seedingTracks}
+            title="Creates missing tracks and fills in any empty descriptions, years, or streaming links for the 5 original tracks"
+            onClick={async () => {
+              setSeedingTracks(true);
+              try {
+                const result = await seedTracks();
+                const { created = 0, updated = 0 } = result;
+                const msg = result.message ?? (created || updated
+                  ? `${created} track(s) created, ${updated} track(s) updated`
+                  : "All original track details are already up to date");
+                notify("ok", msg);
+                const refreshed = await fetchTracksAuth();
+                setTracks(refreshed);
+              } catch (err) {
+                notify("error", err instanceof Error ? err.message : "Seed failed");
+              } finally {
+                setSeedingTracks(false);
+              }
+            }}
+          >
+            {seedingTracks ? "Loading…" : "Restore original track details"}
+          </button>
+        </div>
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
