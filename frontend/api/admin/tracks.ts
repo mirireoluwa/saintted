@@ -120,15 +120,23 @@ export default async function handler(req: Req, res: Res) {
         },
       ];
 
+      // Strip everything except lowercase letters and digits for fuzzy title match.
+      const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
       const tracks = parse(await redis.get<string>(TRACKS_KEY));
       let created = 0;
       let updated = 0;
       const log: string[] = [];
 
       for (const seed of seeds) {
-        const idx = tracks.findIndex((t) => t.slug === seed.slug);
+        // Try exact slug match first, then fall back to normalized title match.
+        let idx = tracks.findIndex((t) => t.slug === seed.slug);
         if (idx === -1) {
-          // Track doesn't exist — create it
+          idx = tracks.findIndex((t) => norm(t.title) === norm(seed.title));
+        }
+
+        if (idx === -1) {
+          // Track not found by slug or title — create it.
           tracks.push({
             id: Date.now() + created,
             title: seed.title,
@@ -151,9 +159,9 @@ export default async function handler(req: Req, res: Res) {
           created++;
           log.push(`created "${seed.slug}"`);
         } else {
-          // Track exists — always restore the canonical detail fields.
+          // Found — always restore canonical detail fields.
           // Preserve user-set fields: art_url, presave_url, is_published,
-          // is_highlighted, is_unreleased, release_at, order, id.
+          // is_highlighted, is_unreleased, release_at, order, id, slug.
           const t = tracks[idx];
           tracks[idx] = {
             ...t,
@@ -166,7 +174,7 @@ export default async function handler(req: Req, res: Res) {
             spotify_url: seed.spotify_url,
           };
           updated++;
-          log.push(`restored "${seed.slug}"`);
+          log.push(`restored "${t.slug}" (matched as "${seed.slug}")`);
         }
       }
 

@@ -17,6 +17,51 @@ import {
 import { absoluteUrl, getSiteUrl } from "../utils/siteUrl";
 import "./TrackDetailPage.css";
 
+// Shared with HomePage — canonical fallback data shown before API responds.
+const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
+const FALLBACK_TRACKS: Track[] = [
+  {
+    id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0,
+    description: "the song talks about giving someone a chance to prove themselves after a mistake but realizing that sometimes apologies are not enough.\n\nthe lyrics express the struggle of holding onto special memories and feelings while trying to move on from a relationship that may not be working out, symbolized by the metaphor of giving one dance to prove wrong.",
+    year: 2025,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("one chance")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("one chance")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("one chance")}`,
+  },
+  {
+    id: 2, title: "shimmer", slug: "shimmer", meta: "Single (Sound)", art_url: "", link_url: "", order: 1,
+    description: "i decided to do something really unconventional. This one has no vocals and I'm sure you all might be wondering, \"why?\". The truth is, it's the best way I could express how i was feeling at the time: \"i've got no words to say\".\n\n\"shimmer\" tells a story of solitude and how i've come to enjoy finding some quiet time alone to think and process life. This song is supposed to help with that. It is designed to help go through those moments of solitude.",
+    year: 2025,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("shimmer")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("shimmer")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("shimmer")}`,
+  },
+  {
+    id: 3, title: "hyperphoria", slug: "hyperphoria", meta: "Single", art_url: "", link_url: "", order: 2,
+    description: "This song was actually written in the summer of 2023. I was at a point where I was just trying to figure out my life. It speaks about my aspirations to be a great person, the challenges I will face to get there, and leaving some pain from my past behind.",
+    year: 2024,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("hyperphoria")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("hyperphoria")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("hyperphoria")}`,
+  },
+  {
+    id: 4, title: "runaway", slug: "runaway", meta: "Single", art_url: "", link_url: "", order: 3,
+    description: "Runaway speaks about a transition period in my life. I wanted things to change so badly and I thought that the best way to express that was by essentially running away from the old to the new.",
+    year: 2022,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("runaway")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("runaway")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("runaway")}`,
+  },
+  {
+    id: 5, title: "home", slug: "home", meta: "Single", art_url: "", link_url: "", order: 4,
+    description: "this song stems from two perspectives.\n\nthe first, from a quote that says, \"sometimes home is a person\". The idea for this song was developed from this quote.\n\nthe second, a vision for a better world where love is everything we express.",
+    year: 2022,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("home")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("home")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("home")}`,
+  },
+];
+
 function pickUrl(stored: string | undefined | null, fallback: string): string {
   const t = (stored ?? "").trim();
   return t || fallback;
@@ -77,7 +122,7 @@ function TrackDetailSkeleton() {
 export function TrackDetailPage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const [track, setTrack] = useState<Track | null>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [slowLoading, setSlowLoading] = useState(false);
@@ -87,7 +132,8 @@ export function TrackDetailPage() {
     let cancelled = false;
     fetchTracks()
       .then((list) => {
-        if (!cancelled) setTracks(list);
+        // Only replace fallback if the API returned actual tracks.
+        if (!cancelled && list.length > 0) setTracks(list);
       })
       .catch(() => {});
     return () => {
