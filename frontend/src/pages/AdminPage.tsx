@@ -6,24 +6,23 @@ import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
   broadcastEmail,
+  checkSession,
   clearTrackCoverArt,
-  deleteSubscriber,
   createFeaturedVideo,
   createGalleryImage,
   createTrack,
   deleteGalleryImage,
   deleteFeaturedVideo,
+  deleteSubscriber,
   deleteTrack,
   fetchFeaturedVideosAuth,
   fetchGalleryImagesAuth,
   fetchMailingListSubscribers,
   fetchReleaseCountdownAuth,
   fetchTracksAuth,
-  getStoredToken,
   login,
+  logout as apiLogout,
   patchTrackCoverArt,
-  resetAdminPassword,
-  setStoredToken,
   updateFeaturedVideo,
   updateGalleryImage,
   updateHeroHeader,
@@ -33,7 +32,6 @@ import {
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
-import { getApiBase } from "../utils/apiBase";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 import "./AdminPage.css";
 
@@ -48,7 +46,7 @@ function AdminSubdomainCallout() {
           {href.replace(/\/+$/, "")}
         </a>
         . If that opens the public site instead of this CMS, add the admin domain to the same Vercel project
-        as your main site and turn off “redirect to primary domain” for it (details in the README).
+        as your main site and turn off "redirect to primary domain" for it (details in the README).
       </p>
     </div>
   );
@@ -173,7 +171,7 @@ const DND_TYPE_TRACK = "application/x-saintted-admin-track";
 const DND_TYPE_VIDEO = "application/x-saintted-admin-video";
 const DND_TYPE_GALLERY = "application/x-saintted-admin-gallery";
 
-/** How long to wait with no new reorder success before showing one “order updated” toast (per list). */
+/** How long to wait with no new reorder success before showing one "order updated" toast (per list). */
 const REORDER_SUCCESS_TOAST_QUIET_MS = 2500;
 
 type AdminToast = { id: number; type: "ok" | "error"; text: string };
@@ -199,12 +197,10 @@ function AdminToastStack({ toasts, onDismiss }: { toasts: AdminToast[]; onDismis
 }
 
 export function AdminPage() {
-  const [token, setToken] = useState<string | null>(() => getStoredToken());
-  const [loginUser, setLoginUser] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [loginPass, setLoginPass] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [resetSecret, setResetSecret] = useState("");
-  const [resetInfo, setResetInfo] = useState<{ username: string; new_password: string } | null>(null);
   const [toasts, setToasts] = useState<AdminToast[]>([]);
 
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -376,13 +372,20 @@ export function AdminPage() {
     };
   }, []);
 
-  const loadData = useCallback(async (t: string, signal?: AbortSignal) => {
+  useEffect(() => {
+    checkSession().then((ok) => {
+      setIsLoggedIn(ok);
+      setSessionChecked(true);
+    });
+  }, []);
+
+  const loadData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     const [tr, fv, cd, gi] = await Promise.allSettled([
-      fetchTracksAuth(t, { signal }),
-      fetchFeaturedVideosAuth(t, { signal }),
-      fetchReleaseCountdownAuth(t, { signal }),
-      fetchGalleryImagesAuth(t, { signal }),
+      fetchTracksAuth({ signal }),
+      fetchFeaturedVideosAuth({ signal }),
+      fetchReleaseCountdownAuth({ signal }),
+      fetchGalleryImagesAuth({ signal }),
     ]);
 
     try {
@@ -426,16 +429,7 @@ export function AdminPage() {
       );
       if (failures.length > 0) {
         const firstErr = String((failures[0] as PromiseRejectedResult).reason);
-        const apiBase = getApiBase();
-        const origin =
-          typeof window !== "undefined" ? window.location.origin : "this origin";
-        const netHint = firstErr.includes("HTTP")
-          ? "If you see HTTP 401, use Log out then sign in again (token invalid after DB/migrate)."
-          : "“Failed to fetch” usually means CORS or the API URL is wrong — check DevTools → Network.";
-        notify(
-          "error",
-          `Some admin sections failed to load (${failures.length}/4). ${firstErr} API base: ${apiBase}. ${netHint} Include ${origin} in CORS_ORIGINS / CSRF_TRUSTED_ORIGINS on the API if needed; redeploy the frontend after changing VITE_API_URL.`,
-        );
+        notify("error", `Some admin sections failed to load (${failures.length}/4). ${firstErr}`);
       }
     } finally {
       setLoading(false);
@@ -443,16 +437,16 @@ export function AdminPage() {
   }, [notify]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!isLoggedIn) return;
     const ac = new AbortController();
-    void loadData(token, ac.signal);
+    void loadData(ac.signal);
     return () => ac.abort();
-  }, [token, loadData]);
+  }, [isLoggedIn, loadData]);
 
-  const loadMailingList = useCallback(async (t: string) => {
+  const loadMailingList = useCallback(async () => {
     setMlLoading(true);
     try {
-      const data = await fetchMailingListSubscribers(t);
+      const data = await fetchMailingListSubscribers();
       setMlSubscribers(data.subscribers);
       setMlCount(data.count);
     } catch (err) {
@@ -463,15 +457,14 @@ export function AdminPage() {
   }, [notify]);
 
   useEffect(() => {
-    if (!token) return;
-    void loadMailingList(token);
-  }, [token, loadMailingList]);
+    if (!isLoggedIn) return;
+    void loadMailingList();
+  }, [isLoggedIn, loadMailingList]);
 
   async function handleDeleteSubscriber(id: number, email: string) {
-    if (!token) return;
     if (!window.confirm(`Remove ${email} from the mailing list?`)) return;
     try {
-      await deleteSubscriber(token, id);
+      await deleteSubscriber(id);
       setMlSubscribers((prev) => prev.filter((s) => s.id !== id));
       setMlCount((prev) => (prev !== null ? prev - 1 : null));
       notify("ok", `${email} removed.`);
@@ -482,7 +475,6 @@ export function AdminPage() {
 
   async function handleBroadcast(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     if (!broadcastSubject.trim() || !broadcastBody.trim()) {
       notify("error", "Subject and message are both required.");
       return;
@@ -494,7 +486,7 @@ export function AdminPage() {
         .split(/\n\n+/)
         .map((p) => `<p style="line-height:1.7;color:rgba(255,255,255,0.8);">${p.replace(/\n/g, "<br/>")}</p>`)
         .join("")}<p style="margin-top:40px;"><a href="https://saintted.com" style="color:#fff;">saintted.com</a></p></body></html>`;
-      const result = await broadcastEmail(token, {
+      const result = await broadcastEmail({
         subject: broadcastSubject.trim(),
         html,
         text: broadcastBody.trim(),
@@ -512,38 +504,17 @@ export function AdminPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const tok = await login(loginUser, loginPass);
-      setStoredToken(tok);
-      setToken(tok);
+      await login(loginPass);
+      setIsLoggedIn(true);
       setLoginPass("");
-      setResetInfo(null);
     } catch (err) {
       notify("error", String(err));
     }
   }
 
-  async function handleForgotPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setResetInfo(null);
-    try {
-      const username = loginUser.trim();
-      if (!username) {
-        notify("error", "Enter your username first.");
-        return;
-      }
-      const data = await resetAdminPassword(username, resetSecret.trim() || undefined);
-      setResetInfo({ username: data.username, new_password: data.new_password });
-      setLoginPass(data.new_password);
-      setShowLoginPassword(true);
-      notify("ok", "Password reset. Use the generated password to sign in.");
-    } catch (err) {
-      notify("error", String(err));
-    }
-  }
-
-  function logout() {
-    setStoredToken(null);
-    setToken(null);
+  async function logout() {
+    await apiLogout().catch(() => {});
+    setIsLoggedIn(false);
     setTracks([]);
     setVideos([]);
     setGalleryImages([]);
@@ -564,12 +535,11 @@ export function AdminPage() {
 
   async function saveReleaseCountdown(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     try {
       const release_at = countdownForm.release_at_local.trim()
         ? new Date(countdownForm.release_at_local).toISOString()
         : null;
-      const updated = await updateReleaseCountdown(token, {
+      const updated = await updateReleaseCountdown({
         enabled: countdownForm.enabled,
         song_title: countdownForm.song_title.trim(),
         release_at,
@@ -584,9 +554,8 @@ export function AdminPage() {
 
   async function saveHeroImageSettings(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     try {
-      const updated = await updateHeroHeader(token, {
+      const updated = await updateHeroHeader({
         header_image_url: heroImageForm.header_image_url.trim(),
         header_image_crop: heroImageForm.header_image_crop,
         header_image_focus_x: heroImageForm.header_image_focus_x,
@@ -605,9 +574,8 @@ export function AdminPage() {
 
   async function saveHeroVideoSettings(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     try {
-      const updated = await updateHeroHeader(token, {
+      const updated = await updateHeroHeader({
         header_video_url: heroImageForm.header_video_url.trim(),
         header_video_file: heroVideoFile,
         clear_header_video_file: clearHeroVideoUpload,
@@ -637,7 +605,6 @@ export function AdminPage() {
 
   async function saveTrack(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     const isUnreleased = Number(trackForm.is_unreleased) !== 0;
     const releaseAtLocal = String(trackForm.release_at_local || "").trim();
     const release_at =
@@ -676,23 +643,23 @@ export function AdminPage() {
       if (editingSlug) {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
-        await updateTrack(token, editingSlug, body as Partial<Track>);
+        await updateTrack(editingSlug, body as Partial<Track>);
         if (coverFile) {
-          await patchTrackCoverArt(token, editingSlug, coverFile);
+          await patchTrackCoverArt(editingSlug, coverFile);
         } else if (shouldClearCover) {
-          await clearTrackCoverArt(token, editingSlug);
+          await clearTrackCoverArt(editingSlug);
         }
         notify("ok", "Track updated.");
       } else {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
-        const created = await createTrack(token, body as Partial<Track>);
+        const created = await createTrack(body as Partial<Track>);
         if (coverFile) {
-          await patchTrackCoverArt(token, created.slug, coverFile);
+          await patchTrackCoverArt(created.slug, coverFile);
         }
         notify("ok", "Track created.");
       }
-      await loadData(token);
+      await loadData();
       startNewTrack();
     } catch (err) {
       notify("error", String(err));
@@ -700,19 +667,19 @@ export function AdminPage() {
   }
 
   async function handleDeleteTrack(slug: string) {
-    if (!token || !window.confirm(`Delete track “${slug}”?`)) return;
+    if (!window.confirm(`Delete track "${slug}"?`)) return;
     try {
-      await deleteTrack(token, slug);
+      await deleteTrack(slug);
       notify("ok", "Track deleted.");
       if (editingSlug === slug) startNewTrack();
-      await loadData(token);
+      await loadData();
     } catch (err) {
       notify("error", String(err));
     }
   }
 
   async function reorderTrackRowsBySlug(draggedSlug: string, targetSlug: string) {
-    if (!token || draggedSlug === targetSlug) return;
+    if (draggedSlug === targetSlug) return;
     const from = sortedTracks.findIndex((item) => item.slug === draggedSlug);
     const to = sortedTracks.findIndex((item) => item.slug === targetSlug);
     if (from < 0 || to < 0) return;
@@ -725,7 +692,7 @@ export function AdminPage() {
     withOrders.forEach((item, i) => {
       const prev = previous.find((p) => p.slug === item.slug);
       if (prev && prev.order !== i) {
-        patches.push(updateTrack(token, item.slug, { order: i }));
+        patches.push(updateTrack(item.slug, { order: i }));
       }
     });
     if (patches.length === 0) return;
@@ -755,7 +722,6 @@ export function AdminPage() {
 
   async function saveVideo(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     const youtube_id = String(videoForm.youtube_id).trim();
     if (!youtube_id) {
       notify("error", "YouTube video ID is required.");
@@ -763,21 +729,21 @@ export function AdminPage() {
     }
     try {
       if (editingVideoId != null) {
-        await updateFeaturedVideo(token, editingVideoId, {
+        await updateFeaturedVideo(editingVideoId, {
           title: String(videoForm.title).trim(),
           youtube_id,
           order: Number(videoForm.order) || 0,
         });
         notify("ok", "Video updated.");
       } else {
-        await createFeaturedVideo(token, {
+        await createFeaturedVideo({
           title: String(videoForm.title).trim(),
           youtube_id,
           order: Number(videoForm.order) || 0,
         });
         notify("ok", "Video added.");
       }
-      await loadData(token);
+      await loadData();
       startNewVideo();
     } catch (err) {
       notify("error", String(err));
@@ -785,19 +751,19 @@ export function AdminPage() {
   }
 
   async function handleDeleteVideo(id: number) {
-    if (!token || !window.confirm("Delete this featured video?")) return;
+    if (!window.confirm("Delete this featured video?")) return;
     try {
-      await deleteFeaturedVideo(token, id);
+      await deleteFeaturedVideo(id);
       notify("ok", "Video removed.");
       if (editingVideoId === id) startNewVideo();
-      await loadData(token);
+      await loadData();
     } catch (err) {
       notify("error", String(err));
     }
   }
 
   async function reorderVideosById(draggedId: number, targetId: number) {
-    if (!token || draggedId === targetId) return;
+    if (draggedId === targetId) return;
     const from = sortedVideos.findIndex((item) => item.id === draggedId);
     const to = sortedVideos.findIndex((item) => item.id === targetId);
     if (from < 0 || to < 0) return;
@@ -810,7 +776,7 @@ export function AdminPage() {
     withOrders.forEach((item, i) => {
       const prev = previous.find((p) => p.id === item.id);
       if (prev && prev.order !== i) {
-        patches.push(updateFeaturedVideo(token, item.id, { order: i }));
+        patches.push(updateFeaturedVideo(item.id, { order: i }));
       }
     });
     if (patches.length === 0) return;
@@ -838,10 +804,9 @@ export function AdminPage() {
 
   async function saveGalleryImage(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
     try {
       if (editingGalleryId != null) {
-        await updateGalleryImage(token, editingGalleryId, {
+        await updateGalleryImage(editingGalleryId, {
           caption: galleryForm.caption.trim(),
           order: Number(galleryForm.order) || 0,
           image: galleryFile,
@@ -852,14 +817,14 @@ export function AdminPage() {
           notify("error", "Select an image file to upload.");
           return;
         }
-        await createGalleryImage(token, {
+        await createGalleryImage({
           image: galleryFile,
           caption: galleryForm.caption.trim(),
           order: Number(galleryForm.order) || 0,
         });
         notify("ok", "Image uploaded.");
       }
-      await loadData(token);
+      await loadData();
       startNewGalleryImage();
     } catch (err) {
       notify("error", String(err));
@@ -867,19 +832,19 @@ export function AdminPage() {
   }
 
   async function handleDeleteGalleryImage(id: number) {
-    if (!token || !window.confirm("Delete this image?")) return;
+    if (!window.confirm("Delete this image?")) return;
     try {
-      await deleteGalleryImage(token, id);
+      await deleteGalleryImage(id);
       notify("ok", "Image deleted.");
       if (editingGalleryId === id) startNewGalleryImage();
-      await loadData(token);
+      await loadData();
     } catch (err) {
       notify("error", String(err));
     }
   }
 
   async function reorderGalleryById(draggedId: number, targetId: number) {
-    if (!token || draggedId === targetId) return;
+    if (draggedId === targetId) return;
     const from = sortedGalleryImages.findIndex((item) => item.id === draggedId);
     const to = sortedGalleryImages.findIndex((item) => item.id === targetId);
     if (from < 0 || to < 0) return;
@@ -892,7 +857,7 @@ export function AdminPage() {
     withOrders.forEach((item, i) => {
       const prev = previous.find((p) => p.id === item.id);
       if (prev && prev.order !== i) {
-        patches.push(updateGalleryImage(token, item.id, { order: i }));
+        patches.push(updateGalleryImage(item.id, { order: i }));
       }
     });
     if (patches.length === 0) return;
@@ -906,78 +871,48 @@ export function AdminPage() {
     }
   }
 
-  if (!token) {
+  if (!sessionChecked) {
+    return null;
+  }
+
+  if (!isLoggedIn) {
     return (
       <>
         <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
         <div className="admin-page">
-        <AdminSiteHeader />
-        <AdminSubdomainCallout />
-        <div className="admin-card">
-          <h2 className="admin-card__title">Log in</h2>
-          <p className="admin-card__lead">
-            Sign in with your Django user (same credentials as the Django <code>/admin/</code> site). An API token is stored in this browser.
-          </p>
-          <form className="admin-form" onSubmit={handleLogin}>
-            <div className="admin-form__row">
-              <label htmlFor="admin-user">Username</label>
-              <input
-                id="admin-user"
-                autoComplete="username"
-                value={loginUser}
-                onChange={(e) => setLoginUser(e.target.value)}
-              />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="admin-pass">Password</label>
-              <div className="admin-password-wrap">
-                <input
-                  id="admin-pass"
-                  type={showLoginPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={loginPass}
-                  onChange={(e) => setLoginPass(e.target.value)}
-                  className="admin-password-wrap__input"
-                />
-                <button
-                  type="button"
-                  className="admin-password-wrap__toggle"
-                  onClick={() => setShowLoginPassword((v) => !v)}
-                  aria-pressed={showLoginPassword}
-                  aria-label={showLoginPassword ? "Hide password" : "Show password"}
-                >
-                  {showLoginPassword ? "Hide" : "Show"}
-                </button>
+          <AdminSiteHeader />
+          <AdminSubdomainCallout />
+          <div className="admin-card">
+            <h2 className="admin-card__title">Log in</h2>
+            <form className="admin-form" onSubmit={(e) => void handleLogin(e)}>
+              <div className="admin-form__row">
+                <label htmlFor="admin-pass">Password</label>
+                <div className="admin-password-wrap">
+                  <input
+                    id="admin-pass"
+                    type={showLoginPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={loginPass}
+                    onChange={(e) => setLoginPass(e.target.value)}
+                    className="admin-password-wrap__input"
+                  />
+                  <button
+                    type="button"
+                    className="admin-password-wrap__toggle"
+                    onClick={() => setShowLoginPassword((v) => !v)}
+                    aria-pressed={showLoginPassword}
+                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                  >
+                    {showLoginPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
-            </div>
-            <button type="submit" className="admin-btn admin-btn--primary">
-              Get API token
-            </button>
-          </form>
-          <form className="admin-form admin-form--forgot" onSubmit={handleForgotPassword}>
-            <div className="admin-form__row">
-              <label htmlFor="admin-reset-secret">Reset secret (required in production)</label>
-              <input
-                id="admin-reset-secret"
-                type="password"
-                autoComplete="off"
-                placeholder="Only needed when production reset is enabled"
-                value={resetSecret}
-                onChange={(e) => setResetSecret(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="admin-btn">
-              Forgot password (generate new one)
-            </button>
-            {resetInfo ? (
-              <p className="admin-form__hint">
-                New password for <strong>{resetInfo.username}</strong>:{" "}
-                <code>{resetInfo.new_password}</code>
-              </p>
-            ) : null}
-          </form>
+              <button type="submit" className="admin-btn admin-btn--primary">
+                Sign in
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
       </>
     );
   }
@@ -995,10 +930,10 @@ export function AdminPage() {
           <span className="admin-page__toolbar-line" aria-hidden />
         </div>
         <div className="admin-page__actions">
-          <button type="button" className="admin-btn" onClick={() => void loadData(token)}>
+          <button type="button" className="admin-btn" onClick={() => void loadData()}>
             Refresh
           </button>
-          <button type="button" className="admin-btn admin-btn--danger" onClick={logout}>
+          <button type="button" className="admin-btn admin-btn--danger" onClick={() => void logout()}>
             Log out
           </button>
         </div>
@@ -1434,7 +1369,7 @@ export function AdminPage() {
                   setTrackForm((f) => ({ ...f, is_unreleased: e.target.checked ? 1 : 0 }))
                 }
               />
-              <span>Unreleased / upcoming (countdown page + “upcoming” row on home)</span>
+              <span>Unreleased / upcoming (countdown page + "upcoming" row on home)</span>
             </label>
           </div>
           <div className="admin-form__row admin-form__row--2">
@@ -1856,7 +1791,7 @@ export function AdminPage() {
           <button
             type="button"
             className="admin-btn"
-            onClick={() => token && void loadMailingList(token)}
+            onClick={() => void loadMailingList()}
             disabled={mlLoading}
           >
             {mlLoading ? "Loading…" : "Refresh"}

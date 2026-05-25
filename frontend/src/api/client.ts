@@ -2,40 +2,34 @@ import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
-import { getApiBase } from "../utils/apiBase";
 import { fetchLive } from "./fetchLive";
 
-const API_BASE = getApiBase();
-
 export async function fetchTracks(): Promise<Track[]> {
-  const res = await fetchLive(`${API_BASE}/tracks/`);
+  const res = await fetchLive("/api/tracks");
   if (!res.ok) throw new Error("Failed to fetch tracks");
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
 export async function fetchTrackBySlug(slug: string): Promise<Track> {
-  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`);
+  const res = await fetchLive(`/api/tracks/${encodeURIComponent(slug)}`);
   if (!res.ok) throw new Error("Track not found");
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
 export async function fetchFeaturedVideos(): Promise<FeaturedVideo[]> {
-  const res = await fetchLive(`${API_BASE}/featured-videos/`);
+  const res = await fetchLive("/api/featured-videos");
   if (!res.ok) return [];
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
 export async function fetchReleaseCountdown(): Promise<ReleaseCountdown | null> {
-  const res = await fetchLive(`${API_BASE}/release-countdown/`);
+  const res = await fetchLive("/api/release-countdown");
   if (!res.ok) return null;
   return res.json();
 }
 
 export async function fetchGalleryImages(): Promise<GalleryImage[]> {
-  const res = await fetchLive(`${API_BASE}/gallery-images/`);
+  const res = await fetchLive("/api/gallery-images");
   if (!res.ok) return [];
   return res.json();
 }
@@ -50,7 +44,7 @@ export async function subscribeToMailingList(data: {
   last_name: string;
   email: string;
 }): Promise<MailingListResult> {
-  const res = await fetch(`${API_BASE}/mailing-list/subscribe/`, {
+  const res = await fetch("/api/mailing-list/subscribe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

@@ -2,106 +2,89 @@ import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
-import { getApiBase } from "../utils/apiBase";
 import { fetchLive } from "./fetchLive";
 
-const API_BASE = getApiBase();
+const ADMIN_FETCH: RequestInit = { credentials: "include" };
 
-const TOKEN_KEY = "saintted_admin_token";
-
-export function getStoredToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredToken(token: string | null): void {
-  try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* ignore */
-  }
-}
-
-function authHeaders(token: string): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Token ${token}`,
-  };
-}
-
-/** Parse list/detail responses; surface HTTP status (e.g. 401 stale token after DB reset). */
-async function guardAuthJson<T>(res: Response, resource: string): Promise<T> {
+async function guardJson<T>(res: Response, resource: string): Promise<T> {
   if (res.ok) return res.json() as Promise<T>;
   const text = (await res.text()).trim();
   let detail = text.slice(0, 400);
   try {
-    const j = JSON.parse(text) as { detail?: string };
+    const j = JSON.parse(text) as { detail?: string; message?: string };
     if (typeof j.detail === "string" && j.detail) detail = j.detail;
-  } catch {
-    /* keep slice */
-  }
+    else if (typeof j.message === "string" && j.message) detail = j.message;
+  } catch { /* keep slice */ }
   if (res.status === 401) {
-    throw new Error(
-      `Unauthorized (HTTP 401) loading ${resource}. Your saved token is no longer valid (common after a database reset or migrate). Use Log out, then sign in again.`,
-    );
+    throw new Error(`Unauthorized loading ${resource}. Sign out and sign in again.`);
   }
   throw new Error(`Failed to load ${resource} (HTTP ${res.status}): ${detail || res.statusText}`);
 }
 
-export async function login(username: string, password: string): Promise<string> {
-  const res = await fetchLive(`${API_BASE}/auth/token/`, {
+/** Upload a File to Vercel Blob via /api/admin/upload. Returns the public URL. */
+async function uploadFile(file: File): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
+  const res = await fetchLive("/api/admin/upload", {
+    ...ADMIN_FETCH,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ filename: file.name, dataUrl }),
   });
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg = (err as { non_field_errors?: string[] }).non_field_errors?.[0];
-    throw new Error(
-      msg || `Login failed (HTTP ${res.status}). Check VITE_API_URL ends with /api and matches your deployed API base URL.`,
-    );
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `Upload failed (HTTP ${res.status})`);
   }
-  const data = (await res.json()) as { token: string };
-  return data.token;
+  const data = await res.json() as { url: string };
+  return data.url;
 }
 
-export async function resetAdminPassword(
-  username: string,
-  resetSecret?: string
-): Promise<{ username: string; new_password: string; detail: string }> {
-  const res = await fetchLive(`${API_BASE}/auth/reset-password/`, {
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+export async function login(password: string): Promise<void> {
+  const res = await fetchLive("/api/admin/auth/login", {
+    ...ADMIN_FETCH,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username,
-      ...(resetSecret ? { reset_secret: resetSecret } : {}),
-    }),
+    body: JSON.stringify({ password }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg =
-      (err as { detail?: string }).detail || `Password reset failed (HTTP ${res.status}).`;
-    throw new Error(msg);
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `Login failed (HTTP ${res.status})`);
   }
-  return res.json();
 }
 
-export async function fetchTracksAuth(token: string, req?: RequestInit): Promise<Track[]> {
-  const res = await fetchLive(`${API_BASE}/tracks/`, {
-    ...req,
-    headers: authHeaders(token),
-  });
-  return guardAuthJson<Track[]>(res, "tracks");
+export async function logout(): Promise<void> {
+  await fetchLive("/api/admin/auth/logout", { ...ADMIN_FETCH, method: "POST" });
 }
 
-export async function createTrack(token: string, body: Partial<Track>): Promise<Track> {
-  const res = await fetchLive(`${API_BASE}/tracks/`, {
+export async function checkSession(): Promise<boolean> {
+  try {
+    const res = await fetchLive("/api/admin/auth/session", ADMIN_FETCH);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ── Tracks ────────────────────────────────────────────────────────────────────
+
+export async function fetchTracksAuth(req?: RequestInit): Promise<Track[]> {
+  const res = await fetchLive("/api/admin/tracks", { ...ADMIN_FETCH, ...req });
+  return guardJson<Track[]>(res, "tracks");
+}
+
+export async function createTrack(body: Partial<Track>): Promise<Track> {
+  const res = await fetchLive("/api/admin/tracks", {
+    ...ADMIN_FETCH,
     method: "POST",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -111,14 +94,11 @@ export async function createTrack(token: string, body: Partial<Track>): Promise<
   return res.json();
 }
 
-export async function updateTrack(
-  token: string,
-  slug: string,
-  body: Partial<Track>
-): Promise<Track> {
-  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+export async function updateTrack(slug: string, body: Partial<Track>): Promise<Track> {
+  const res = await fetchLive(`/api/admin/tracks/${encodeURIComponent(slug)}`, {
+    ...ADMIN_FETCH,
     method: "PATCH",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -128,63 +108,37 @@ export async function updateTrack(
   return res.json();
 }
 
-/** PATCH cover only (multipart). Call after JSON create/update for metadata. */
-export async function patchTrackCoverArt(token: string, slug: string, file: File): Promise<Track> {
-  const body = new FormData();
-  body.set("art_file", file);
-  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
-    method: "PATCH",
-    headers: { Authorization: `Token ${token}` },
-    body,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(JSON.stringify(err));
-  }
-  return res.json();
+export async function patchTrackCoverArt(slug: string, file: File): Promise<Track> {
+  const url = await uploadFile(file);
+  return updateTrack(slug, { art_url: url });
 }
 
-export async function clearTrackCoverArt(token: string, slug: string): Promise<Track> {
-  const body = new FormData();
-  body.set("clear_art_file", "true");
-  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
-    method: "PATCH",
-    headers: { Authorization: `Token ${token}` },
-    body,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(JSON.stringify(err));
-  }
-  return res.json();
+export async function clearTrackCoverArt(slug: string): Promise<Track> {
+  return updateTrack(slug, { art_url: "" });
 }
 
-export async function deleteTrack(token: string, slug: string): Promise<void> {
-  const res = await fetchLive(`${API_BASE}/tracks/${encodeURIComponent(slug)}/`, {
+export async function deleteTrack(slug: string): Promise<void> {
+  const res = await fetchLive(`/api/admin/tracks/${encodeURIComponent(slug)}`, {
+    ...ADMIN_FETCH,
     method: "DELETE",
-    headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error("Delete failed");
 }
 
-export async function fetchFeaturedVideosAuth(
-  token: string,
-  req?: RequestInit,
-): Promise<FeaturedVideo[]> {
-  const res = await fetchLive(`${API_BASE}/featured-videos/`, {
-    ...req,
-    headers: authHeaders(token),
-  });
-  return guardAuthJson<FeaturedVideo[]>(res, "featured videos");
+// ── Featured videos ───────────────────────────────────────────────────────────
+
+export async function fetchFeaturedVideosAuth(req?: RequestInit): Promise<FeaturedVideo[]> {
+  const res = await fetchLive("/api/admin/featured-videos", { ...ADMIN_FETCH, ...req });
+  return guardJson<FeaturedVideo[]>(res, "featured videos");
 }
 
 export async function createFeaturedVideo(
-  token: string,
   body: Pick<FeaturedVideo, "title" | "youtube_id" | "order">
 ): Promise<FeaturedVideo> {
-  const res = await fetchLive(`${API_BASE}/featured-videos/`, {
+  const res = await fetchLive("/api/admin/featured-videos", {
+    ...ADMIN_FETCH,
     method: "POST",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -195,13 +149,13 @@ export async function createFeaturedVideo(
 }
 
 export async function updateFeaturedVideo(
-  token: string,
   id: number,
   body: Partial<Pick<FeaturedVideo, "title" | "youtube_id" | "order">>
 ): Promise<FeaturedVideo> {
-  const res = await fetchLive(`${API_BASE}/featured-videos/${id}/`, {
+  const res = await fetchLive(`/api/admin/featured-videos/${id}`, {
+    ...ADMIN_FETCH,
     method: "PATCH",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -211,43 +165,28 @@ export async function updateFeaturedVideo(
   return res.json();
 }
 
-export async function deleteFeaturedVideo(token: string, id: number): Promise<void> {
-  const res = await fetchLive(`${API_BASE}/featured-videos/${id}/`, {
+export async function deleteFeaturedVideo(id: number): Promise<void> {
+  const res = await fetchLive(`/api/admin/featured-videos/${id}`, {
+    ...ADMIN_FETCH,
     method: "DELETE",
-    headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error("Delete failed");
 }
 
-export async function fetchReleaseCountdownAuth(
-  token: string,
-  req?: RequestInit,
-): Promise<ReleaseCountdown> {
-  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
-    ...req,
-    headers: authHeaders(token),
-  });
-  return guardAuthJson<ReleaseCountdown>(res, "release countdown");
-}
+// ── Release countdown ─────────────────────────────────────────────────────────
 
-export async function fetchGalleryImagesAuth(
-  token: string,
-  req?: RequestInit,
-): Promise<GalleryImage[]> {
-  const res = await fetchLive(`${API_BASE}/gallery-images/`, {
-    ...req,
-    headers: authHeaders(token),
-  });
-  return guardAuthJson<GalleryImage[]>(res, "gallery images");
+export async function fetchReleaseCountdownAuth(req?: RequestInit): Promise<ReleaseCountdown> {
+  const res = await fetchLive("/api/admin/release-countdown", { ...ADMIN_FETCH, ...req });
+  return guardJson<ReleaseCountdown>(res, "release countdown");
 }
 
 export async function updateReleaseCountdown(
-  token: string,
   body: Partial<Pick<ReleaseCountdown, "enabled" | "song_title" | "release_at" | "presave_url">>
 ): Promise<ReleaseCountdown> {
-  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
+  const res = await fetchLive("/api/admin/release-countdown", {
+    ...ADMIN_FETCH,
     method: "PATCH",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -257,53 +196,40 @@ export async function updateReleaseCountdown(
   return res.json();
 }
 
-export async function updateHeroHeader(
-  token: string,
-  payload: {
-    header_image_url?: string;
-    header_image_crop?: ReleaseCountdown["header_image_crop"];
-    header_image_focus_x?: number;
-    header_image_focus_y?: number;
-    header_image_file?: File | null;
-    clear_header_image_file?: boolean;
-    header_video_url?: string;
-    header_video_file?: File | null;
-    clear_header_video_file?: boolean;
-  }
-): Promise<ReleaseCountdown> {
-  const body = new FormData();
-  if (payload.header_image_url !== undefined) {
-    body.set("header_image_url", payload.header_image_url);
-  }
-  if (payload.header_image_crop !== undefined) {
-    body.set("header_image_crop", payload.header_image_crop);
-  }
-  if (payload.header_image_focus_x !== undefined) {
-    body.set("header_image_focus_x", String(payload.header_image_focus_x));
-  }
-  if (payload.header_image_focus_y !== undefined) {
-    body.set("header_image_focus_y", String(payload.header_image_focus_y));
-  }
+export async function updateHeroHeader(payload: {
+  header_image_url?: string;
+  header_image_crop?: ReleaseCountdown["header_image_crop"];
+  header_image_focus_x?: number;
+  header_image_focus_y?: number;
+  header_image_file?: File | null;
+  clear_header_image_file?: boolean;
+  header_video_url?: string;
+  header_video_file?: File | null;
+  clear_header_video_file?: boolean;
+}): Promise<ReleaseCountdown> {
+  const patch: Record<string, unknown> = {};
+
+  if (payload.header_image_url !== undefined) patch.header_image_url = payload.header_image_url;
+  if (payload.header_image_crop !== undefined) patch.header_image_crop = payload.header_image_crop;
+  if (payload.header_image_focus_x !== undefined) patch.header_image_focus_x = payload.header_image_focus_x;
+  if (payload.header_image_focus_y !== undefined) patch.header_image_focus_y = payload.header_image_focus_y;
+  if (payload.header_video_url !== undefined) patch.header_video_url = payload.header_video_url;
+
+  if (payload.clear_header_image_file) patch.header_image_file_url = "";
+  if (payload.clear_header_video_file) patch.header_video_file_url = "";
+
   if (payload.header_image_file) {
-    body.set("header_image_file", payload.header_image_file);
-  }
-  if (payload.clear_header_image_file) {
-    body.set("clear_header_image_file", "true");
-  }
-  if (payload.header_video_url !== undefined) {
-    body.set("header_video_url", payload.header_video_url);
+    patch.header_image_file_url = await uploadFile(payload.header_image_file);
   }
   if (payload.header_video_file) {
-    body.set("header_video_file", payload.header_video_file);
-  }
-  if (payload.clear_header_video_file) {
-    body.set("clear_header_video_file", "true");
+    patch.header_video_file_url = await uploadFile(payload.header_video_file);
   }
 
-  const res = await fetchLive(`${API_BASE}/release-countdown/`, {
+  const res = await fetchLive("/api/admin/release-countdown", {
+    ...ADMIN_FETCH,
     method: "PATCH",
-    headers: { Authorization: `Token ${token}` },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -312,18 +238,22 @@ export async function updateHeroHeader(
   return res.json();
 }
 
+// ── Gallery images ────────────────────────────────────────────────────────────
+
+export async function fetchGalleryImagesAuth(req?: RequestInit): Promise<GalleryImage[]> {
+  const res = await fetchLive("/api/admin/gallery-images", { ...ADMIN_FETCH, ...req });
+  return guardJson<GalleryImage[]>(res, "gallery images");
+}
+
 export async function createGalleryImage(
-  token: string,
   payload: { image: File; caption?: string; order?: number }
 ): Promise<GalleryImage> {
-  const body = new FormData();
-  body.set("image", payload.image);
-  body.set("caption", payload.caption ?? "");
-  body.set("order", String(payload.order ?? 0));
-  const res = await fetchLive(`${API_BASE}/gallery-images/`, {
+  const image_url = await uploadFile(payload.image);
+  const res = await fetchLive("/api/admin/gallery-images", {
+    ...ADMIN_FETCH,
     method: "POST",
-    headers: { Authorization: `Token ${token}` },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image_url, caption: payload.caption ?? "", order: payload.order ?? 0 }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -333,18 +263,19 @@ export async function createGalleryImage(
 }
 
 export async function updateGalleryImage(
-  token: string,
   id: number,
   payload: { image?: File | null; caption?: string; order?: number }
 ): Promise<GalleryImage> {
-  const body = new FormData();
-  if (payload.image) body.set("image", payload.image);
-  if (payload.caption !== undefined) body.set("caption", payload.caption);
-  if (payload.order !== undefined) body.set("order", String(payload.order));
-  const res = await fetchLive(`${API_BASE}/gallery-images/${id}/`, {
+  const body: Record<string, unknown> = {};
+  if (payload.image) body.image_url = await uploadFile(payload.image);
+  if (payload.caption !== undefined) body.caption = payload.caption;
+  if (payload.order !== undefined) body.order = payload.order;
+
+  const res = await fetchLive(`/api/admin/gallery-images/${id}`, {
+    ...ADMIN_FETCH,
     method: "PATCH",
-    headers: { Authorization: `Token ${token}` },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -353,13 +284,15 @@ export async function updateGalleryImage(
   return res.json();
 }
 
-export async function deleteGalleryImage(token: string, id: number): Promise<void> {
-  const res = await fetchLive(`${API_BASE}/gallery-images/${id}/`, {
+export async function deleteGalleryImage(id: number): Promise<void> {
+  const res = await fetchLive(`/api/admin/gallery-images/${id}`, {
+    ...ADMIN_FETCH,
     method: "DELETE",
-    headers: { Authorization: `Token ${token}` },
   });
-  if (!res.ok) throw new Error("Delete failed");
+  if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
 }
+
+// ── Mailing list ──────────────────────────────────────────────────────────────
 
 export type MailingListSubscriber = {
   id: number;
@@ -369,36 +302,34 @@ export type MailingListSubscriber = {
   subscribed_at: string;
 };
 
-export async function fetchMailingListSubscribers(
-  token: string,
-): Promise<{ count: number; subscribers: MailingListSubscriber[] }> {
-  const res = await fetchLive(`${API_BASE}/mailing-list/subscribers/`, {
-    headers: authHeaders(token),
-  });
-  return guardAuthJson<{ count: number; subscribers: MailingListSubscriber[] }>(res, "subscribers");
+export async function fetchMailingListSubscribers(): Promise<{
+  count: number;
+  subscribers: MailingListSubscriber[];
+}> {
+  const res = await fetchLive("/api/admin/mailing-list/subscribers", ADMIN_FETCH);
+  return guardJson<{ count: number; subscribers: MailingListSubscriber[] }>(res, "subscribers");
 }
 
 export async function broadcastEmail(
-  token: string,
-  payload: { subject: string; html: string; text?: string },
+  payload: { subject: string; html: string; text?: string }
 ): Promise<{ sent: number }> {
-  const res = await fetchLive(`${API_BASE}/mailing-list/broadcast/`, {
+  const res = await fetchLive("/api/admin/mailing-list/broadcast", {
+    ...ADMIN_FETCH,
     method: "POST",
-    headers: authHeaders(token),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg = (err as { error?: string }).error || `Broadcast failed (HTTP ${res.status})`;
-    throw new Error(msg);
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `Broadcast failed (HTTP ${res.status})`);
   }
   return res.json();
 }
 
-export async function deleteSubscriber(token: string, id: number): Promise<void> {
-  const res = await fetchLive(`${API_BASE}/mailing-list/subscribers/${id}/`, {
+export async function deleteSubscriber(id: number): Promise<void> {
+  const res = await fetchLive(`/api/admin/mailing-list/subscribers/${id}`, {
+    ...ADMIN_FETCH,
     method: "DELETE",
-    headers: { Authorization: `Token ${token}` },
   });
   if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
 }

@@ -17,6 +17,7 @@ build/
 db.sqlite3
 backend/staticfiles/
 backend/media/
+backend/*.dump
 local_settings.py
 .venv-check/
 *.log
@@ -35,6 +36,9 @@ frontend/dist-ssr/
 !backend/.env.example
 frontend/.env
 backend/.env
+
+# Claude Code
+.claude/
 
 # OS & editors
 .DS_Store
