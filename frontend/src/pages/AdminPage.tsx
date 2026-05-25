@@ -1446,6 +1446,7 @@ export function AdminPage() {
                 <th>Title</th>
                 <th>Slug</th>
                 <th>Year</th>
+                <th>Description</th>
                 <th>Public</th>
                 <th>Upcoming</th>
                 <th>Highlighted</th>
@@ -1501,6 +1502,9 @@ export function AdminPage() {
                     </Link>
                   </td>
                   <td>{t.year ?? "—"}</td>
+                  <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.7, fontSize: "0.85em" }} title={t.description || ""}>
+                    {t.description?.trim() ? t.description.trim().slice(0, 60) + (t.description.trim().length > 60 ? "…" : "") : <em>empty</em>}
+                  </td>
                   <td>{t.is_published === false ? "draft" : "live"}</td>
                   <td>{t.is_unreleased ? "yes" : "—"}</td>
                   <td>{t.is_highlighted ? "yes" : "—"}</td>
