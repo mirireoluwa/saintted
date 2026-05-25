@@ -7,6 +7,7 @@ import type { ReleaseCountdown } from "../types/releaseCountdown";
 import {
   broadcastEmail,
   checkSession,
+  seedTracks,
   clearTrackCoverArt,
   createFeaturedVideo,
   createGalleryImage,
@@ -215,6 +216,8 @@ export function AdminPage() {
   const [broadcastSubject, setBroadcastSubject] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
+
+  const [seedingTracks, setSeedingTracks] = useState(false);
 
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
@@ -1408,6 +1411,31 @@ export function AdminPage() {
 
       <div className="admin-card">
         <h2 className="admin-card__title">All tracks</h2>
+        {sortedTracks.length === 0 && (
+          <div style={{ marginBottom: "1rem" }}>
+            <p style={{ marginBottom: "0.5rem", opacity: 0.7 }}>No tracks yet.</p>
+            <button
+              type="button"
+              className="admin-btn"
+              disabled={seedingTracks}
+              onClick={async () => {
+                setSeedingTracks(true);
+                try {
+                  const result = await seedTracks();
+                  notify("ok", result.message ?? `Loaded ${result.seeded} original tracks`);
+                  const refreshed = await fetchTracksAuth();
+                  setTracks(refreshed);
+                } catch (err) {
+                  notify("error", err instanceof Error ? err.message : "Seed failed");
+                } finally {
+                  setSeedingTracks(false);
+                }
+              }}
+            >
+              {seedingTracks ? "Loading…" : "Load original tracks"}
+            </button>
+          </div>
+        )}
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>

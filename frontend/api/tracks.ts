@@ -9,7 +9,7 @@ export default async function handler(
   }
 ) {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Cache-Control", "s-maxage=30, stale-while-revalidate=120");
+  res.setHeader("Cache-Control", "no-cache, no-store");
 
   if (req.method !== "GET") {
     return res.status(405).json({ ok: false, message: "Method not allowed" });

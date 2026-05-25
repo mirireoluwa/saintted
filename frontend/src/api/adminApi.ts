@@ -125,6 +125,18 @@ export async function deleteTrack(slug: string): Promise<void> {
   if (!res.ok) throw new Error("Delete failed");
 }
 
+export async function seedTracks(): Promise<{ seeded: number; message?: string }> {
+  const res = await fetchLive("/api/admin/tracks?action=seed", {
+    ...ADMIN_FETCH,
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message ?? `Seed failed (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
 // ── Featured videos ───────────────────────────────────────────────────────────
 
 export async function fetchFeaturedVideosAuth(req?: RequestInit): Promise<FeaturedVideo[]> {
