@@ -1425,10 +1425,7 @@ export function AdminPage() {
               try {
                 const result = await seedTracks();
                 const { created = 0, updated = 0 } = result;
-                const msg = result.message ?? (created || updated
-                  ? `${created} track(s) created, ${updated} track(s) updated`
-                  : "All original track details are already up to date");
-                notify("ok", msg);
+                notify("ok", result.message ?? `${created} created, ${updated} restored`);
                 const refreshed = await fetchTracksAuth();
                 setTracks(refreshed);
               } catch (err) {

@@ -123,6 +123,7 @@ export default async function handler(req: Req, res: Res) {
       const tracks = parse(await redis.get<string>(TRACKS_KEY));
       let created = 0;
       let updated = 0;
+      const log: string[] = [];
 
       for (const seed of seeds) {
         const idx = tracks.findIndex((t) => t.slug === seed.slug);
@@ -148,22 +149,29 @@ export default async function handler(req: Req, res: Res) {
             presave_url: "",
           });
           created++;
+          log.push(`created "${seed.slug}"`);
         } else {
-          // Track exists — fill in any missing/empty fields without overwriting custom data
+          // Track exists — always restore the canonical detail fields.
+          // Preserve user-set fields: art_url, presave_url, is_published,
+          // is_highlighted, is_unreleased, release_at, order, id.
           const t = tracks[idx];
-          let changed = false;
-          if (!t.description?.trim()) { t.description = seed.description; changed = true; }
-          if (t.year == null) { t.year = seed.year; changed = true; }
-          if (!t.meta?.trim()) { t.meta = seed.meta; changed = true; }
-          if (!t.youtube_url?.trim()) { t.youtube_url = seed.youtube_url; changed = true; }
-          if (!t.apple_music_url?.trim()) { t.apple_music_url = seed.apple_music_url; changed = true; }
-          if (!t.spotify_url?.trim()) { t.spotify_url = seed.spotify_url; changed = true; }
-          if (changed) { tracks[idx] = t; updated++; }
+          tracks[idx] = {
+            ...t,
+            title: seed.title,
+            meta: seed.meta,
+            description: seed.description,
+            year: seed.year,
+            youtube_url: seed.youtube_url,
+            apple_music_url: seed.apple_music_url,
+            spotify_url: seed.spotify_url,
+          };
+          updated++;
+          log.push(`restored "${seed.slug}"`);
         }
       }
 
       await redis.set(TRACKS_KEY, JSON.stringify(tracks));
-      return res.status(200).json({ ok: true, created, updated, seeded: created + updated });
+      return res.status(200).json({ ok: true, created, updated, seeded: created + updated, log });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ ok: false, message: "Seed failed" });
