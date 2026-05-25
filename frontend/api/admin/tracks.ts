@@ -1,6 +1,6 @@
 import { verifyAdminCookie } from "../lib-js/adminAuth.js";
 import { getRedis, TRACKS_KEY } from "../lib-js/redis.js";
-import type { Track } from "../lib/types";
+import type { Track } from "../lib/types.js";
 
 type Req = {
   method?: string;

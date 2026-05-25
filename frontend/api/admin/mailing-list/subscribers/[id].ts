@@ -1,6 +1,6 @@
 import { verifyAdminCookie } from "../../../lib-js/adminAuth.js";
 import { getRedis, SUBSCRIBERS_KEY } from "../../../lib-js/redis.js";
-import type { Subscriber } from "../../../lib/types";
+import type { Subscriber } from "../../../lib/types.js";
 
 export default async function handler(
   req: { method?: string; headers?: { cookie?: string }; query?: Record<string, string> },

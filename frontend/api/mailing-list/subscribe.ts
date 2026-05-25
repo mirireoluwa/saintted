@@ -1,5 +1,5 @@
 import { getRedis, SUBSCRIBERS_KEY } from "../lib-js/redis.js";
-import type { Subscriber } from "../lib/types";
+import type { Subscriber } from "../lib/types.js";
 
 type Req = {
   method?: string;

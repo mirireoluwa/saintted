@@ -1,6 +1,6 @@
 import { verifyAdminCookie } from "../lib-js/adminAuth.js";
 import { getRedis, GALLERY_KEY } from "../lib-js/redis.js";
-import type { GalleryImage } from "../lib/types";
+import type { GalleryImage } from "../lib/types.js";
 
 type Req = {
   method?: string;

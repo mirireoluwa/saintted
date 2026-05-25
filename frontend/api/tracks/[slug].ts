@@ -1,5 +1,5 @@
 import { getRedis, TRACKS_KEY } from "../lib-js/redis.js";
-import type { Track } from "../lib/types";
+import type { Track } from "../lib/types.js";
 
 export default async function handler(
   req: { method?: string; query?: Record<string, string> },

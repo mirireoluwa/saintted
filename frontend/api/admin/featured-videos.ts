@@ -1,6 +1,6 @@
 import { verifyAdminCookie } from "../lib-js/adminAuth.js";
 import { getRedis, VIDEOS_KEY } from "../lib-js/redis.js";
-import type { FeaturedVideo } from "../lib/types";
+import type { FeaturedVideo } from "../lib/types.js";
 
 type Req = {
   method?: string;

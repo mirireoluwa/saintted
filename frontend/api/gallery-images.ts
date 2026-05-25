@@ -1,5 +1,5 @@
 import { getRedis, GALLERY_KEY } from "./lib-js/redis.js";
-import type { GalleryImage } from "./lib/types";
+import type { GalleryImage } from "./lib/types.js";
 
 export default async function handler(
   req: { method?: string },

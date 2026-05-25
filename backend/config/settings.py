@@ -10,6 +10,8 @@ import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
+from config.database import apply_supabase_database_options
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Local overrides: create backend/.env (see .env.example). Not used if file missing.
@@ -36,6 +38,7 @@ if not DEBUG:
         ".up.railway.app",
         ".railway.app",
         ".fly.dev",
+        ".onrender.com",
     )
     ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS + list(_paas_suffixes)))
 
@@ -103,19 +106,20 @@ else:
     if not (_lower.startswith("postgres://") or _lower.startswith("postgresql://")):
         raise ImproperlyConfigured(
             "DATABASE_URL must start with postgresql:// or postgres://. "
-            "Neon: Project → Connect → copy the full URI (not a fragment after ://). "
+            "Supabase/Neon: copy the full URI from the dashboard (not a fragment after ://). "
             "Check backend/.env: no line break inside the URL, no leading spaces, "
             "and no quotes that trim the scheme."
         )
     _database_url_effective = _database_url_raw
 
-DATABASES = {
-    "default": dj_database_url.parse(
-        _database_url_effective,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+_db_default = dj_database_url.parse(
+    _database_url_effective,
+    conn_max_age=600,
+    conn_health_checks=True,
+)
+apply_supabase_database_options(_db_default, _database_url_effective)
+
+DATABASES = {"default": _db_default}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -140,8 +144,16 @@ MEDIA_PUBLIC_ORIGIN = (os.environ.get("MEDIA_PUBLIC_ORIGIN") or "").strip().rstr
 
 # Media storage:
 # - Local dev/default: filesystem under MEDIA_ROOT
-# - Production option: S3-compatible object storage (AWS S3, Cloudflare R2, etc.)
+# - Production: S3-compatible storage (Supabase Storage, Cloudflare R2, AWS S3, …)
 USE_S3_MEDIA = os.environ.get("USE_S3_MEDIA", "0") == "1"
+_supabase_ref = (os.environ.get("SUPABASE_PROJECT_REF") or "").strip()
+if USE_S3_MEDIA and _supabase_ref and not (os.environ.get("S3_ENDPOINT_URL") or "").strip():
+    os.environ.setdefault(
+        "S3_ENDPOINT_URL",
+        f"https://{_supabase_ref}.storage.supabase.co/storage/v1/s3",
+    )
+    os.environ.setdefault("S3_REGION", "us-east-1")
+    os.environ.setdefault("S3_ADDRESSING_STYLE", "path")
 _s3_bucket = (os.environ.get("S3_BUCKET_NAME") or "").strip()
 if USE_S3_MEDIA and _s3_bucket:
     AWS_ACCESS_KEY_ID = (os.environ.get("S3_ACCESS_KEY_ID") or "").strip()

@@ -1,6 +1,6 @@
 import { getRedis, COUNTDOWN_KEY } from "./lib-js/redis.js";
-import type { ReleaseCountdown } from "./lib/types";
-import { DEFAULT_COUNTDOWN } from "./lib/types";
+import type { ReleaseCountdown } from "./lib/types.js";
+import { DEFAULT_COUNTDOWN } from "./lib/types.js";
 
 export default async function handler(
   req: { method?: string },

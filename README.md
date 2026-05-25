@@ -98,11 +98,19 @@ saintted/
 └── README.md
 ```
 
-## Deploy: [Railway](https://railway.app) (Django API) + [Neon](https://neon.tech) (Postgres) + [Vercel](https://vercel.com) (frontend)
+## Deploy: [Supabase](https://supabase.com) (Postgres + media) + API host + [Vercel](https://vercel.com) (frontend)
+
+**Recommended:** Supabase for the database and uploaded files, **Render** (free tier) or Fly for Django, Vercel for the SPA.
+
+Step-by-step: **[docs/SUPABASE.md](docs/SUPABASE.md)**. Starter Render config: **`render.yaml`**.
 
 Deploy the **API first** so you have a stable URL for **`VITE_API_URL`** and for **`CORS_ORIGINS`** / **`CSRF_TRUSTED_ORIGINS`**.
 
-### A. Postgres on [Neon](https://neon.tech)
+### A. Postgres on [Supabase](https://supabase.com) (or Neon)
+
+See **docs/SUPABASE.md** for connection strings (direct vs pooler), Storage bucket, and env vars.
+
+### A (legacy). Postgres on [Neon](https://neon.tech)
 
 Create a project, create a database, and copy **`DATABASE_URL`**. Prefer Neon’s **direct** (port **`5432`**) URI for migrations unless you know you need the pooler.
 
