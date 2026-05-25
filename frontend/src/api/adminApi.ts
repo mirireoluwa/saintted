@@ -21,28 +21,33 @@ async function guardJson<T>(res: Response, resource: string): Promise<T> {
   throw new Error(`Failed to load ${resource} (HTTP ${res.status}): ${detail || res.statusText}`);
 }
 
-/** Upload a File to Vercel Blob via /api/admin/upload. Returns the public URL. */
+/** Upload a File directly to Cloudinary. Returns the public secure URL. */
 async function uploadFile(file: File): Promise<string> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
+  const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined)?.trim();
+  const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined)?.trim();
 
-  const res = await fetchLive("/api/admin/gallery-images?action=upload", {
-    ...ADMIN_FETCH,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename: file.name, dataUrl }),
-  });
+  if (!cloudName || !uploadPreset) {
+    throw new Error(
+      "File uploads not configured. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to the Vercel project env vars."
+    );
+  }
+
+  const resourceType = file.type.startsWith("video/") ? "video" : "image";
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", uploadPreset);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+    { method: "POST", body: form }
+  );
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { message?: string };
-    throw new Error(err.message ?? `Upload failed (HTTP ${res.status})`);
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err.error?.message ?? `Upload failed (HTTP ${res.status})`);
   }
-  const data = await res.json() as { url: string };
-  return data.url;
+  const data = await res.json() as { secure_url: string };
+  return data.secure_url;
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
