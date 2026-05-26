@@ -184,7 +184,8 @@ export function TrackDetailPage() {
   const pendingTransition = Boolean(loading && track && track.slug !== slug);
   const showSlowLoadingUi = pendingTransition && slowLoading;
   const showSkeleton = loading && !track && !error;
-  const showNotFound = !loading && (error || !track);
+  // Only show "not found" if the API failed AND we have no fallback data for this slug.
+  const showNotFound = !loading && !displayTrack && (error || !track);
 
   const displayTrack: Track | null =
     track?.slug === slug ? track : tracks.find((t) => t.slug === slug) ?? null;
