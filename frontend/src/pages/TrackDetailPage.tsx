@@ -123,6 +123,7 @@ export function TrackDetailPage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const [track, setTrack] = useState<Track | null>(null);
   const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
+  const [tracksLoaded, setTracksLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [slowLoading, setSlowLoading] = useState(false);
@@ -135,7 +136,10 @@ export function TrackDetailPage() {
         // Only replace fallback if the API returned actual tracks.
         if (!cancelled && list.length > 0) setTracks(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setTracksLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -183,13 +187,20 @@ export function TrackDetailPage() {
   const resolved = track && track.slug === slug;
   const pendingTransition = Boolean(loading && track && track.slug !== slug);
   const showSlowLoadingUi = pendingTransition && slowLoading;
-  const showSkeleton = loading && !track && !error;
 
+  // Compute displayTrack first so the skeleton/not-found guards can use it.
   const displayTrack: Track | null =
     track?.slug === slug ? track : tracks.find((t) => t.slug === slug) ?? null;
   const showInterstitial = Boolean(slug && loading && !displayTrack && !error && track !== null);
-  // Only show "not found" if the API failed AND we have no fallback data for this slug.
-  const showNotFound = !loading && !displayTrack && (error || !track);
+
+  // Show skeleton when we have no displayable data yet.
+  // Also keep skeleton if the slug fetch failed but the tracks list hasn't returned yet —
+  // this prevents a split-second "Track not found" flash for transient slug-fetch failures
+  // while fetchTracks() is still in-flight.
+  const showSkeleton = (loading || (error && !tracksLoaded)) && !displayTrack;
+
+  // Only show "not found" once both fetches are done and we still have nothing to show.
+  const showNotFound = !loading && tracksLoaded && !displayTrack && (error || !track);
 
   const listNeighbors =
     displayTrack && tracks.length > 0
