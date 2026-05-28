@@ -880,6 +880,18 @@
     padding: 0.55rem 0.65rem;
   }
 
+  /* Checkboxes: pin to left edge regardless of grid/overflow context */
+  .admin-form__check,
+  .admin-form__checkbox-label {
+    justify-self: start;
+    align-self: center;
+    width: 100%;
+  }
+
+  .admin-form__row--checkbox {
+    justify-items: start;
+  }
+
   /* Callout banner */
   .admin-callout--subdomain {
     font-size: 0.75rem;
