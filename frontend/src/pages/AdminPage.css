@@ -190,6 +190,9 @@
 .admin-form input,
 .admin-form select,
 .admin-form textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-family: var(--font-body);
   font-size: 0.875rem;
   padding: 0.6rem 0.75rem;
@@ -197,6 +200,12 @@
   border-radius: var(--radius-sm);
   background: rgba(9, 9, 12, 0.55);
   color: var(--text);
+}
+
+/* Prevent grid blowout in two-column rows */
+.admin-form__row--2 > * {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .admin-form__row--checkbox {
@@ -296,7 +305,27 @@
 
 .admin-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-top: 0.5rem;
+}
+
+/* Action cell: keeps both buttons on one row */
+.admin-table__actions {
+  white-space: nowrap;
+}
+
+.admin-table__actions .admin-btn + .admin-btn {
+  margin-left: 0.35rem;
+}
+
+/* Icon / label pattern — default: show label, hide icon */
+.admin-btn__icon {
+  display: none;
+  line-height: 1;
+}
+
+.admin-btn__label {
+  display: inline;
 }
 
 .admin-table {
@@ -747,16 +776,17 @@
 
 /* ── Mobile overrides (≤ 640px) ─────────────────────────────────────── */
 @media (max-width: 640px) {
-  /* Page shell */
+  /* Page shell — contain any stray overflow */
   .admin-page {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
     padding-bottom: 2rem;
+    overflow-x: hidden;
   }
 
-  /* Cards: tighter padding, full-bleed feel */
+  /* Cards: tighter padding */
   .admin-card {
-    padding: 1rem 0.875rem;
+    padding: 1rem 0.75rem;
     border-radius: var(--radius-md);
     margin-bottom: 1rem;
   }
@@ -773,50 +803,73 @@
     flex: unset;
   }
 
+  /* Only shrink toolbar utility buttons, not form submit/primary buttons */
+  .admin-page__toolbar .admin-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 9px;
+  }
+
   .admin-page__actions {
     justify-content: flex-start;
     gap: 0.4rem;
   }
 
-  .admin-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 9px;
-  }
-
-  /* Tables: horizontal scroll + compact cells */
+  /* Tables: scroll within card padding, compact cells */
   .admin-table-wrap {
-    /* Let tables scroll horizontally on mobile */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin-left: -0.875rem;
-    margin-right: -0.875rem;
-    padding-left: 0.875rem;
-    padding-right: 0.875rem;
   }
 
   .admin-table {
     font-size: 0.75rem;
-    min-width: 480px;
+    min-width: 400px;
   }
 
   .admin-table th,
   .admin-table td {
-    padding: 0.5rem 0.35rem;
+    padding: 0.5rem 0.4rem;
   }
 
   .admin-table th {
     font-size: 9px;
   }
 
-  /* Forms */
+  /* Table action cells: icon-only buttons side by side */
+  .admin-table__actions .admin-btn {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .admin-table__actions .admin-btn:first-child {
+    margin-left: 0;
+  }
+
+  /* Show icons, hide text labels inside table action buttons */
+  .admin-table .admin-btn__icon {
+    display: inline;
+  }
+
+  .admin-table .admin-btn__label {
+    display: none;
+  }
+
+  /* Forms — slightly tighter gap */
   .admin-form {
     gap: 0.85rem;
   }
 
+  /* Prevent iOS font-size zoom (must be ≥ 16px) */
   .admin-form input,
   .admin-form select,
   .admin-form textarea {
-    font-size: 1rem; /* prevent iOS auto-zoom (must be ≥ 16px or em equiv) */
+    font-size: 1rem;
     padding: 0.55rem 0.65rem;
   }
 
@@ -825,7 +878,7 @@
     font-size: 0.75rem;
   }
 
-  /* Toast stack: stretch to near full width on mobile */
+  /* Toast stack: full width on mobile */
   .admin-toast-stack {
     top: 0.5rem;
     right: 0.5rem;
@@ -833,12 +886,12 @@
     max-width: 100%;
   }
 
-  /* Hero media grid already collapses at 980px; fine-tune cols */
+  /* Hero media columns */
   .admin-hero-media-col {
     padding: 0.65rem;
   }
 
-  /* Password show/hide button: keep accessible tap target */
+  /* Password show/hide: keep accessible tap target */
   .admin-password-wrap__toggle {
     padding: 0 0.65rem;
     font-size: 9px;

@@ -1508,21 +1508,24 @@ export function AdminPage() {
                   <td>{t.is_published === false ? "draft" : "live"}</td>
                   <td>{t.is_unreleased ? "yes" : "—"}</td>
                   <td>{t.is_highlighted ? "yes" : "—"}</td>
-                  <td>
+                  <td className="admin-table__actions">
                     <button
                       type="button"
                       className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
+                      aria-label={`Edit ${t.title}`}
                       onClick={() => startEditTrack(t)}
                     >
-                      Edit
+                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
                       type="button"
                       className="admin-btn admin-btn--danger"
+                      aria-label={`Delete ${t.title}`}
                       onClick={() => void handleDeleteTrack(t.slug)}
                     >
-                      Delete
+                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
                 </tr>
@@ -1645,21 +1648,24 @@ export function AdminPage() {
                   </td>
                   <td>{v.title || "—"}</td>
                   <td>{v.youtube_id}</td>
-                  <td>
+                  <td className="admin-table__actions">
                     <button
                       type="button"
                       className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
+                      aria-label={`Edit ${v.title || v.youtube_id}`}
                       onClick={() => startEditVideo(v)}
                     >
-                      Edit
+                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
                       type="button"
                       className="admin-btn admin-btn--danger"
+                      aria-label={`Delete ${v.title || v.youtube_id}`}
                       onClick={() => void handleDeleteVideo(v.id)}
                     >
-                      Delete
+                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
                 </tr>
@@ -1786,21 +1792,24 @@ export function AdminPage() {
                     </a>
                   </td>
                   <td>{img.caption || "—"}</td>
-                  <td>
+                  <td className="admin-table__actions">
                     <button
                       type="button"
                       className="admin-btn"
-                      style={{ marginRight: "0.35rem" }}
+                      aria-label={`Edit image ${img.id}`}
                       onClick={() => startEditGalleryImage(img)}
                     >
-                      Edit
+                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
                       type="button"
                       className="admin-btn admin-btn--danger"
+                      aria-label={`Delete image ${img.id}`}
                       onClick={() => void handleDeleteGalleryImage(img.id)}
                     >
-                      Delete
+                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
                 </tr>
@@ -1859,13 +1868,15 @@ export function AdminPage() {
                     <td>{s.first_name} {s.last_name}</td>
                     <td>{s.email}</td>
                     <td>{new Date(s.subscribed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
-                    <td>
+                    <td className="admin-table__actions">
                       <button
                         type="button"
                         className="admin-btn admin-btn--danger"
+                        aria-label={`Remove ${s.email}`}
                         onClick={() => void handleDeleteSubscriber(s.id, s.email)}
                       >
-                        Remove
+                        <span className="admin-btn__icon" aria-hidden>✕</span>
+                        <span className="admin-btn__label">Remove</span>
                       </button>
                     </td>
                   </tr>
