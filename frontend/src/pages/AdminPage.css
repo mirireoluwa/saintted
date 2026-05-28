@@ -124,6 +124,7 @@
 
 .admin-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -159,6 +160,9 @@
   letter-spacing: normal;
   color: var(--text);
   cursor: pointer;
+  justify-self: start;
+  align-self: center;
+  width: 100%;
 }
 
 .admin-form__check input {
@@ -210,6 +214,7 @@
 
 .admin-form__row--checkbox {
   align-items: center;
+  justify-items: start;
 }
 
 .admin-form__checkbox-label {
@@ -219,7 +224,11 @@
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
+  justify-self: start;
+  align-self: center;
+  width: 100%;
 }
+
 
 .admin-form__checkbox-label input {
   width: auto;
@@ -716,6 +725,7 @@
 
 .admin-hero-video-preview {
   display: block;
+  min-width: 0;
   margin-top: 0.6rem;
   width: 100%;
   max-width: 100%;
@@ -878,18 +888,6 @@
   .admin-form textarea {
     font-size: 1rem;
     padding: 0.55rem 0.65rem;
-  }
-
-  /* Checkboxes: pin to left edge regardless of grid/overflow context */
-  .admin-form__check,
-  .admin-form__checkbox-label {
-    justify-self: start;
-    align-self: center;
-    width: 100%;
-  }
-
-  .admin-form__row--checkbox {
-    justify-items: start;
   }
 
   /* Callout banner */
