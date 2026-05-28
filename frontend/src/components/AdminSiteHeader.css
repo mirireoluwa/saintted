@@ -15,7 +15,7 @@
 }
 
 .admin-site-header__bar {
-  border-radius: 14px;
+  border-radius: 18px;
   border: 1px solid var(--header-border);
   background: var(--header-bg);
   backdrop-filter: blur(14px);
@@ -46,7 +46,7 @@
   width: 2.35rem;
   height: 2.35rem;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--bg-hover);
   color: var(--text-muted);

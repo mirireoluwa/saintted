@@ -18,7 +18,7 @@
   font-family: var(--font-mono);
   font-size: 0.75em;
   padding: 0.1em 0.35em;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--bg-hover);
   color: var(--text);
 }
@@ -117,7 +117,7 @@
   font-family: var(--font-mono);
   font-size: 0.75em;
   padding: 0.1em 0.35em;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
@@ -488,7 +488,7 @@
   color: var(--text-muted);
   background: none;
   border: none;
-  border-radius: 2px;
+  border-radius: 4px;
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.15s, color 0.15s;

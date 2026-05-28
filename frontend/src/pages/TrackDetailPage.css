@@ -29,7 +29,7 @@
   right: 1.25rem;
   bottom: 1rem;
   height: 2px;
-  border-radius: 2px;
+  border-radius: 6px;
   background: var(--border);
   overflow: hidden;
   pointer-events: none;
@@ -554,7 +554,7 @@ a.track-detail__nav-btn:hover {
 
 .track-detail__skeleton-line {
   height: 0.85rem;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--bg-hover);
   animation: track-skel-shimmer 1.2s ease-in-out infinite;
 }
