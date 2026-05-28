@@ -160,9 +160,6 @@
   letter-spacing: normal;
   color: var(--text);
   cursor: pointer;
-  justify-self: start;
-  align-self: center;
-  width: 100%;
 }
 
 .admin-form__check input {
@@ -214,19 +211,15 @@
 
 .admin-form__row--checkbox {
   align-items: center;
-  justify-items: start;
 }
 
 .admin-form__checkbox-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
-  justify-self: start;
-  align-self: center;
-  width: 100%;
 }
 
 
