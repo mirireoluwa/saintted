@@ -1,10 +1,36 @@
 import { getRedis, SUBSCRIBERS_KEY } from "../lib-js/redis.js";
 import type { Subscriber } from "../lib/types.js";
+import type { IncomingMessage } from "http";
 
-type Req = {
+type Req = IncomingMessage & {
   method?: string;
-  body?: { first_name?: string; last_name?: string; email?: string };
+  body?: unknown;
 };
+
+/** Vercel auto-parses JSON bodies, but fall back to manual stream reading if not. */
+async function readJsonBody(req: Req): Promise<{ first_name?: string; last_name?: string; email?: string }> {
+  // Vercel already parsed the body
+  if (req.body !== undefined && req.body !== null) {
+    if (typeof req.body === "string") {
+      try { return JSON.parse(req.body); } catch { return {}; }
+    }
+    if (typeof req.body === "object") return req.body as Record<string, string>;
+  }
+  // Manual fallback: read raw stream
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => {
+      try {
+        const raw = Buffer.concat(chunks).toString("utf-8");
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch {
+        resolve({});
+      }
+    });
+    req.on("error", () => resolve({}));
+  });
+}
 
 async function sendWelcomeEmail(subscriber: Subscriber): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
@@ -81,9 +107,10 @@ export default async function handler(
     return res.status(405).json({ ok: false, message: "Method not allowed" });
   }
 
-  const first_name = req.body?.first_name?.trim() ?? "";
-  const last_name = req.body?.last_name?.trim() ?? "";
-  const email = req.body?.email?.trim().toLowerCase() ?? "";
+  const parsed = await readJsonBody(req);
+  const first_name = (typeof parsed.first_name === "string" ? parsed.first_name : "").trim();
+  const last_name = (typeof parsed.last_name === "string" ? parsed.last_name : "").trim();
+  const email = (typeof parsed.email === "string" ? parsed.email : "").trim().toLowerCase();
 
   if (!first_name) return res.status(400).json({ first_name: ["This field is required."] });
   if (!last_name) return res.status(400).json({ last_name: ["This field is required."] });

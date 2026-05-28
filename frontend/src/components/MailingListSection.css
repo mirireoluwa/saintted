@@ -143,8 +143,8 @@
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #050509;
-  background: #f9fafb;
+  color: #0a0a0d;
+  background: #f5c542;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -153,7 +153,7 @@
 }
 
 .mailing-list-form__btn:hover:not(:disabled) {
-  background: #ffffff;
+  background: #f7ce55;
 }
 
 .mailing-list-form__btn:disabled {
