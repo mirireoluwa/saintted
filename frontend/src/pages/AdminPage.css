@@ -321,6 +321,8 @@
 /* Icon / label pattern — default: show label, hide icon */
 .admin-btn__icon {
   display: none;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
@@ -853,7 +855,7 @@
 
   /* Show icons, hide text labels inside table action buttons */
   .admin-table .admin-btn__icon {
-    display: inline;
+    display: inline-flex;
   }
 
   .admin-table .admin-btn__label {

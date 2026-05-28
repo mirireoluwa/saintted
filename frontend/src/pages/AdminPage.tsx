@@ -1,5 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+
+function PencilIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  );
+}
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
@@ -1515,7 +1532,7 @@ export function AdminPage() {
                       aria-label={`Edit ${t.title}`}
                       onClick={() => startEditTrack(t)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__icon"><PencilIcon /></span>
                       <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
@@ -1524,7 +1541,7 @@ export function AdminPage() {
                       aria-label={`Delete ${t.title}`}
                       onClick={() => void handleDeleteTrack(t.slug)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__icon"><TrashIcon /></span>
                       <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
@@ -1655,7 +1672,7 @@ export function AdminPage() {
                       aria-label={`Edit ${v.title || v.youtube_id}`}
                       onClick={() => startEditVideo(v)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__icon"><PencilIcon /></span>
                       <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
@@ -1664,7 +1681,7 @@ export function AdminPage() {
                       aria-label={`Delete ${v.title || v.youtube_id}`}
                       onClick={() => void handleDeleteVideo(v.id)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__icon"><TrashIcon /></span>
                       <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
@@ -1799,7 +1816,7 @@ export function AdminPage() {
                       aria-label={`Edit image ${img.id}`}
                       onClick={() => startEditGalleryImage(img)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✏</span>
+                      <span className="admin-btn__icon"><PencilIcon /></span>
                       <span className="admin-btn__label">Edit</span>
                     </button>
                     <button
@@ -1808,7 +1825,7 @@ export function AdminPage() {
                       aria-label={`Delete image ${img.id}`}
                       onClick={() => void handleDeleteGalleryImage(img.id)}
                     >
-                      <span className="admin-btn__icon" aria-hidden>✕</span>
+                      <span className="admin-btn__icon"><TrashIcon /></span>
                       <span className="admin-btn__label">Delete</span>
                     </button>
                   </td>
@@ -1875,7 +1892,7 @@ export function AdminPage() {
                         aria-label={`Remove ${s.email}`}
                         onClick={() => void handleDeleteSubscriber(s.id, s.email)}
                       >
-                        <span className="admin-btn__icon" aria-hidden>✕</span>
+                        <span className="admin-btn__icon"><TrashIcon /></span>
                         <span className="admin-btn__label">Remove</span>
                       </button>
                     </td>
