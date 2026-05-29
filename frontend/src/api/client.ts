@@ -11,7 +11,7 @@ export async function fetchTracks(): Promise<Track[]> {
 }
 
 export async function fetchTrackBySlug(slug: string): Promise<Track> {
-  const res = await fetchLive(`/api/tracks/${encodeURIComponent(slug)}`);
+  const res = await fetchLive(`/api/tracks?slug=${encodeURIComponent(slug)}`);
   if (!res.ok) throw new Error("Track not found");
   return res.json();
 }
@@ -44,7 +44,7 @@ export async function subscribeToMailingList(data: {
   last_name: string;
   email: string;
 }): Promise<MailingListResult> {
-  const res = await fetch("/api/mailing-list/subscribe", {
+  const res = await fetch("/api/mailing-list", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
