@@ -17,6 +17,10 @@ export interface Track {
   release_at?: string | null;
   presave_url?: string;
   release_email_sent?: boolean;
+  /** ISO datetime after which is_highlighted should be ignored (auto-expires). */
+  highlighted_until?: string | null;
+  /** ISO datetime when a draft track should auto-publish. */
+  publish_at?: string | null;
 }
 
 export interface FeaturedVideo {
@@ -56,6 +60,14 @@ export interface Subscriber {
   last_name: string;
   email: string;
   subscribed_at: string;
+}
+
+export interface PendingSubscriber {
+  token: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  created_at: string;
 }
 
 export const DEFAULT_COUNTDOWN: ReleaseCountdown = {

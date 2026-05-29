@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { Track } from "../types/track";
 import { Helmet } from "react-helmet-async";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { TrackCoverPlaceholder } from "../components/TrackCoverPlaceholder";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
-import { getTrackArtUrl } from "../utils/trackArt";
+import { getTrackArtUrl, getTrackArtSrcSet } from "../utils/trackArt";
 import { SocialLinks } from "../components/SocialLinks";
 import { UnreleasedTrackFullScreen } from "../components/UnreleasedTrackFullScreen";
 import {
@@ -67,6 +67,13 @@ function pickUrl(stored: string | undefined | null, fallback: string): string {
   return t || fallback;
 }
 
+/** Extract the Spotify track ID from a direct track URL, or null for search/artist links. */
+function spotifyTrackId(url: string | undefined | null): string | null {
+  if (!url) return null;
+  const m = url.match(/open\.spotify\.com\/track\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
+}
+
 function neighborSlugsFromList(list: Track[], currentSlug: string, isUnreleased: boolean) {
   const released = list.filter((t) => !t.is_unreleased);
   if (released.length === 0) return { prev: undefined, next: undefined };
@@ -121,6 +128,8 @@ function TrackDetailSkeleton() {
 
 export function TrackDetailPage() {
   const { slug = "" } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const presaved = searchParams.get("presaved") === "1";
   const [track, setTrack] = useState<Track | null>(null);
   const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
   const [tracksLoaded, setTracksLoaded] = useState(false);
@@ -182,6 +191,19 @@ export function TrackDetailPage() {
       if (slowTimer) window.clearTimeout(slowTimer);
     };
   }, [slug]);
+
+  // Dismiss presaved param from URL after 6 seconds (clean up history)
+  useEffect(() => {
+    if (!presaved) return;
+    const timer = window.setTimeout(() => {
+      setSearchParams((p) => {
+        const next = new URLSearchParams(p);
+        next.delete("presaved");
+        return next;
+      }, { replace: true });
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [presaved, setSearchParams]);
 
   const canonicalPath = `/music/${encodeURIComponent(slug)}`;
   const resolved = track && track.slug === slug;
@@ -300,6 +322,8 @@ export function TrackDetailPage() {
     displayTrack != null
       ? pickUrl(displayTrack.spotify_url, spotifySearchUrl(displayTrack.title))
       : "#";
+  const spotifyEmbedId = displayTrack != null ? spotifyTrackId(displayTrack.spotify_url) : null;
+  const coverSrcSet = displayTrack != null ? getTrackArtSrcSet(displayTrack) : undefined;
 
   const panelClassName = showInterstitial
     ? "track-detail__inner track-detail__inner--skeleton"
@@ -349,6 +373,12 @@ export function TrackDetailPage() {
             <TrackDetailSkeletonBlocks />
           ) : (
             <>
+          {presaved && (
+            <div className="track-detail__presave-banner" role="status" aria-live="polite">
+              <span className="track-detail__presave-banner__check">✓</span>
+              <span>you're all set — you'll be the first to hear it. love, saintted.</span>
+            </div>
+          )}
           <nav className="track-detail__nav" aria-label="Track navigation">
             <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
               home
@@ -403,6 +433,7 @@ export function TrackDetailPage() {
                 {coverUrl ? (
                   <img
                     src={coverUrl}
+                    srcSet={coverSrcSet}
                     alt={`${displayTrack!.title} cover art`}
                     className="track-detail__cover-img"
                     decoding="async"
@@ -458,6 +489,20 @@ export function TrackDetailPage() {
               </a>
             </div>
           </div>
+
+          {spotifyEmbedId && (
+            <div className="track-detail__spotify-embed">
+              <iframe
+                title={`Listen to ${displayTrack!.title} on Spotify`}
+                src={`https://open.spotify.com/embed/track/${spotifyEmbedId}?utm_source=generator&theme=0`}
+                width="100%"
+                height="152"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              />
+            </div>
+          )}
 
           <footer className="track-detail__footer">
             <div className="track-detail__footer-left">

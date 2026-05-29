@@ -29,11 +29,27 @@ export default async function handler(req: Req, res: Res) {
   if (!redis) return res.status(503).json({ ok: false, message: "Redis not configured" });
 
   if (req.method === "GET") {
+    const format = typeof req.query?.format === "string" ? req.query.format : "json";
     try {
       const subscribers = parse(await redis.get<string>(SUBSCRIBERS_KEY));
       const sorted = [...subscribers].sort(
         (a, b) => new Date(b.subscribed_at).getTime() - new Date(a.subscribed_at).getTime()
       );
+
+      if (format === "csv") {
+        const escape = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const rows = [
+          ["id", "first_name", "last_name", "email", "subscribed_at"].join(","),
+          ...sorted.map((s) =>
+            [s.id, escape(s.first_name), escape(s.last_name), escape(s.email), s.subscribed_at].join(",")
+          ),
+        ].join("\r\n");
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="saintted-subscribers-${new Date().toISOString().slice(0, 10)}.csv"`);
+        // Return CSV through json wrapper trick: send raw string
+        return (res as unknown as { send: (s: string) => void }).send(rows);
+      }
+
       return res.status(200).json({ count: sorted.length, subscribers: sorted });
     } catch (e) {
       console.error(e);

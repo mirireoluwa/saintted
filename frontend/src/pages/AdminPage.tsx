@@ -98,6 +98,8 @@ function emptyTrackForm(): Record<string, string | number> {
     is_unreleased: 0,
     release_at_local: "",
     presave_url: "",
+    highlighted_until_local: "",
+    publish_at_local: "",
   };
 }
 
@@ -119,6 +121,8 @@ function trackToForm(t: Track): Record<string, string | number> {
     is_unreleased: t.is_unreleased ? 1 : 0,
     release_at_local: isoToDatetimeLocal(t.release_at),
     presave_url: t.presave_url || "",
+    highlighted_until_local: isoToDatetimeLocal(t.highlighted_until),
+    publish_at_local: isoToDatetimeLocal(t.publish_at),
   };
 }
 
@@ -214,9 +218,14 @@ function AdminToastStack({ toasts, onDismiss }: { toasts: AdminToast[]; onDismis
   );
 }
 
+const SESSION_LOGIN_KEY = "saintted_admin_login_at";
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SESSION_WARN_BEFORE_MS = 24 * 60 * 60 * 1000;  // warn 1 day before expiry
+
 export function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
   const [loginPass, setLoginPass] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [toasts, setToasts] = useState<AdminToast[]>([]);
@@ -233,6 +242,10 @@ export function AdminPage() {
   const [broadcastSubject, setBroadcastSubject] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastPreviewOpen, setBroadcastPreviewOpen] = useState(false);
+
+  // Cover art validation hints
+  const [coverArtWarning, setCoverArtWarning] = useState<string | null>(null);
 
   const [seedingTracks, setSeedingTracks] = useState(false);
 
@@ -245,10 +258,28 @@ export function AdminPage() {
   useEffect(() => {
     if (!trackCoverFile) {
       setTrackCoverBlobUrl(null);
+      setCoverArtWarning(null);
       return;
     }
     const url = URL.createObjectURL(trackCoverFile);
     setTrackCoverBlobUrl(url);
+
+    // Validate image dimensions and file size
+    const warnings: string[] = [];
+    const MAX_SIZE_MB = 5;
+    const MIN_DIM = 500;
+    if (trackCoverFile.size > MAX_SIZE_MB * 1024 * 1024) {
+      warnings.push(`File is ${(trackCoverFile.size / 1024 / 1024).toFixed(1)} MB — consider compressing below ${MAX_SIZE_MB} MB for faster loads.`);
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth < MIN_DIM || img.naturalHeight < MIN_DIM) {
+        warnings.push(`Image is ${img.naturalWidth}×${img.naturalHeight}px — recommended minimum is ${MIN_DIM}×${MIN_DIM}px for crisp display.`);
+      }
+      setCoverArtWarning(warnings.join(" "));
+    };
+    img.src = url;
+
     return () => URL.revokeObjectURL(url);
   }, [trackCoverFile]);
 
@@ -271,6 +302,14 @@ export function AdminPage() {
     | { kind: "gallery"; id: number }
     | null
   >(null);
+
+  // Touch drag state for mobile reorder
+  const touchDragRef = useRef<{
+    kind: "track" | "video" | "gallery";
+    key: string | number;
+    startY: number;
+    currentY: number;
+  } | null>(null);
 
   const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
   const [heroImageForm, setHeroImageForm] = useState(emptyHeroImageForm);
@@ -396,6 +435,16 @@ export function AdminPage() {
     checkSession().then((ok) => {
       setIsLoggedIn(ok);
       setSessionChecked(true);
+      if (ok) {
+        const loginAt = parseInt(localStorage.getItem(SESSION_LOGIN_KEY) || "0", 10);
+        if (loginAt > 0) {
+          const expiresAt = loginAt + SESSION_MAX_AGE_MS;
+          const remaining = expiresAt - Date.now();
+          if (remaining < SESSION_WARN_BEFORE_MS && remaining > 0) {
+            setSessionExpiresIn(remaining);
+          }
+        }
+      }
     });
   }, []);
 
@@ -493,6 +542,13 @@ export function AdminPage() {
     }
   }
 
+  function buildBroadcastHtml(body: string): string {
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="background:#000;color:#fff;font-family:'Space Mono',ui-monospace,monospace;padding:40px 24px;max-width:600px;margin:0 auto;">${body
+      .split(/\n\n+/)
+      .map((p) => `<p style="line-height:1.7;color:rgba(255,255,255,0.8);">${p.replace(/\n/g, "<br/>")}</p>`)
+      .join("")}<p style="margin-top:40px;font-size:11px;opacity:0.4;"><a href="https://saintted.com" style="color:#fff;">saintted.com</a></p></body></html>`;
+  }
+
   async function handleBroadcast(e: React.FormEvent) {
     e.preventDefault();
     if (!broadcastSubject.trim() || !broadcastBody.trim()) {
@@ -502,10 +558,7 @@ export function AdminPage() {
     setBroadcastSending(true);
     try {
       // Convert plain text body to simple HTML paragraphs
-      const html = `<!DOCTYPE html><html><body style="background:#000;color:#fff;font-family:system-ui,sans-serif;padding:40px 24px;max-width:600px;margin:0 auto;">${broadcastBody
-        .split(/\n\n+/)
-        .map((p) => `<p style="line-height:1.7;color:rgba(255,255,255,0.8);">${p.replace(/\n/g, "<br/>")}</p>`)
-        .join("")}<p style="margin-top:40px;"><a href="https://saintted.com" style="color:#fff;">saintted.com</a></p></body></html>`;
+      const html = buildBroadcastHtml(broadcastBody);
       const result = await broadcastEmail({
         subject: broadcastSubject.trim(),
         html,
@@ -525,7 +578,9 @@ export function AdminPage() {
     e.preventDefault();
     try {
       await login(loginPass);
+      localStorage.setItem(SESSION_LOGIN_KEY, String(Date.now()));
       setIsLoggedIn(true);
+      setSessionExpiresIn(null);
       setLoginPass("");
     } catch (err) {
       notify("error", String(err));
@@ -534,6 +589,7 @@ export function AdminPage() {
 
   async function logout() {
     await apiLogout().catch(() => {});
+    localStorage.removeItem(SESSION_LOGIN_KEY);
     setIsLoggedIn(false);
     setTracks([]);
     setVideos([]);
@@ -630,6 +686,14 @@ export function AdminPage() {
     const release_at =
       isUnreleased && releaseAtLocal ? new Date(releaseAtLocal).toISOString() : null;
 
+    const highlightedUntilLocal = String(trackForm.highlighted_until_local || "").trim();
+    const highlighted_until = highlightedUntilLocal
+      ? new Date(highlightedUntilLocal).toISOString()
+      : null;
+
+    const publishAtLocal = String(trackForm.publish_at_local || "").trim();
+    const publish_at = publishAtLocal ? new Date(publishAtLocal).toISOString() : null;
+
     const payload: Record<string, unknown> = {
       title: String(trackForm.title).trim(),
       slug: String(trackForm.slug).trim(),
@@ -647,6 +711,8 @@ export function AdminPage() {
       is_unreleased: isUnreleased,
       release_at,
       presave_url: String(trackForm.presave_url).trim(),
+      highlighted_until,
+      publish_at,
     };
     if (!payload.title) {
       notify("error", "Title is required.");
@@ -891,6 +957,27 @@ export function AdminPage() {
     }
   }
 
+  // ── Touch drag-to-reorder helpers ────────────────────────────────────────
+  function handleTouchStart(
+    kind: "track" | "video" | "gallery",
+    key: string | number,
+    e: React.TouchEvent
+  ) {
+    const touch = e.touches[0];
+    touchDragRef.current = { kind, key, startY: touch.clientY, currentY: touch.clientY };
+    setDndDragging(
+      kind === "track"
+        ? { kind, key: key as string }
+        : { kind, id: key as number }
+    );
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!touchDragRef.current) return;
+    e.preventDefault(); // prevent page scroll while dragging
+    touchDragRef.current.currentY = e.touches[0].clientY;
+  }
+
   if (!sessionChecked) {
     return null;
   }
@@ -937,12 +1024,23 @@ export function AdminPage() {
     );
   }
 
+  const sessionHoursLeft = sessionExpiresIn != null
+    ? Math.ceil(sessionExpiresIn / 1000 / 60 / 60)
+    : null;
+
   return (
     <>
       <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
     <div className="admin-page">
       <AdminSiteHeader />
       <AdminSubdomainCallout />
+      {sessionHoursLeft !== null && (
+        <div className="admin-callout admin-callout--warning" role="alert">
+          <p className="admin-callout__text">
+            ⏱ Your admin session expires in about <strong>{sessionHoursLeft} hour{sessionHoursLeft === 1 ? "" : "s"}</strong>. Log out and back in to reset it.
+          </p>
+        </div>
+      )}
 
       <div className="admin-page__toolbar">
         <div className="admin-page__toolbar-label">
@@ -1266,6 +1364,9 @@ export function AdminPage() {
                   if (f) setClearTrackCover(false);
                 }}
               />
+              {coverArtWarning ? (
+                <p className="admin-form__hint admin-form__hint--warning">⚠ {coverArtWarning}</p>
+              ) : null}
             </div>
             {trackCoverPreviewUrl ? (
               <div className="admin-form__row admin-form__preview">
@@ -1413,6 +1514,28 @@ export function AdminPage() {
               />
             </div>
           </div>
+          <div className="admin-form__row admin-form__row--2">
+            <div className="admin-form__row">
+              <label htmlFor="t-publish-at">Auto-publish at (optional)</label>
+              <input
+                id="t-publish-at"
+                type="datetime-local"
+                value={String(trackForm.publish_at_local)}
+                onChange={(e) => setTrackForm((f) => ({ ...f, publish_at_local: e.target.value }))}
+              />
+              <p className="admin-form__hint">Leave the track unpublished; it will go live automatically at this time.</p>
+            </div>
+            <div className="admin-form__row">
+              <label htmlFor="t-highlighted-until">"New" badge expires at (optional)</label>
+              <input
+                id="t-highlighted-until"
+                type="datetime-local"
+                value={String(trackForm.highlighted_until_local)}
+                onChange={(e) => setTrackForm((f) => ({ ...f, highlighted_until_local: e.target.value }))}
+              />
+              <p className="admin-form__hint">The highlighted badge will auto-clear after this date.</p>
+            </div>
+          </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary">
               {editingSlug ? "Save changes" : "Create track"}
@@ -1474,6 +1597,7 @@ export function AdminPage() {
               {sortedTracks.map((t) => (
                 <tr
                   key={t.id}
+                  data-track-slug={t.slug}
                   className={
                     dndDragging?.kind === "track" && dndDragging.key === t.slug
                       ? "admin-table__row--dragging"
@@ -1505,8 +1629,21 @@ export function AdminPage() {
                           e.dataTransfer.effectAllowed = "move";
                           setDndDragging({ kind: "track", key: t.slug });
                         }}
-                        onDragEnd={() => {
+                        onDragEnd={() => setDndDragging(null)}
+                        onTouchStart={(e) => handleTouchStart("track", t.slug, e)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={() => {
+                          const drag = touchDragRef.current;
+                          if (!drag) return;
+                          const y = drag.currentY;
+                          const el = document.elementFromPoint(0, y) ?? document.elementFromPoint(window.innerWidth / 2, y);
+                          const row = el?.closest("tr[data-track-slug]");
+                          const targetSlug = row?.getAttribute("data-track-slug");
+                          touchDragRef.current = null;
                           setDndDragging(null);
+                          if (targetSlug && targetSlug !== t.slug) {
+                            void reorderTrackRowsBySlug(t.slug, targetSlug);
+                          }
                         }}
                       />
                       <span>{t.order}</span>
@@ -1623,6 +1760,7 @@ export function AdminPage() {
               {sortedVideos.map((v) => (
                 <tr
                   key={v.id}
+                  data-video-id={v.id}
                   className={
                     dndDragging?.kind === "video" && dndDragging.id === v.id
                       ? "admin-table__row--dragging"
@@ -1656,8 +1794,22 @@ export function AdminPage() {
                           e.dataTransfer.effectAllowed = "move";
                           setDndDragging({ kind: "video", id: v.id });
                         }}
-                        onDragEnd={() => {
+                        onDragEnd={() => setDndDragging(null)}
+                        onTouchStart={(e) => handleTouchStart("video", v.id, e)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={() => {
+                          const drag = touchDragRef.current;
+                          if (!drag) return;
+                          const y = drag.currentY;
+                          const el = document.elementFromPoint(window.innerWidth / 2, y);
+                          const row = el?.closest("tr[data-video-id]");
+                          const targetIdStr = row?.getAttribute("data-video-id");
+                          const targetId = targetIdStr ? parseInt(targetIdStr, 10) : NaN;
+                          touchDragRef.current = null;
                           setDndDragging(null);
+                          if (Number.isFinite(targetId) && targetId !== v.id) {
+                            void reorderVideosById(v.id, targetId);
+                          }
                         }}
                       />
                       <span>{v.order}</span>
@@ -1763,6 +1915,7 @@ export function AdminPage() {
               {sortedGalleryImages.map((img) => (
                 <tr
                   key={img.id}
+                  data-gallery-id={img.id}
                   className={
                     dndDragging?.kind === "gallery" && dndDragging.id === img.id
                       ? "admin-table__row--dragging"
@@ -1796,8 +1949,22 @@ export function AdminPage() {
                           e.dataTransfer.effectAllowed = "move";
                           setDndDragging({ kind: "gallery", id: img.id });
                         }}
-                        onDragEnd={() => {
+                        onDragEnd={() => setDndDragging(null)}
+                        onTouchStart={(e) => handleTouchStart("gallery", img.id, e)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={() => {
+                          const drag = touchDragRef.current;
+                          if (!drag) return;
+                          const y = drag.currentY;
+                          const el = document.elementFromPoint(window.innerWidth / 2, y);
+                          const row = el?.closest("tr[data-gallery-id]");
+                          const targetIdStr = row?.getAttribute("data-gallery-id");
+                          const targetId = targetIdStr ? parseInt(targetIdStr, 10) : NaN;
+                          touchDragRef.current = null;
                           setDndDragging(null);
+                          if (Number.isFinite(targetId) && targetId !== img.id) {
+                            void reorderGalleryById(img.id, targetId);
+                          }
                         }}
                       />
                       <span>{img.order}</span>
@@ -1848,6 +2015,13 @@ export function AdminPage() {
           <span className="admin-page__toolbar-line" aria-hidden />
         </div>
         <div className="admin-page__actions">
+          <a
+            href="/api/admin/mailing-list?format=csv"
+            className="admin-btn"
+            download
+          >
+            Export CSV
+          </a>
           <button
             type="button"
             className="admin-btn"
@@ -1934,7 +2108,7 @@ export function AdminPage() {
               required
             />
           </div>
-          <div>
+          <div className="admin-page__actions" style={{ flexWrap: "wrap", gap: "0.75rem" }}>
             <button
               type="submit"
               className="admin-btn admin-btn--primary"
@@ -1944,8 +2118,29 @@ export function AdminPage() {
                 ? "Sending…"
                 : `Send to ${mlCount ?? "…"} subscriber${mlCount === 1 ? "" : "s"}`}
             </button>
+            <button
+              type="button"
+              className="admin-btn"
+              onClick={() => setBroadcastPreviewOpen((v) => !v)}
+              disabled={!broadcastBody.trim()}
+            >
+              {broadcastPreviewOpen ? "Hide preview" : "Preview email"}
+            </button>
           </div>
         </form>
+        {broadcastPreviewOpen && broadcastBody.trim() ? (
+          <div className="admin-broadcast-preview">
+            <p className="admin-broadcast-preview__label">
+              Email preview — subject: <strong>{broadcastSubject || "(no subject)"}</strong>
+            </p>
+            <iframe
+              className="admin-broadcast-preview__frame"
+              srcDoc={buildBroadcastHtml(broadcastBody)}
+              title="Email preview"
+              sandbox="allow-same-origin"
+            />
+          </div>
+        ) : null}
       </div>
     </div>
     </>

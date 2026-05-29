@@ -592,3 +592,41 @@ a.track-detail__nav-btn:hover {
     animation: none;
   }
 }
+
+/* ── Pre-save confirmation banner ───────────────────────────────────────── */
+.track-detail__presave-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius);
+  background: rgba(29, 185, 84, 0.1);
+  border: 1px solid rgba(29, 185, 84, 0.35);
+  color: #1db954;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  animation: presave-fadein 0.4s ease both;
+}
+
+.track-detail__presave-banner__check {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+@keyframes presave-fadein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Spotify embed ────────────────────────────────────────────────────────── */
+.track-detail__spotify-embed {
+  margin-top: 1.75rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.track-detail__spotify-embed iframe {
+  display: block;
+  border-radius: var(--radius);
+}

@@ -5,6 +5,7 @@ import untitledIcon from "../assets/untitled-in-brackets.svg";
 import appleMusicIcon from "../assets/apple-music.svg";
 import spotifyIcon from "../assets/spotify.svg";
 import youtubeIcon from "../assets/youtube.svg";
+import whatsappIcon from "../assets/whatsapp.svg";
 
 const SOCIAL_LINKS = [
   { href: "https://instagram.com/beingsaintted", label: "Instagram", icon: instagramIcon },
@@ -20,6 +21,7 @@ const SOCIAL_LINKS = [
     icon: spotifyIcon,
   },
   { href: "https://www.youtube.com/@saintted", label: "YouTube", icon: youtubeIcon },
+  { href: "https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF", label: "WhatsApp Community", icon: whatsappIcon },
   { href: "https://linktr.ee/saintted", label: "Linktree", icon: linkIcon },
   {
     href: "https://untitled.stream/library/project/jWQL4g2PdE8woebBo6Wgv",

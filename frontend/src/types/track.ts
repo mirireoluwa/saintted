@@ -24,4 +24,8 @@ export interface Track {
   /** Present on GET /api/tracks/<slug>/ (detail); enables prev/next before the list loads. */
   previous_slug?: string | null;
   next_slug?: string | null;
+  /** ISO datetime after which `is_highlighted` should be ignored (badge auto-expires). */
+  highlighted_until?: string | null;
+  /** ISO datetime when a draft track should auto-publish (server honours at request time). */
+  publish_at?: string | null;
 }

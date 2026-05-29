@@ -7,6 +7,7 @@ const VIDEOS_KEY = "saintted:featured-videos";
 const GALLERY_KEY = "saintted:gallery-images";
 const COUNTDOWN_KEY = "saintted:release-countdown";
 const SUBSCRIBERS_KEY = "saintted:subscribers";
+const PENDING_SUBSCRIBERS_KEY = "saintted:pending-subscribers";
 function ensureLocalEnvLoaded() {
   const hasPair = (url, token) => Boolean(url?.trim() && token?.trim());
   if (hasPair(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN) || hasPair(process.env.KV_REST_API_URL, process.env.KV_REST_API_TOKEN)) {
@@ -42,6 +43,7 @@ function getRedis() {
 export {
   COUNTDOWN_KEY,
   GALLERY_KEY,
+  PENDING_SUBSCRIBERS_KEY,
   SUBSCRIBERS_KEY,
   TRACKS_KEY,
   VIDEOS_KEY,

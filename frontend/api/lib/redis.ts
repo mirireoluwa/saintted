@@ -8,6 +8,7 @@ export const VIDEOS_KEY = "saintted:featured-videos";
 export const GALLERY_KEY = "saintted:gallery-images";
 export const COUNTDOWN_KEY = "saintted:release-countdown";
 export const SUBSCRIBERS_KEY = "saintted:subscribers";
+export const PENDING_SUBSCRIBERS_KEY = "saintted:pending-subscribers";
 
 function ensureLocalEnvLoaded(): void {
   const hasPair = (url?: string, token?: string) =>

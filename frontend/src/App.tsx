@@ -1,11 +1,15 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { PublicShell } from "./components/PublicShell";
 import { HomePage } from "./pages/HomePage";
 import { TrackDetailPage } from "./pages/TrackDetailPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import { AdminPage } from "./pages/AdminPage";
 import { isAdminHostname } from "./utils/adminHost";
 import "./index.css";
+
+const AdminPage = lazy(() =>
+  import("./pages/AdminPage").then((m) => ({ default: m.AdminPage }))
+);
 
 const isAdminHost =
   typeof window !== "undefined" && isAdminHostname(window.location.hostname);
@@ -13,7 +17,14 @@ const isAdminHost =
 function App() {
   return (
     <Routes>
-      <Route path="/admin" element={<AdminPage />} />
+      <Route
+        path="/admin"
+        element={
+          <Suspense fallback={null}>
+            <AdminPage />
+          </Suspense>
+        }
+      />
       {isAdminHost ? (
         <>
           <Route path="/" element={<Navigate to="/admin" replace />} />
