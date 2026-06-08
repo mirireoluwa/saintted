@@ -105,7 +105,13 @@
   outline-offset: 3px;
 }
 
-/* Listen now button */
+/* Listen now button — hidden on mobile, visible on desktop */
+@media (max-width: 639px) {
+  .site-header__listen-btn {
+    display: none;
+  }
+}
+
 .site-header__listen-btn {
   display: inline-flex;
   align-items: center;
@@ -218,6 +224,23 @@
 
 .site-header__mobile-link:hover {
   color: var(--text);
+}
+
+.site-header__mobile-listen {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f5c518;
+  text-align: left;
+}
+
+.site-header__mobile-listen:hover {
+  opacity: 0.8;
 }
 
 /* ── Listen now modal ─────────────────────────────────────────── */
