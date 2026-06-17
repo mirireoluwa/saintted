@@ -274,7 +274,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
               className="hero-listen-btn"
               onClick={openModal}
             >
-              Stream now
+              Listen now
             </button>
             <a href="#music-section" className="hero-scroll">
               <span className="hero-scroll__text">Scroll</span>
@@ -309,7 +309,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <span className="listen-modal__handle" aria-hidden />
-              <p className="listen-modal__label">.stream on</p>
+              <p className="listen-modal__label">.listen on</p>
               <ul className="listen-modal__list">
                 {PLATFORMS.map(({ name, url, color }) => (
                   <li key={name}>
