@@ -1,7 +1,18 @@
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { readHeroCache } from "../utils/heroCache";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
+
+const PLATFORMS = [
+  { name: "Spotify",       url: "https://open.spotify.com/search/saintted",       color: "#1DB954" },
+  { name: "Apple Music",   url: "https://music.apple.com/search?term=saintted",   color: "#FC3C44" },
+  { name: "YouTube Music", url: "https://music.youtube.com/search?q=saintted",    color: "#FF0000" },
+  { name: "Deezer",        url: "https://www.deezer.com/search/saintted",         color: "#A238FF" },
+  { name: "Amazon Music",  url: "https://music.amazon.com/search/saintted",       color: "#FF9900" },
+  { name: "Tidal",         url: "https://tidal.com/search?q=saintted",            color: "#00FFFF" },
+  { name: "SoundCloud",    url: "https://soundcloud.com/search?q=saintted",       color: "#FF5500" },
+];
 
 type HeroProps = {
   releaseConfig: ReleaseCountdown | null;
@@ -12,6 +23,8 @@ type HeroProps = {
 export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [listenOpen, setListenOpen] = useState(false);
+  const reduceMotion = useReducedMotion() ?? false;
   const summaryHideTimerRef = useRef<number | null>(null);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
@@ -28,6 +41,13 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
     }, 3200);
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!listenOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setListenOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [listenOpen]);
 
   useEffect(() => {
     return () => {
@@ -242,12 +262,72 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
             </p>
           ) : null}
 
-          <a href="#music-section" className="hero-scroll">
-            <span className="hero-scroll__text">Scroll</span>
-            <span className="hero-scroll__chevron">↓</span>
-          </a>
+          <div className="hero-cta-row">
+            <button
+              type="button"
+              className="hero-listen-btn"
+              onClick={() => setListenOpen(true)}
+            >
+              Stream now
+            </button>
+            <a href="#music-section" className="hero-scroll">
+              <span className="hero-scroll__text">Scroll</span>
+              <span className="hero-scroll__chevron">↓</span>
+            </a>
+          </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {listenOpen ? (
+          <motion.div
+            className="listen-modal__overlay"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setListenOpen(false)}
+          >
+            <motion.div
+              className="listen-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Choose a streaming platform"
+              initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="listen-modal__label">.stream on</p>
+              <ul className="listen-modal__list">
+                {PLATFORMS.map(({ name, url, color }) => (
+                  <li key={name}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="listen-modal__item"
+                      style={{ "--brand-color": color } as React.CSSProperties}
+                      onClick={() => setListenOpen(false)}
+                    >
+                      {name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className="listen-modal__close"
+                aria-label="Close"
+                onClick={() => setListenOpen(false)}
+              >
+                ✕
+              </button>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }
