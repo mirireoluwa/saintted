@@ -24,7 +24,13 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
   const [showAltTag, setShowAltTag] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [listenOpen, setListenOpen] = useState(false);
+  const [isMobileSheet, setIsMobileSheet] = useState(false);
   const reduceMotion = useReducedMotion() ?? false;
+
+  const openModal = () => {
+    setIsMobileSheet(typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches);
+    setListenOpen(true);
+  };
   const summaryHideTimerRef = useRef<number | null>(null);
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
@@ -266,7 +272,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
             <button
               type="button"
               className="hero-listen-btn"
-              onClick={() => setListenOpen(true)}
+              onClick={openModal}
             >
               Stream now
             </button>
@@ -285,7 +291,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setListenOpen(false)}
           >
             <motion.div
@@ -293,12 +299,16 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Choose a streaming platform"
-              initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12, scale: 0.97 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              initial={reduceMotion ? false : isMobileSheet ? { y: "100%" } : { opacity: 0, y: 18, scale: 0.97 }}
+              animate={isMobileSheet ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={reduceMotion ? undefined : isMobileSheet ? { y: "100%" } : { opacity: 0, y: 10, scale: 0.97 }}
+              transition={isMobileSheet
+                ? { duration: 0.34, ease: [0.32, 0.72, 0, 1] }
+                : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+              }
               onClick={(e) => e.stopPropagation()}
             >
+              <span className="listen-modal__handle" aria-hidden />
               <p className="listen-modal__label">.stream on</p>
               <ul className="listen-modal__list">
                 {PLATFORMS.map(({ name, url, color }) => (
