@@ -1,5 +1,5 @@
-import { getRedis, VIDEOS_KEY } from "./lib-js/redis.js";
-import type { FeaturedVideo } from "./lib/types.js";
+import { getRedis, VIDEOS_KEY } from "./_lib-js/redis.js";
+import type { FeaturedVideo } from "./_lib/types.js";
 
 export default async function handler(
   req: { method?: string },

@@ -1,5 +1,5 @@
-import { getRedis, TRACKS_KEY } from "./lib-js/redis.js";
-import type { Track } from "./lib/types.js";
+import { getRedis, TRACKS_KEY } from "./_lib-js/redis.js";
+import type { Track } from "./_lib/types.js";
 
 type Res = {
   setHeader: (name: string, value: string) => void;

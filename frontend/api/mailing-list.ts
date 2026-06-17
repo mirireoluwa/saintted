@@ -4,8 +4,8 @@
  * POST /api/mailing-list              → subscribe
  * GET  /api/mailing-list?action=verify&token=<token>  → confirm email (double opt-in)
  */
-import { getRedis, SUBSCRIBERS_KEY, PENDING_SUBSCRIBERS_KEY } from "./lib-js/redis.js";
-import type { Subscriber, PendingSubscriber } from "./lib/types.js";
+import { getRedis, SUBSCRIBERS_KEY, PENDING_SUBSCRIBERS_KEY } from "./_lib-js/redis.js";
+import type { Subscriber, PendingSubscriber } from "./_lib/types.js";
 import type { IncomingMessage } from "http";
 
 const RATE_LIMIT_WINDOW_SEC = 3600;

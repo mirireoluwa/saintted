@@ -1,7 +1,7 @@
-import { verifyAdminCookie } from "../lib-js/adminAuth.js";
-import { getRedis, COUNTDOWN_KEY } from "../lib-js/redis.js";
-import type { ReleaseCountdown } from "../lib/types.js";
-import { DEFAULT_COUNTDOWN } from "../lib/types.js";
+import { verifyAdminCookie } from "../_lib-js/adminAuth.js";
+import { getRedis, COUNTDOWN_KEY } from "../_lib-js/redis.js";
+import type { ReleaseCountdown } from "../_lib/types.js";
+import { DEFAULT_COUNTDOWN } from "../_lib/types.js";
 
 type Req = {
   method?: string;

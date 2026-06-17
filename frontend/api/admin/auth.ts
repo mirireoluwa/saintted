@@ -3,7 +3,7 @@ import {
   getExpectedAdminToken,
   setAdminCookieHeader,
   clearAdminCookieHeader,
-} from "../lib-js/adminAuth.js";
+} from "../_lib-js/adminAuth.js";
 
 type Req = {
   method?: string;
