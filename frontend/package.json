@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:api-lib && tsc -b && vite build",
-    "build:api-lib": "esbuild api/lib/adminAuth.ts api/lib/redis.ts --outdir=api/lib-js --format=esm --platform=node --packages=external",
+    "build:api-lib": "esbuild api/_lib/adminAuth.ts api/_lib/redis.ts --outdir=api/_lib-js --format=esm --platform=node --packages=external",
     "postinstall": "npm run build:api-lib",
     "generate:og": "node scripts/generate-og-image.mjs",
     "lint": "eslint .",
