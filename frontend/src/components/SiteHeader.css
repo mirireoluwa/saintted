@@ -116,9 +116,9 @@
     align-items: center;
     padding: 0.45rem 0.9rem;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text);
+    border: 1px solid #38bdf8;
+    background: #38bdf8;
+    color: #000;
     cursor: pointer;
     font-family: var(--font-mono);
     font-size: 11px;
