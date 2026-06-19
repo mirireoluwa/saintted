@@ -153,7 +153,9 @@ export function ImageGallery() {
               aria-label="Previous image"
               onClick={(e) => { e.stopPropagation(); prev(); }}
             >
-              ‹
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden>
+                <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
 
             <motion.div
@@ -184,7 +186,9 @@ export function ImageGallery() {
               aria-label="Next image"
               onClick={(e) => { e.stopPropagation(); next(); }}
             >
-              ›
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden>
+                <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
           </motion.div>
         ) : null}
