@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { Track } from "../types/track";
 import { Helmet } from "react-helmet-async";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { TrackCoverPlaceholder } from "../components/TrackCoverPlaceholder";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
-import { getTrackArtUrl } from "../utils/trackArt";
+import { getTrackArtUrl, getTrackArtSrcSet } from "../utils/trackArt";
 import { SocialLinks } from "../components/SocialLinks";
 import { UnreleasedTrackFullScreen } from "../components/UnreleasedTrackFullScreen";
 import {
@@ -17,9 +17,61 @@ import {
 import { absoluteUrl, getSiteUrl } from "../utils/siteUrl";
 import "./TrackDetailPage.css";
 
+// Shared with HomePage — canonical fallback data shown before API responds.
+const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
+const FALLBACK_TRACKS: Track[] = [
+  {
+    id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0,
+    description: "the song talks about giving someone a chance to prove themselves after a mistake but realizing that sometimes apologies are not enough.\n\nthe lyrics express the struggle of holding onto special memories and feelings while trying to move on from a relationship that may not be working out, symbolized by the metaphor of giving one dance to prove wrong.",
+    year: 2025,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("one chance")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("one chance")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("one chance")}`,
+  },
+  {
+    id: 2, title: "shimmer", slug: "shimmer", meta: "Single (Sound)", art_url: "", link_url: "", order: 1,
+    description: "i decided to do something really unconventional. This one has no vocals and I'm sure you all might be wondering, \"why?\". The truth is, it's the best way I could express how i was feeling at the time: \"i've got no words to say\".\n\n\"shimmer\" tells a story of solitude and how i've come to enjoy finding some quiet time alone to think and process life. This song is supposed to help with that. It is designed to help go through those moments of solitude.",
+    year: 2025,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("shimmer")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("shimmer")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("shimmer")}`,
+  },
+  {
+    id: 3, title: "hyperphoria", slug: "hyperphoria", meta: "Single", art_url: "", link_url: "", order: 2,
+    description: "This song was actually written in the summer of 2023. I was at a point where I was just trying to figure out my life. It speaks about my aspirations to be a great person, the challenges I will face to get there, and leaving some pain from my past behind.",
+    year: 2024,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("hyperphoria")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("hyperphoria")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("hyperphoria")}`,
+  },
+  {
+    id: 4, title: "runaway", slug: "runaway", meta: "Single", art_url: "", link_url: "", order: 3,
+    description: "Runaway speaks about a transition period in my life. I wanted things to change so badly and I thought that the best way to express that was by essentially running away from the old to the new.",
+    year: 2022,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("runaway")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("runaway")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("runaway")}`,
+  },
+  {
+    id: 5, title: "home", slug: "home", meta: "Single", art_url: "", link_url: "", order: 4,
+    description: "this song stems from two perspectives.\n\nthe first, from a quote that says, \"sometimes home is a person\". The idea for this song was developed from this quote.\n\nthe second, a vision for a better world where love is everything we express.",
+    year: 2022,
+    youtube_url: `https://www.youtube.com/results?search_query=${_q("home")}`,
+    apple_music_url: `https://music.apple.com/us/search?term=${_q("home")}`,
+    spotify_url: `https://open.spotify.com/search/${_q("home")}`,
+  },
+];
+
 function pickUrl(stored: string | undefined | null, fallback: string): string {
   const t = (stored ?? "").trim();
   return t || fallback;
+}
+
+/** Extract the Spotify track ID from a direct track URL, or null for search/artist links. */
+function spotifyTrackId(url: string | undefined | null): string | null {
+  if (!url) return null;
+  const m = url.match(/open\.spotify\.com\/track\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
 }
 
 function neighborSlugsFromList(list: Track[], currentSlug: string, isUnreleased: boolean) {
@@ -76,8 +128,11 @@ function TrackDetailSkeleton() {
 
 export function TrackDetailPage() {
   const { slug = "" } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const presaved = searchParams.get("presaved") === "1";
   const [track, setTrack] = useState<Track | null>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<Track[]>(FALLBACK_TRACKS);
+  const [tracksLoaded, setTracksLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [slowLoading, setSlowLoading] = useState(false);
@@ -87,9 +142,13 @@ export function TrackDetailPage() {
     let cancelled = false;
     fetchTracks()
       .then((list) => {
-        if (!cancelled) setTracks(list);
+        // Only replace fallback if the API returned actual tracks.
+        if (!cancelled && list.length > 0) setTracks(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setTracksLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -133,16 +192,37 @@ export function TrackDetailPage() {
     };
   }, [slug]);
 
+  // Dismiss presaved param from URL after 6 seconds (clean up history)
+  useEffect(() => {
+    if (!presaved) return;
+    const timer = window.setTimeout(() => {
+      setSearchParams((p) => {
+        const next = new URLSearchParams(p);
+        next.delete("presaved");
+        return next;
+      }, { replace: true });
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [presaved, setSearchParams]);
+
   const canonicalPath = `/music/${encodeURIComponent(slug)}`;
   const resolved = track && track.slug === slug;
   const pendingTransition = Boolean(loading && track && track.slug !== slug);
   const showSlowLoadingUi = pendingTransition && slowLoading;
-  const showSkeleton = loading && !track && !error;
-  const showNotFound = !loading && (error || !track);
 
+  // Compute displayTrack first so the skeleton/not-found guards can use it.
   const displayTrack: Track | null =
     track?.slug === slug ? track : tracks.find((t) => t.slug === slug) ?? null;
   const showInterstitial = Boolean(slug && loading && !displayTrack && !error && track !== null);
+
+  // Show skeleton when we have no displayable data yet.
+  // Also keep skeleton if the slug fetch failed but the tracks list hasn't returned yet —
+  // this prevents a split-second "Track not found" flash for transient slug-fetch failures
+  // while fetchTracks() is still in-flight.
+  const showSkeleton = (loading || (error && !tracksLoaded)) && !displayTrack;
+
+  // Only show "not found" once both fetches are done and we still have nothing to show.
+  const showNotFound = !loading && tracksLoaded && !displayTrack && (error || !track);
 
   const listNeighbors =
     displayTrack && tracks.length > 0
@@ -242,6 +322,8 @@ export function TrackDetailPage() {
     displayTrack != null
       ? pickUrl(displayTrack.spotify_url, spotifySearchUrl(displayTrack.title))
       : "#";
+  const spotifyEmbedId = displayTrack != null ? spotifyTrackId(displayTrack.spotify_url) : null;
+  const coverSrcSet = displayTrack != null ? getTrackArtSrcSet(displayTrack) : undefined;
 
   const panelClassName = showInterstitial
     ? "track-detail__inner track-detail__inner--skeleton"
@@ -291,51 +373,84 @@ export function TrackDetailPage() {
             <TrackDetailSkeletonBlocks />
           ) : (
             <>
+          {presaved && (
+            <div className="track-detail__presave-banner" role="status" aria-live="polite">
+              <span className="track-detail__presave-banner__check">✓</span>
+              <span>you're all set — you'll be the first to hear it. love, saintted.</span>
+            </div>
+          )}
           <nav className="track-detail__nav" aria-label="Track navigation">
             <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+              <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               home
             </Link>
             <span className="track-detail__breadcrumb">
-              <Link to="/#music-section">My Music</Link>
-              <span className="track-detail__breadcrumb-sep">→</span>
-              <span>{displayTrack!.title}</span>
+              <Link to="/#music-section" className="track-detail__breadcrumb-link">my music</Link>
+              <span className="track-detail__breadcrumb-sep" aria-hidden>
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none">
+                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="track-detail__breadcrumb-current">{displayTrack!.title}</span>
             </span>
             <div className="track-detail__nav-pair">
               {prevSlug ? (
                 <Link
                   to={`/music/${prevSlug}`}
                   className="track-detail__nav-btn track-detail__nav-btn--prev"
+                  aria-label="Previous track"
                 >
-                  previous
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="track-detail__nav-label">previous</span>
                 </Link>
               ) : (
                 <span
                   className="track-detail__nav-btn track-detail__nav-btn--prev track-detail__nav-btn--inactive"
                   aria-disabled="true"
                 >
-                  previous
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="track-detail__nav-label">previous</span>
                 </span>
               )}
               {nextSlug ? (
                 <Link
                   to={`/music/${nextSlug}`}
                   className="track-detail__nav-btn track-detail__nav-btn--next"
+                  aria-label="Next track"
                 >
-                  next
+                  <span className="track-detail__nav-label">next</span>
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </Link>
               ) : (
                 <span
                   className="track-detail__nav-btn track-detail__nav-btn--next track-detail__nav-btn--inactive"
                   aria-disabled="true"
                 >
-                  next
+                  <span className="track-detail__nav-label">next</span>
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </span>
               )}
             </div>
           </nav>
 
           <div className="track-detail__title-row">
-            <h1 className="track-detail__title">{displayTrack!.title}</h1>
+            <div className="track-detail__title-head">
+              <span className="track-detail__eyebrow">
+                {(displayTrack!.meta || "single").toLowerCase()}
+                {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
+              </span>
+              <h1 className="track-detail__title">{displayTrack!.title}</h1>
+            </div>
             {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
           </div>
 
@@ -345,6 +460,7 @@ export function TrackDetailPage() {
                 {coverUrl ? (
                   <img
                     src={coverUrl}
+                    srcSet={coverSrcSet}
                     alt={`${displayTrack!.title} cover art`}
                     className="track-detail__cover-img"
                     decoding="async"
@@ -359,9 +475,11 @@ export function TrackDetailPage() {
             <div className="track-detail__right">
               <section className="track-detail__about">
                 <h2 className="track-detail__about-title">About the song</h2>
-                <p className="track-detail__about-text">
-                  {(displayTrack!.description || "").trim() || "—"}
-                </p>
+                {(displayTrack!.description || "").trim()
+                  ? (displayTrack!.description || "").trim().split(/\n\n+/).map((para, i) => (
+                      <p key={i} className="track-detail__about-text">{para}</p>
+                    ))
+                  : <p className="track-detail__about-text">—</p>}
               </section>
             </div>
           </div>
@@ -398,6 +516,20 @@ export function TrackDetailPage() {
               </a>
             </div>
           </div>
+
+          {spotifyEmbedId && (
+            <div className="track-detail__spotify-embed">
+              <iframe
+                title={`Listen to ${displayTrack!.title} on Spotify`}
+                src={`https://open.spotify.com/embed/track/${spotifyEmbedId}?utm_source=generator&theme=0`}
+                width="100%"
+                height="152"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              />
+            </div>
+          )}
 
           <footer className="track-detail__footer">
             <div className="track-detail__footer-left">
