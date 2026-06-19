@@ -381,49 +381,76 @@ export function TrackDetailPage() {
           )}
           <nav className="track-detail__nav" aria-label="Track navigation">
             <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+              <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               home
             </Link>
             <span className="track-detail__breadcrumb">
-              <Link to="/#music-section">My Music</Link>
-              <span className="track-detail__breadcrumb-sep">→</span>
-              <span>{displayTrack!.title}</span>
+              <Link to="/#music-section" className="track-detail__breadcrumb-link">my music</Link>
+              <span className="track-detail__breadcrumb-sep" aria-hidden>
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none">
+                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="track-detail__breadcrumb-current">{displayTrack!.title}</span>
             </span>
             <div className="track-detail__nav-pair">
               {prevSlug ? (
                 <Link
                   to={`/music/${prevSlug}`}
                   className="track-detail__nav-btn track-detail__nav-btn--prev"
+                  aria-label="Previous track"
                 >
-                  previous
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="track-detail__nav-label">previous</span>
                 </Link>
               ) : (
                 <span
                   className="track-detail__nav-btn track-detail__nav-btn--prev track-detail__nav-btn--inactive"
                   aria-disabled="true"
                 >
-                  previous
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="track-detail__nav-label">previous</span>
                 </span>
               )}
               {nextSlug ? (
                 <Link
                   to={`/music/${nextSlug}`}
                   className="track-detail__nav-btn track-detail__nav-btn--next"
+                  aria-label="Next track"
                 >
-                  next
+                  <span className="track-detail__nav-label">next</span>
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </Link>
               ) : (
                 <span
                   className="track-detail__nav-btn track-detail__nav-btn--next track-detail__nav-btn--inactive"
                   aria-disabled="true"
                 >
-                  next
+                  <span className="track-detail__nav-label">next</span>
+                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </span>
               )}
             </div>
           </nav>
 
           <div className="track-detail__title-row">
-            <h1 className="track-detail__title">{displayTrack!.title}</h1>
+            <div className="track-detail__title-head">
+              <span className="track-detail__eyebrow">
+                {(displayTrack!.meta || "single").toLowerCase()}
+                {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
+              </span>
+              <h1 className="track-detail__title">{displayTrack!.title}</h1>
+            </div>
             {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
           </div>
 
