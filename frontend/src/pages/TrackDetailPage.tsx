@@ -449,9 +449,11 @@ export function TrackDetailPage() {
                 {(displayTrack!.meta || "single").toLowerCase()}
                 {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
               </span>
-              <h1 className="track-detail__title">{displayTrack!.title}</h1>
+              <div className="track-detail__title-line">
+                <h1 className="track-detail__title">{displayTrack!.title}</h1>
+                {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
+              </div>
             </div>
-            {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
           </div>
 
           <div className="track-detail__main">

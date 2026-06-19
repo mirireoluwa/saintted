@@ -405,13 +405,19 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
   color: var(--accent-green);
 }
 
+.track-detail__title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .track-detail__title-row .track-detail__title {
   margin: 0;
 }
 
-.track-detail__title-row .track-card__new-pill {
-  align-self: flex-end;
-  margin-bottom: 0.6rem;
+.track-detail__title-line .track-card__new-pill {
+  flex-shrink: 0;
 }
 
 .track-detail__right {
