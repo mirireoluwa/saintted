@@ -194,15 +194,54 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
   text-decoration: none;
 }
 
+.track-detail__crumb-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .track-detail__breadcrumb-current {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
   line-height: 1;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
   color: var(--text);
   font-weight: 500;
+  cursor: pointer;
+  max-width: 100%;
+  transition: color 0.2s ease;
+}
+
+.track-detail__breadcrumb-current:disabled {
+  cursor: default;
+}
+
+.track-detail__breadcrumb-current:not(:disabled):hover {
+  color: var(--accent-green);
+}
+
+.track-detail__breadcrumb-current-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.track-detail__crumb-caret {
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.track-detail__crumb-caret--open {
+  transform: rotate(180deg);
 }
 
 .track-detail__breadcrumb-sep {
@@ -215,6 +254,74 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
 
 .track-detail__breadcrumb-sep svg {
   display: block;
+}
+
+/* ── Breadcrumb song dropdown ───────────────────────────────────────────── */
+.track-detail__crumb-menu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 50%;
+  transform-origin: top center;
+  translate: -50% 0;
+  z-index: 30;
+  min-width: 12rem;
+  max-width: min(20rem, 80vw);
+  max-height: 18rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--td-border);
+  background: rgba(14, 14, 20, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.track-detail__crumb-menu::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: rgba(14, 14, 20, 0.96);
+}
+
+.track-detail__crumb-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.16s ease, background 0.16s ease;
+}
+
+.track-detail__crumb-option:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
+.track-detail__crumb-option--active {
+  color: var(--accent-green);
+}
+
+.track-detail__crumb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  flex-shrink: 0;
 }
 
 .track-detail__main {
