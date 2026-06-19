@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchFeaturedVideos } from "../api/client";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import { staggerChildren, sectionTransition } from "../utils/motion";
+import { SectionLabel } from "./SectionLabel";
 
 const EMBED_BASE = "https://www.youtube.com/embed";
 
@@ -22,10 +23,7 @@ export function Featured() {
 
   return (
     <section className="featured-section" id="featured-section">
-      <div className="section-label">
-        <span className="section-label__text">.videos</span>
-        <span className="section-label__line" aria-hidden />
-      </div>
+      <SectionLabel text=".videos" />
       {loading ? (
         <div className="featured-videos">
           {Array.from({ length: 2 }).map((_, idx) => (
