@@ -3,8 +3,8 @@
   margin-bottom: 1.25rem;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(0, 255, 119, 0.35);
-  background: rgba(0, 255, 119, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.06);
 }
 
 .admin-callout__text {
@@ -290,9 +290,9 @@
 }
 
 .admin-btn--primary:hover {
-  background: var(--hover-green-bg, rgba(0, 255, 119, 0.08));
+  background: var(--hover-green-bg, rgba(56, 189, 248, 0.08));
   color: var(--hover-green-text, var(--accent-green));
-  border-color: var(--hover-green-border, rgba(0, 255, 119, 0.45));
+  border-color: var(--hover-green-border, rgba(56, 189, 248, 0.45));
 }
 
 .admin-btn--danger {
@@ -653,7 +653,7 @@
   background: var(--accent-green);
   border: 2px solid var(--surface);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 119, 0.35),
+    0 0 0 1px rgba(56, 189, 248, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.35);
   cursor: grab;
   transition:
@@ -665,7 +665,7 @@
   cursor: grabbing;
   transform: scale(1.06);
   box-shadow:
-    0 0 0 2px rgba(0, 255, 119, 0.25),
+    0 0 0 2px rgba(56, 189, 248, 0.25),
     0 4px 18px rgba(0, 0, 0, 0.4);
 }
 
@@ -683,7 +683,7 @@
   background: var(--accent-green);
   border: 2px solid var(--surface);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 119, 0.35),
+    0 0 0 1px rgba(56, 189, 248, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.35);
   cursor: grab;
 }

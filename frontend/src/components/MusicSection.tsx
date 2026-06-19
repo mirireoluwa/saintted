@@ -5,6 +5,7 @@ import type { Track } from "../types/track";
 import { compactCountdownFromMs, pad2, remainingPartsFromMs } from "../utils/countdownParts";
 import { staggerChildren, sectionTransition } from "../utils/motion";
 import { TrackCoverPlaceholder } from "./TrackCoverPlaceholder";
+import { SectionLabel } from "./SectionLabel";
 import { getTrackArtUrl } from "../utils/trackArt";
 
 interface MusicSectionProps {
@@ -338,10 +339,7 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
         </div>
       ) : null}
 
-      <div className="section-label music-section__label-released">
-        <span className="section-label__text">.my music</span>
-        <span className="section-label__line" aria-hidden />
-      </div>
+      <SectionLabel text=".my music" className="music-section__label-released" />
       {loading ? (
         <div className="music-grid">
           {Array.from({ length: 5 }).map((_, idx) => (

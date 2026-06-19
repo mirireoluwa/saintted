@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { subscribeToMailingList } from "../api/client";
+import { SectionLabel } from "./SectionLabel";
 import "./MailingListSection.css";
 
 type FormState = "idle" | "loading" | "success" | "error";
@@ -40,10 +41,7 @@ export function MailingListSection() {
   return (
     <section className="mailing-list-section" id="mailing-list-section">
       <div className="mailing-list-section__inner">
-        <div className="section-label">
-          <span className="section-label__text">mailing list</span>
-          <span className="section-label__line" />
-        </div>
+        <SectionLabel text="mailing list" />
 
         <div className="mailing-list-section__body">
           <div className="mailing-list-section__copy">

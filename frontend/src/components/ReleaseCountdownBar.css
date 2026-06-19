@@ -16,7 +16,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0.58)),
-    radial-gradient(circle at 10% 50%, rgba(0, 255, 119, 0.22), transparent 42%);
+    radial-gradient(circle at 10% 50%, rgba(56, 189, 248, 0.22), transparent 42%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -50,7 +50,7 @@
   letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
   color: #b9fdd9;
-  text-shadow: 0 0 10px rgba(0, 255, 119, 0.3);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
   animation: release-ticker-color 3.6s ease-in-out infinite alternate;
 }
 

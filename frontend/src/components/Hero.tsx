@@ -231,7 +231,14 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
       <div className="hero-inner">
         <div className="hero-content">
           <div className="hero-titles">
-            <h1 className="hero-title">SAINTTED</h1>
+            <motion.h1
+              className="hero-title"
+              initial={reduceMotion ? false : { opacity: 0, y: 24, letterSpacing: "0.12em" }}
+              animate={{ opacity: 1, y: 0, letterSpacing: "-0.02em" }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="hero-title__inner">SAINTTED</span>
+            </motion.h1>
           </div>
 
           <div className="hero-tags hero-tags--bottom">

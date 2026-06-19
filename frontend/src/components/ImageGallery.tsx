@@ -2,13 +2,12 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchGalleryImages } from "../api/client";
 import type { GalleryImage } from "../types/galleryImage";
-import { staggerChildren, sectionTransition } from "../utils/motion";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
+import { SectionLabel } from "./SectionLabel";
 
 export function ImageGallery() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [landscapeIds, setLandscapeIds] = useState<Record<number, boolean>>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const reduceMotion = useReducedMotion() ?? false;
   const touchStartX = useRef<number | null>(null);
@@ -65,10 +64,7 @@ export function ImageGallery() {
 
   return (
     <section className="image-gallery-section" id="image-gallery-section">
-      <div className="section-label">
-        <span className="section-label__text">.images</span>
-        <span className="section-label__line" aria-hidden />
-      </div>
+      <SectionLabel text=".images" />
       {loading ? (
         <div className="image-gallery image-gallery--skeleton">
           {Array.from({ length: 6 }).map((_, idx) => (
@@ -76,54 +72,39 @@ export function ImageGallery() {
           ))}
         </div>
       ) : (
-        <motion.div
-          className="image-gallery"
-          variants={{
-            hidden: {},
-            visible: {
-              transition: { staggerChildren: staggerChildren(reduceMotion, 0.06) },
-            },
-          }}
-          initial={reduceMotion ? false : "hidden"}
-          animate="visible"
-        >
+        <div className="image-gallery">
           {images.map((img, idx) => (
             <motion.figure
               key={img.id}
-              className={`image-gallery__item${landscapeIds[img.id] ? " image-gallery__item--landscape" : ""}`}
+              className="image-gallery__item"
+              initial={reduceMotion ? false : "hidden"}
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
               variants={{
-                hidden: reduceMotion ? {} : { opacity: 0, y: 18 },
-                visible: { opacity: 1, y: 0 },
+                hidden: reduceMotion
+                  ? {}
+                  : { opacity: 0, y: 28, scale: 0.96, filter: "blur(6px)" },
+                visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
               }}
-              transition={sectionTransition(reduceMotion)}
+              transition={{ duration: reduceMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setLightboxIndex(idx)}
               role="button"
               tabIndex={0}
               aria-label={`View ${img.caption || "gallery image"} in fullscreen`}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIndex(idx); } }}
             >
-              <motion.img
+              <img
                 src={resolvePublicMediaUrl(img.image_url || img.image || "")}
                 alt={img.caption || "Saintted gallery image"}
                 className="image-gallery__img"
                 loading="lazy"
                 decoding="async"
                 sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                initial={reduceMotion ? false : { opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: reduceMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-                onLoad={(e) => {
-                  const { naturalWidth, naturalHeight } = e.currentTarget;
-                  const isLandscape = naturalWidth > naturalHeight;
-                  setLandscapeIds((prev) =>
-                    prev[img.id] === isLandscape ? prev : { ...prev, [img.id]: isLandscape }
-                  );
-                }}
               />
               {img.caption ? <figcaption className="image-gallery__caption">{img.caption}</figcaption> : null}
             </motion.figure>
           ))}
-        </motion.div>
+        </div>
       )}
 
       <AnimatePresence>

@@ -68,7 +68,7 @@
 
 .unreleased-fs a.track-detail__nav-btn:hover {
   color: var(--accent-green);
-  border-color: rgba(0, 255, 119, 0.5);
+  border-color: rgba(56, 189, 248, 0.5);
   background: rgba(0, 0, 0, 0.58);
 }
 
@@ -194,8 +194,8 @@
 
 .unreleased-fs__cta:hover {
   color: var(--hover-green-text, var(--accent-green));
-  border-color: var(--hover-green-border, rgba(0, 255, 119, 0.55));
-  background: var(--hover-green-bg, rgba(0, 255, 119, 0.12));
+  border-color: var(--hover-green-border, rgba(56, 189, 248, 0.55));
+  background: var(--hover-green-bg, rgba(56, 189, 248, 0.12));
   transform: translateY(-2px);
   text-decoration: none;
 }
