@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Track } from "../types/track";
 import { Helmet } from "react-helmet-async";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -136,7 +136,42 @@ export function TrackDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [slowLoading, setSlowLoading] = useState(false);
+  const [crumbOpen, setCrumbOpen] = useState(false);
+  const crumbRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion() ?? false;
+
+  // Songs available in the breadcrumb dropdown — released tracks in homepage order.
+  const breadcrumbSongs = useMemo(() => {
+    const released = tracks.filter((t) => !t.is_unreleased);
+    return [
+      ...released.filter((t) => t.is_highlighted),
+      ...released.filter((t) => !t.is_highlighted),
+    ];
+  }, [tracks]);
+
+  // Close the breadcrumb dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!crumbOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (crumbRef.current && !crumbRef.current.contains(e.target as Node)) {
+        setCrumbOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCrumbOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointer);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [crumbOpen]);
+
+  // Collapse the dropdown whenever the route (slug) changes.
+  useEffect(() => {
+    setCrumbOpen(false);
+  }, [slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -393,7 +428,70 @@ export function TrackDetailPage() {
                   <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-              <span className="track-detail__breadcrumb-current">{displayTrack!.title}</span>
+              <span className="track-detail__crumb-wrap" ref={crumbRef}>
+                <button
+                  type="button"
+                  className="track-detail__breadcrumb-current"
+                  aria-haspopup="listbox"
+                  aria-expanded={crumbOpen}
+                  disabled={breadcrumbSongs.length <= 1}
+                  onClick={() => setCrumbOpen((o) => !o)}
+                >
+                  <span className="track-detail__breadcrumb-current-text">{displayTrack!.title}</span>
+                  {breadcrumbSongs.length > 1 ? (
+                    <svg
+                      className={`track-detail__crumb-caret${crumbOpen ? " track-detail__crumb-caret--open" : ""}`}
+                      viewBox="0 0 24 24"
+                      width="11"
+                      height="11"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : null}
+                </button>
+                <AnimatePresence>
+                  {crumbOpen ? (
+                    <motion.ul
+                      className="track-detail__crumb-menu"
+                      role="listbox"
+                      aria-label="Jump to a song"
+                      initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.97 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {breadcrumbSongs.map((t, i) => {
+                        const active = t.slug === displayTrack!.slug;
+                        return (
+                          <motion.li
+                            key={t.slug}
+                            role="option"
+                            aria-selected={active}
+                            initial={reduceMotion ? false : { opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              duration: reduceMotion ? 0 : 0.22,
+                              ease: [0.22, 1, 0.36, 1],
+                              delay: reduceMotion ? 0 : 0.03 + i * 0.025,
+                            }}
+                          >
+                            <Link
+                              to={`/music/${t.slug}`}
+                              className={`track-detail__crumb-option${active ? " track-detail__crumb-option--active" : ""}`}
+                              onClick={() => setCrumbOpen(false)}
+                            >
+                              {t.title}
+                              {active ? <span className="track-detail__crumb-dot" aria-hidden /> : null}
+                            </Link>
+                          </motion.li>
+                        );
+                      })}
+                    </motion.ul>
+                  ) : null}
+                </AnimatePresence>
+              </span>
             </span>
             <div className="track-detail__nav-pair">
               {prevSlug ? (
