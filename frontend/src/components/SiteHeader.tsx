@@ -93,7 +93,6 @@ export function SiteHeader() {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            <span className="site-header__menu-label">menu</span>
             <span className="site-header__menu-icon" aria-hidden />
           </button>
         </div>

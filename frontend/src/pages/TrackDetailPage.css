@@ -450,6 +450,32 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
   .track-detail__stage {
     border-radius: var(--radius-md);
   }
+
+  /* Icon-only streaming buttons on mobile */
+  .track-detail__stream-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .track-detail__stream-link {
+    gap: 0;
+    padding: 0.85rem;
+    width: 3rem;
+    height: 3rem;
+    justify-content: center;
+  }
+
+  .track-detail__stream-logo {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .track-detail__eyebrow {

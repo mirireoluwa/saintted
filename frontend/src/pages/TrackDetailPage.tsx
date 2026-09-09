@@ -579,28 +579,31 @@ export function TrackDetailPage() {
                 href={sp}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Listen on Spotify"
                 className="track-detail__stream-link track-detail__stream-link--spotify"
               >
                 <img className="track-detail__stream-logo" src={spotifyIcon} alt="" aria-hidden />
-                Spotify
+                <span className="track-detail__stream-label">Spotify</span>
               </a>
               <a
                 href={am}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Listen on Apple Music"
                 className="track-detail__stream-link track-detail__stream-link--apple"
               >
                 <img className="track-detail__stream-logo" src={appleMusicIcon} alt="" aria-hidden />
-                Apple Music
+                <span className="track-detail__stream-label">Apple Music</span>
               </a>
               <a
                 href={yt}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Listen on YouTube"
                 className="track-detail__stream-link track-detail__stream-link--youtube"
               >
                 <img className="track-detail__stream-logo" src={youtubeIcon} alt="" aria-hidden />
-                YouTube
+                <span className="track-detail__stream-label">YouTube</span>
               </a>
             </div>
           </div>
