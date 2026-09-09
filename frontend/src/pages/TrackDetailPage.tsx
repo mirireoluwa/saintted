@@ -3,7 +3,6 @@ import type { Track } from "../types/track";
 import { Helmet } from "react-helmet-async";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { TrackCoverPlaceholder } from "../components/TrackCoverPlaceholder";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
 import { getTrackArtUrl, getTrackArtSrcSet } from "../utils/trackArt";
@@ -15,6 +14,9 @@ import {
   youtubeSearchUrl,
 } from "../utils/streamingLinks";
 import { absoluteUrl, getSiteUrl } from "../utils/siteUrl";
+import spotifyIcon from "../assets/spotify.svg";
+import appleMusicIcon from "../assets/apple-music.svg";
+import youtubeIcon from "../assets/youtube.svg";
 import "./TrackDetailPage.css";
 
 // Shared with HomePage — canonical fallback data shown before API responds.
@@ -541,8 +543,24 @@ export function TrackDetailPage() {
             </div>
           </nav>
 
-          <div className="track-detail__title-row">
-            <div className="track-detail__title-head">
+          <div className="track-detail__stage">
+            <div className="track-detail__stage-media">
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  srcSet={coverSrcSet}
+                  alt={`${displayTrack!.title} cover art`}
+                  className="track-detail__stage-img"
+                  decoding="async"
+                  fetchPriority="high"
+                  sizes="100vw"
+                />
+              ) : (
+                <div className="track-detail__stage-fallback" aria-hidden />
+              )}
+            </div>
+            <div className="track-detail__stage-scrim" aria-hidden />
+            <div className="track-detail__stage-body">
               <span className="track-detail__eyebrow">
                 {(displayTrack!.meta || "single").toLowerCase()}
                 {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
@@ -554,49 +572,17 @@ export function TrackDetailPage() {
             </div>
           </div>
 
-          <div className="track-detail__main">
-            <div className="track-detail__left">
-              <div className="track-detail__cover">
-                {coverUrl ? (
-                  <img
-                    src={coverUrl}
-                    srcSet={coverSrcSet}
-                    alt={`${displayTrack!.title} cover art`}
-                    className="track-detail__cover-img"
-                    decoding="async"
-                    fetchPriority="high"
-                    sizes="(max-width: 900px) 100vw, 420px"
-                  />
-                ) : (
-                  <TrackCoverPlaceholder variant="detail" />
-                )}
-              </div>
-            </div>
-            <div className="track-detail__right">
-              <section className="track-detail__about">
-                <h2 className="track-detail__about-title">About the song</h2>
-                {(displayTrack!.description || "").trim()
-                  ? (displayTrack!.description || "").trim().split(/\n\n+/).map((para, i) => (
-                      <p key={i} className="track-detail__about-text">{para}</p>
-                    ))
-                  : <p className="track-detail__about-text">—</p>}
-              </section>
-            </div>
-          </div>
-
-          <div className="track-detail__meta">
-            <div className="track-detail__year-block">
-              <span className="track-detail__year-label">YEAR</span>
-              <span className="track-detail__year-value">{displayTrack!.year ?? "—"}</span>
-            </div>
+          <div className="track-detail__listen">
+            <span className="track-detail__listen-label">.listen on</span>
             <div className="track-detail__streaming">
               <a
-                href={yt}
+                href={sp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="track-detail__stream-link track-detail__stream-link--youtube"
+                className="track-detail__stream-link track-detail__stream-link--spotify"
               >
-                YouTube
+                <img className="track-detail__stream-logo" src={spotifyIcon} alt="" aria-hidden />
+                Spotify
               </a>
               <a
                 href={am}
@@ -604,15 +590,17 @@ export function TrackDetailPage() {
                 rel="noopener noreferrer"
                 className="track-detail__stream-link track-detail__stream-link--apple"
               >
+                <img className="track-detail__stream-logo" src={appleMusicIcon} alt="" aria-hidden />
                 Apple Music
               </a>
               <a
-                href={sp}
+                href={yt}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="track-detail__stream-link track-detail__stream-link--spotify"
+                className="track-detail__stream-link track-detail__stream-link--youtube"
               >
-                Spotify
+                <img className="track-detail__stream-logo" src={youtubeIcon} alt="" aria-hidden />
+                YouTube
               </a>
             </div>
           </div>
