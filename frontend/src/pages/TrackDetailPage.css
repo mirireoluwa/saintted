@@ -555,6 +555,7 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
 }
 
 .track-detail__about-text {
+  font-family: "Questrial", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.9375rem;
   line-height: 1.7;
   color: #ffffff;
