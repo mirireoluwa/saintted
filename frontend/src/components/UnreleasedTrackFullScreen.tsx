@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Track } from "../types/track";
 import { getTrackArtUrl } from "../utils/trackArt";
 import { pad2, remainingPartsFromMs } from "../utils/countdownParts";
@@ -13,6 +14,7 @@ type Props = {
 
 export function UnreleasedTrackFullScreen({ track }: Props) {
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const reduceMotion = useReducedMotion() ?? false;
   const releaseIso = track.release_at || "";
   const targetMs = releaseIso ? new Date(releaseIso).getTime() : NaN;
   const validTarget = Number.isFinite(targetMs);
@@ -30,6 +32,18 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
 
   const ariaRemaining = `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds`;
 
+  const units: { value: string; label: string }[] = [
+    ...(parts.days > 0 ? [{ value: String(parts.days), label: "days" }] : []),
+    { value: pad2(parts.hours), label: "hrs" },
+    { value: pad2(parts.minutes), label: "min" },
+    { value: pad2(parts.seconds), label: "sec" },
+  ];
+
+  const stagger = (i: number) =>
+    reduceMotion
+      ? { duration: 0 }
+      : { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const, delay: 0.08 * i };
+
   return (
     <div className="unreleased-fs">
       <div
@@ -42,71 +56,117 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
       <div className="unreleased-fs__content">
         <nav className="unreleased-fs__nav-bar" aria-label="Site">
           <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+            <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
+              <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
             home
           </Link>
         </nav>
 
-        <div className="unreleased-fs__badge">unreleased</div>
+        {coverUrl ? (
+          <motion.div
+            className="unreleased-fs__cover"
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={stagger(0)}
+          >
+            <img src={coverUrl} alt={`${track.title} cover art`} className="unreleased-fs__cover-img" />
+          </motion.div>
+        ) : (
+          <motion.div
+            className="unreleased-fs__cover unreleased-fs__cover--placeholder"
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={stagger(0)}
+            aria-hidden
+          >
+            <TrackCoverPlaceholder variant="detail" />
+          </motion.div>
+        )}
 
-        <h1 className="unreleased-fs__title">{track.title}</h1>
-        <p className="unreleased-fs__meta">{track.meta}</p>
+        <motion.div
+          className="unreleased-fs__badge"
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={stagger(1)}
+        >
+          <span className="unreleased-fs__badge-dot" aria-hidden />
+          {isLive ? "just released" : "arriving soon"}
+        </motion.div>
+
+        <motion.h1
+          className="unreleased-fs__title"
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={stagger(2)}
+        >
+          {track.title}
+        </motion.h1>
+        {track.meta ? (
+          <motion.p
+            className="unreleased-fs__meta"
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={stagger(3)}
+          >
+            {track.meta}
+          </motion.p>
+        ) : null}
 
         {validTarget ? (
           !isLive ? (
-            <div
+            <motion.div
               className="unreleased-fs__timer"
               role="timer"
               aria-live="polite"
               aria-atomic="true"
               aria-label={ariaRemaining}
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={stagger(4)}
             >
-              {parts.days > 0 ? (
-                <div className="unreleased-fs__unit">
-                  <span className="unreleased-fs__value">{parts.days}</span>
-                  <span className="unreleased-fs__label">days</span>
+              {units.map((u, i) => (
+                <div key={u.label} className="unreleased-fs__unit">
+                  <span className="unreleased-fs__value">{u.value}</span>
+                  <span className="unreleased-fs__label">{u.label}</span>
+                  {i < units.length - 1 ? <span className="unreleased-fs__sep" aria-hidden /> : null}
                 </div>
-              ) : null}
-              <div className="unreleased-fs__unit">
-                <span className="unreleased-fs__value">{pad2(parts.hours)}</span>
-                <span className="unreleased-fs__label">hours</span>
-              </div>
-              <span className="unreleased-fs__colon" aria-hidden>
-                :
-              </span>
-              <div className="unreleased-fs__unit">
-                <span className="unreleased-fs__value">{pad2(parts.minutes)}</span>
-                <span className="unreleased-fs__label">min</span>
-              </div>
-              <span className="unreleased-fs__colon" aria-hidden>
-                :
-              </span>
-              <div className="unreleased-fs__unit">
-                <span className="unreleased-fs__value">{pad2(parts.seconds)}</span>
-                <span className="unreleased-fs__label">sec</span>
-              </div>
-            </div>
+              ))}
+            </motion.div>
           ) : (
-            <p className="unreleased-fs__live">out now</p>
+            <motion.p
+              className="unreleased-fs__live"
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={stagger(4)}
+            >
+              out now
+            </motion.p>
           )
         ) : (
-          <p className="unreleased-fs__soon">coming soon</p>
+          <motion.p
+            className="unreleased-fs__soon"
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={stagger(4)}
+          >
+            coming soon
+          </motion.p>
         )}
 
         {presave ? (
-          <a
+          <motion.a
             href={presave}
             target="_blank"
             rel="noopener noreferrer"
             className="unreleased-fs__cta"
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={stagger(5)}
           >
-            {isLive ? "Listen / save" : "Pre-save"}
-          </a>
-        ) : null}
-
-        {!coverUrl ? (
-          <div className="unreleased-fs__placeholder-wrap" aria-hidden>
-            <TrackCoverPlaceholder variant="detail" />
-          </div>
+            {isLive ? "listen / save" : "pre-save"}
+            <span className="unreleased-fs__cta-arrow" aria-hidden>↗</span>
+          </motion.a>
         ) : null}
       </div>
     </div>
