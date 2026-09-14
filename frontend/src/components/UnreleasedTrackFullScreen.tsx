@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Track } from "../types/track";
 import { getTrackArtUrl } from "../utils/trackArt";
 import { pad2, remainingPartsFromMs } from "../utils/countdownParts";
-import { TrackCoverPlaceholder } from "./TrackCoverPlaceholder";
 import "../pages/TrackDetailPage.css";
 import "./UnreleasedTrackFullScreen.css";
 
@@ -30,125 +29,122 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
     return () => window.clearInterval(id);
   }, [validTarget, targetMs]);
 
-  const ariaRemaining = `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds`;
+  const ariaRemaining = `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds until release`;
 
-  const units: { value: string; label: string }[] = [
-    ...(parts.days > 0 ? [{ value: String(parts.days), label: "days" }] : []),
-    { value: pad2(parts.hours), label: "hrs" },
-    { value: pad2(parts.minutes), label: "min" },
-    { value: pad2(parts.seconds), label: "sec" },
+  const units = [
+    ...(parts.days > 0 ? [{ key: "days", value: String(parts.days), label: "days" }] : []),
+    { key: "hrs", value: pad2(parts.hours), label: "hours" },
+    { key: "min", value: pad2(parts.minutes), label: "minutes" },
+    { key: "sec", value: pad2(parts.seconds), label: "seconds" },
   ];
 
-  const stagger = (i: number) =>
-    reduceMotion
-      ? { duration: 0 }
-      : { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const, delay: 0.08 * i };
+  const ease = [0.22, 1, 0.36, 1] as const;
 
   return (
-    <div className="unreleased-fs">
+    <div
+      className="uf2"
+      style={
+        coverUrl
+          ? ({ "--uf2-cover": `url("${coverUrl}")` } as React.CSSProperties)
+          : undefined
+      }
+    >
       <div
-        className="unreleased-fs__bg"
+        className="uf2__bg"
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
         aria-hidden
       />
-      <div className="unreleased-fs__scrim" aria-hidden />
+      <div className="uf2__scrim" aria-hidden />
+      <div className="uf2__aurora" aria-hidden>
+        <span className="uf2__blob uf2__blob--a" />
+        <span className="uf2__blob uf2__blob--b" />
+        <span className="uf2__grain" />
+      </div>
 
-      <div className="unreleased-fs__content">
-        <nav className="unreleased-fs__nav-bar" aria-label="Site">
-          <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
-            <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-              <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            home
-          </Link>
-        </nav>
+      <nav className="uf2__nav" aria-label="Site">
+        <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
+          <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden>
+            <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          home
+        </Link>
+      </nav>
 
-        {coverUrl ? (
-          <motion.div
-            className="unreleased-fs__cover"
-            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={stagger(0)}
-          >
-            <img src={coverUrl} alt={`${track.title} cover art`} className="unreleased-fs__cover-img" />
-          </motion.div>
-        ) : (
-          <motion.div
-            className="unreleased-fs__cover unreleased-fs__cover--placeholder"
-            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={stagger(0)}
-            aria-hidden
-          >
-            <TrackCoverPlaceholder variant="detail" />
-          </motion.div>
-        )}
-
-        <motion.div
-          className="unreleased-fs__badge"
-          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      <div className="uf2__inner">
+        <motion.header
+          className="uf2__head"
+          initial={reduceMotion ? false : { opacity: 0, y: -14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={stagger(1)}
+          transition={{ duration: 0.7, ease }}
         >
-          <span className="unreleased-fs__badge-dot" aria-hidden />
-          {isLive ? "just released" : "arriving soon"}
-        </motion.div>
+          {coverUrl ? (
+            <span className="uf2__thumb">
+              <img src={coverUrl} alt={`${track.title} cover art`} />
+            </span>
+          ) : null}
+          <span className="uf2__head-text">
+            <span className="uf2__badge">
+              <span className="uf2__badge-dot" aria-hidden />
+              {isLive ? "just released" : "arriving soon"}
+            </span>
+            <h1 className="uf2__title">{track.title}</h1>
+            {track.meta ? <span className="uf2__meta">{track.meta}</span> : null}
+          </span>
+        </motion.header>
 
-        <motion.h1
-          className="unreleased-fs__title"
-          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={stagger(2)}
-        >
-          {track.title}
-        </motion.h1>
-        {track.meta ? (
-          <motion.p
-            className="unreleased-fs__meta"
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={stagger(3)}
+        {validTarget && !isLive ? (
+          <motion.div
+            className="uf2__countdown"
+            role="timer"
+            aria-label={ariaRemaining}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.85, ease, delay: 0.1 }}
           >
-            {track.meta}
-          </motion.p>
-        ) : null}
+            <span className="uf2__rings" aria-hidden>
+              <span className="uf2__ring" />
+              <span className="uf2__ring" />
+              <span className="uf2__ring" />
+            </span>
 
-        {validTarget ? (
-          !isLive ? (
-            <motion.div
-              className="unreleased-fs__timer"
-              role="timer"
-              aria-live="polite"
-              aria-atomic="true"
-              aria-label={ariaRemaining}
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={stagger(4)}
-            >
+            <div className="uf2__units">
               {units.map((u, i) => (
-                <div key={u.label} className="unreleased-fs__unit">
-                  <span className="unreleased-fs__value">{u.value}</span>
-                  <span className="unreleased-fs__label">{u.label}</span>
-                  {i < units.length - 1 ? <span className="unreleased-fs__sep" aria-hidden /> : null}
+                <div className="uf2__unit" key={u.key}>
+                  <span className="uf2__value">
+                    <AnimatePresence initial={false} mode="popLayout">
+                      <motion.span
+                        key={u.value}
+                        className="uf2__digit"
+                        initial={reduceMotion ? false : { y: "48%", opacity: 0, filter: "blur(6px)" }}
+                        animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                        exit={reduceMotion ? { opacity: 0 } : { y: "-48%", opacity: 0, filter: "blur(6px)" }}
+                        transition={{ duration: 0.5, ease }}
+                      >
+                        {u.value}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                  <span className="uf2__label">{u.label}</span>
+                  {i < units.length - 1 ? <span className="uf2__colon" aria-hidden>:</span> : null}
                 </div>
               ))}
-            </motion.div>
-          ) : (
-            <motion.p
-              className="unreleased-fs__live"
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={stagger(4)}
-            >
-              out now
-            </motion.p>
-          )
+            </div>
+          </motion.div>
+        ) : isLive ? (
+          <motion.p
+            className="uf2__live"
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease }}
+          >
+            out now
+          </motion.p>
         ) : (
           <motion.p
-            className="unreleased-fs__soon"
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={stagger(4)}
+            className="uf2__soon"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease }}
           >
             coming soon
           </motion.p>
@@ -159,13 +155,13 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
             href={presave}
             target="_blank"
             rel="noopener noreferrer"
-            className="unreleased-fs__cta"
+            className="uf2__cta"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={stagger(5)}
+            transition={{ duration: 0.6, ease, delay: 0.3 }}
           >
             {isLive ? "listen / save" : "pre-save"}
-            <span className="unreleased-fs__cta-arrow" aria-hidden>↗</span>
+            <span className="uf2__cta-arrow" aria-hidden>↗</span>
           </motion.a>
         ) : null}
       </div>
