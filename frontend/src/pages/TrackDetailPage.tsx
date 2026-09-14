@@ -316,27 +316,30 @@ export function TrackDetailPage() {
     return null;
   }
 
-  const unreleasedTargetMs = track?.release_at ? new Date(track.release_at).getTime() : NaN;
+  // Decide from displayTrack (available immediately from the cached list) so an
+  // unreleased track never briefly renders the normal detail layout while the
+  // single-track fetch is still in flight.
+  const unreleasedTargetMs = displayTrack?.release_at ? new Date(displayTrack.release_at).getTime() : NaN;
   const showUnreleasedFullscreen =
     !showInterstitial &&
-    resolved &&
-    !!track?.is_unreleased &&
+    !!displayTrack?.is_unreleased &&
     Number.isFinite(unreleasedTargetMs) &&
     unreleasedTargetMs > Date.now();
 
   if (showUnreleasedFullscreen) {
-    const ogU = getTrackArtUrl(track);
+    const uTrack = displayTrack!;
+    const ogU = getTrackArtUrl(uTrack);
     return (
       <>
         <SeoHead
-          title={`${track.title} · unreleased · saintted`}
-          description={`${track.meta} · coming soon · love, saintted`}
+          title={`${uTrack.title} · unreleased · saintted`}
+          description={`${uTrack.meta} · coming soon · love, saintted`}
           canonicalPath={canonicalPath}
           ogImage={ogU ? absoluteUrl(ogU) : undefined}
           ogType="music.song"
         />
         <div className="track-detail track-detail--unreleased">
-          <UnreleasedTrackFullScreen track={track} />
+          <UnreleasedTrackFullScreen track={uTrack} />
         </div>
       </>
     );

@@ -1048,6 +1048,7 @@ a {
 
 /* Tighter shell so visual weight matches grid cards (same min column ~200px) */
 .music-upcoming-row .track-card__art-frame {
+  position: relative;
   aspect-ratio: 1;
   padding: 0.65rem 0.65rem 0;
   overflow: visible;
@@ -1059,6 +1060,7 @@ a {
 }
 
 .music-upcoming-row .track-card__body {
+  position: static;
   background: none;
   padding: 0.7rem 0.8rem 0.95rem;
 }
