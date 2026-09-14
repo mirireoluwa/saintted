@@ -454,7 +454,7 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
   }
 
   .track-detail__cover {
-    width: min(320px, 74vw);
+    width: 100%;
     border-radius: var(--radius-md);
   }
 
