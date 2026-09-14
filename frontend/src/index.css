@@ -134,7 +134,7 @@ a {
   gap: 1rem;
   margin-bottom: 2rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: lowercase;
   letter-spacing: 0.25em;
@@ -404,7 +404,7 @@ a {
   align-items: center;
   gap: 0.65rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.7);
@@ -478,7 +478,7 @@ a {
 
 .listen-modal__label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: lowercase;
   color: var(--text-muted);
@@ -561,7 +561,7 @@ a {
   }
 
   .listen-modal__label {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.16em;
     margin-bottom: 0.9rem;
   }
@@ -669,7 +669,7 @@ a {
   background: transparent;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
@@ -736,7 +736,7 @@ a {
 
 .music-highlighted__label-text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: lowercase;
   letter-spacing: 0.25em;
   color: var(--accent-green);
@@ -766,7 +766,7 @@ a {
 
 .music-unreleased__label-text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: lowercase;
   letter-spacing: 0.25em;
   color: var(--accent-saintted);
@@ -1068,7 +1068,7 @@ a {
 }
 
 .music-upcoming-row .track-meta {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .music-upcoming-row__timer {
@@ -1179,7 +1179,7 @@ a {
     width: 100%;
     max-width: 16rem;
     padding: 0.55rem 1rem;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.14em;
     align-self: flex-start;
   }
@@ -1626,7 +1626,7 @@ a {
 
 .track-meta {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -1831,7 +1831,7 @@ a {
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.35);
   white-space: nowrap;
@@ -2027,7 +2027,7 @@ a {
 
 .footer-copy {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: lowercase;
   color: var(--text-muted);
@@ -2090,7 +2090,7 @@ a {
 @media (max-width: 470.98px) {
   .hero-meta {
     gap: 0.6rem;
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 1.1rem;
   }
 
@@ -2118,7 +2118,7 @@ a {
   }
 
   .track-meta {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .image-gallery {

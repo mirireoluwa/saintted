@@ -543,24 +543,24 @@ export function TrackDetailPage() {
             </div>
           </nav>
 
-          <div className="track-detail__stage">
-            <div className="track-detail__stage-media">
+          <div className="track-detail__hero">
+            <div className="track-detail__cover">
               {coverUrl ? (
                 <img
                   src={coverUrl}
                   srcSet={coverSrcSet}
                   alt={`${displayTrack!.title} cover art`}
-                  className="track-detail__stage-img"
+                  className="track-detail__cover-img"
                   decoding="async"
                   fetchPriority="high"
-                  sizes="100vw"
+                  sizes="(max-width: 720px) 92vw, 380px"
                 />
               ) : (
-                <div className="track-detail__stage-fallback" aria-hidden />
+                <div className="track-detail__cover-fallback" aria-hidden />
               )}
             </div>
-            <div className="track-detail__stage-scrim" aria-hidden />
-            <div className="track-detail__stage-body">
+
+            <div className="track-detail__info">
               <span className="track-detail__eyebrow">
                 {(displayTrack!.meta || "single").toLowerCase()}
                 {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
@@ -569,12 +569,21 @@ export function TrackDetailPage() {
                 <h1 className="track-detail__title">{displayTrack!.title}</h1>
                 {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
               </div>
-            </div>
-          </div>
 
-          <div className="track-detail__listen">
-            <span className="track-detail__listen-label">.listen on</span>
-            <div className="track-detail__streaming">
+              {(displayTrack!.description || "").trim() ? (
+                <div className="track-detail__desc">
+                  {(displayTrack!.description || "")
+                    .trim()
+                    .split(/\n\n+/)
+                    .map((para, i) => (
+                      <p key={i} className="track-detail__desc-text">{para}</p>
+                    ))}
+                </div>
+              ) : null}
+
+              <div className="track-detail__listen">
+                <span className="track-detail__listen-label">.listen on</span>
+                <div className="track-detail__streaming">
               <a
                 href={sp}
                 target="_blank"
@@ -605,6 +614,8 @@ export function TrackDetailPage() {
                 <img className="track-detail__stream-logo" src={youtubeIcon} alt="" aria-hidden />
                 <span className="track-detail__stream-label">YouTube</span>
               </a>
+                </div>
+              </div>
             </div>
           </div>
 
