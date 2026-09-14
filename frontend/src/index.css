@@ -1,14 +1,36 @@
-/* Saintted — display font + portfolio-inspired shell (mirireoluwa.com) */
+/* Saintted — Apfel Grotezk primary typeface */
+
+/* Apfel Grotezk — self-hosted; falls back to a locally installed copy first.
+   Drop the woff2 files in frontend/public/fonts/ to serve them to all visitors. */
 @font-face {
-  font-family: "Saintted Regular";
-  src: url("https://framerusercontent.com/assets/LimSbtxVlVTxPCPPurHl7ZiNzU.woff2") format("woff2");
+  font-family: "Apfel Grotezk";
+  src: local("Apfel Grotezk"), local("ApfelGrotezk-Regular"),
+       url("/fonts/ApfelGrotezk-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Apfel Grotezk";
+  src: local("Apfel Grotezk Mittel"), local("ApfelGrotezk-Mittel"),
+       url("/fonts/ApfelGrotezk-Mittel.woff2") format("woff2");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Apfel Grotezk";
+  src: local("Apfel Grotezk Fett"), local("ApfelGrotezk-Fett"),
+       url("/fonts/ApfelGrotezk-Fett.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 
 :root {
-  --font-display: "Saintted Regular", "Space Grotesk", system-ui, sans-serif;
-  --font-body: "Space Grotesk", "Manrope", system-ui, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Apfel Grotezk", "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Apfel Grotezk", "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Apfel Grotezk", "Space Grotesk", ui-monospace, monospace;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -112,7 +134,7 @@ a {
   gap: 1rem;
   margin-bottom: 2rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: lowercase;
   letter-spacing: 0.25em;
@@ -309,8 +331,8 @@ a {
 .hero-lede {
   margin: 1.6rem 0 0;
   max-width: 34rem;
-  font-family: "Questrial", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 1.35vw, 1.1rem);
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: -0.005em;
@@ -382,7 +404,7 @@ a {
   align-items: center;
   gap: 0.65rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.7);
@@ -456,7 +478,7 @@ a {
 
 .listen-modal__label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: lowercase;
   color: var(--text-muted);
@@ -539,7 +561,7 @@ a {
   }
 
   .listen-modal__label {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.16em;
     margin-bottom: 0.9rem;
   }
@@ -647,7 +669,7 @@ a {
   background: transparent;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
@@ -714,7 +736,7 @@ a {
 
 .music-highlighted__label-text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: lowercase;
   letter-spacing: 0.25em;
   color: var(--accent-green);
@@ -744,7 +766,7 @@ a {
 
 .music-unreleased__label-text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: lowercase;
   letter-spacing: 0.25em;
   color: var(--accent-saintted);
@@ -1046,7 +1068,7 @@ a {
 }
 
 .music-upcoming-row .track-meta {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .music-upcoming-row__timer {
@@ -1157,7 +1179,7 @@ a {
     width: 100%;
     max-width: 16rem;
     padding: 0.55rem 1rem;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.14em;
     align-self: flex-start;
   }
@@ -1604,7 +1626,7 @@ a {
 
 .track-meta {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -1809,7 +1831,7 @@ a {
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.35);
   white-space: nowrap;
@@ -2005,7 +2027,7 @@ a {
 
 .footer-copy {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: lowercase;
   color: var(--text-muted);
@@ -2068,7 +2090,7 @@ a {
 @media (max-width: 470.98px) {
   .hero-meta {
     gap: 0.6rem;
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 1.1rem;
   }
 
@@ -2096,7 +2118,7 @@ a {
   }
 
   .track-meta {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .image-gallery {
