@@ -11,18 +11,11 @@
   font-display: swap;
 }
 @font-face {
+  /* Mittel covers medium → bold (no separate Fett file self-hosted) */
   font-family: "Apfel Grotezk";
   src: local("Apfel Grotezk Mittel"), local("ApfelGrotezk-Mittel"),
        url("/fonts/ApfelGrotezk-Mittel.woff2") format("woff2");
-  font-weight: 500 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Apfel Grotezk";
-  src: local("Apfel Grotezk Fett"), local("ApfelGrotezk-Fett"),
-       url("/fonts/ApfelGrotezk-Fett.woff2") format("woff2");
-  font-weight: 700;
+  font-weight: 500 700;
   font-style: normal;
   font-display: swap;
 }
