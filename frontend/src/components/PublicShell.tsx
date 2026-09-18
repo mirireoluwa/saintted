@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import { SiteHeader } from "./SiteHeader";
+import { MailingListPopup } from "./MailingListPopup";
 import { pageTransition } from "../utils/motion";
 
 export function PublicShell() {
@@ -29,6 +30,7 @@ export function PublicShell() {
           <Outlet />
         </motion.div>
       </AnimatePresence>
+      <MailingListPopup />
     </>
   );
 }

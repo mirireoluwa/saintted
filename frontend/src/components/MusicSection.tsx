@@ -247,11 +247,6 @@ export function MusicSection({ tracks, loading }: MusicSectionProps) {
                           <Link to={detailPath} className="music-upcoming-card__meta-link">
                             <p className="track-meta track-meta--unreleased">
                               <span>single</span>
-                              <span className="track-meta__dot" aria-hidden>
-                                {" "}
-                                ·{" "}
-                              </span>
-                              <span className="track-meta__soon">not out yet</span>
                             </p>
                           </Link>
                         </div>
