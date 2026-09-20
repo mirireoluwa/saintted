@@ -12,6 +12,8 @@ import { Featured } from "../components/Featured";
 import { ImageGallery } from "../components/ImageGallery";
 import { MailingListSection } from "../components/MailingListSection";
 import { Footer } from "../components/Footer";
+import { About } from "../components/About";
+import { Shows } from "../components/Shows";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
@@ -148,6 +150,7 @@ export function HomePage() {
             releaseConfig={releaseConfig}
             releaseLoaded={releaseLoaded}
             summaryText={HOMEPAGE_DESCRIPTION}
+            tracks={tracks}
           />
           {releaseBarVisible(releaseConfig) ? (
             <div className="home-landing__countdown">
@@ -163,7 +166,13 @@ export function HomePage() {
             <Featured />
           </AnimatedSection>
           <AnimatedSection>
+            <Shows />
+          </AnimatedSection>
+          <AnimatedSection>
             <ImageGallery />
+          </AnimatedSection>
+          <AnimatedSection>
+            <About />
           </AnimatedSection>
           <AnimatedSection>
             <MailingListSection />

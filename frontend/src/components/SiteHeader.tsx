@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { id: "music-section", label: "music" },
   { id: "featured-section", label: "videos" },
   { id: "image-gallery-section", label: "images" },
+  { id: "about-section", label: "about" },
 ] as const;
 
 export function SiteHeader() {

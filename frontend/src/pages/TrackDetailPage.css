@@ -845,3 +845,9 @@ a.track-detail__nav-btn--next:hover .track-detail__nav-ico {
   display: block;
   border-radius: var(--radius);
 }
+
+/* Shared footer beneath the full-screen unreleased countdown */
+.track-detail__unreleased-footer {
+  padding: 0 1.5rem;
+  background: #04040a;
+}

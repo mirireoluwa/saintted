@@ -1,6 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
+import type { Track } from "../types/track";
 import { readHeroCache } from "../utils/heroCache";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 
@@ -8,9 +10,24 @@ type HeroProps = {
   releaseConfig: ReleaseCountdown | null;
   releaseLoaded: boolean;
   summaryText?: string;
+  tracks?: Track[];
 };
 
-export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
+/** Pick the hero's primary action from the release cycle: upcoming → pre-save, else latest release. */
+function pickHeroCta(tracks: Track[]): { to: string; label: string; kind: "presave" | "listen" } | null {
+  const now = Date.now();
+  const upcoming = tracks
+    .filter((t) => t.is_unreleased && t.release_at && new Date(t.release_at).getTime() > now)
+    .sort((a, b) => new Date(a.release_at!).getTime() - new Date(b.release_at!).getTime())[0];
+  if (upcoming) return { to: `/music/${upcoming.slug}`, label: `pre-save ${upcoming.title}`, kind: "presave" };
+  const released = tracks.filter((t) => !t.is_unreleased);
+  const latest = released.find((t) => t.is_highlighted) ?? released[0];
+  if (latest) return { to: `/music/${latest.slug}`, label: `listen to ${latest.title}`, kind: "listen" };
+  return null;
+}
+
+export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }: HeroProps) {
+  const cta = pickHeroCta(tracks);
   const [showAltTag, setShowAltTag] = useState(false);
   const [showDesc, setShowDesc] = useState(false);
   const reduceMotion = useReducedMotion() ?? false;
@@ -201,6 +218,16 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText }: HeroProps) {
           ) : null}
 
           <div className="hero-cta-row">
+            {cta ? (
+              <div className="hero-actions">
+                <Link to={cta.to} className={`hero-btn hero-btn--primary hero-btn--${cta.kind}`}>
+                  {cta.kind === "presave" ? <span className="hero-btn__dot" aria-hidden /> : null}
+                  {cta.label}
+                  <span className="hero-btn__arrow" aria-hidden>↗</span>
+                </Link>
+                <a href="#music-section" className="hero-btn hero-btn--ghost">all music</a>
+              </div>
+            ) : <span />}
             <a href="#music-section" className="hero-scroll" aria-label="Scroll to music">
               <span className="hero-scroll__text">scroll</span>
               <span className="hero-scroll__line" aria-hidden />
