@@ -21,7 +21,7 @@ export function Footer() {
             <span className="footer__wordmark-dot" aria-hidden>.</span>saintted
           </p>
           <p className="footer__tagline">
-            a nigerian artist + producer making experimental alternative and afrobeats.
+            a Nigerian artist + producer communicating the human experience through his perspective.
           </p>
           <a href={`mailto:${BOOKING_EMAIL}`} className="footer__email">
             <span className="footer__email-label">booking &amp; press</span>

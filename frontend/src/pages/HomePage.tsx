@@ -19,6 +19,10 @@ import { getSiteUrl } from "../utils/siteUrl";
 const HOMEPAGE_DESCRIPTION =
   "A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
 
+/** Hero tagline (shown on hover of the wordmark). SEO copy stays in HOMEPAGE_DESCRIPTION above. */
+const HERO_TAGLINE =
+  "a Nigerian artist + producer communicating the human experience through his perspective.";
+
 const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
 const FALLBACK_TRACKS: Track[] = [
   {
@@ -146,7 +150,7 @@ export function HomePage() {
           <Hero
             releaseConfig={releaseConfig}
             releaseLoaded={releaseLoaded}
-            summaryText={HOMEPAGE_DESCRIPTION}
+            summaryText={HERO_TAGLINE}
             tracks={tracks}
           />
           {releaseBarVisible(releaseConfig) ? (
