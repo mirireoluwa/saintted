@@ -6,7 +6,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
 import { getTrackArtUrl, getTrackArtSrcSet } from "../utils/trackArt";
-import { SocialLinks } from "../components/SocialLinks";
+import { Footer } from "../components/Footer";
 import { UnreleasedTrackFullScreen } from "../components/UnreleasedTrackFullScreen";
 import {
   appleMusicSearchUrl,
@@ -340,6 +340,9 @@ export function TrackDetailPage() {
         />
         <div className="track-detail track-detail--unreleased">
           <UnreleasedTrackFullScreen track={uTrack} />
+          <div className="track-detail__unreleased-footer">
+            <Footer />
+          </div>
         </div>
       </>
     );
@@ -636,23 +639,7 @@ export function TrackDetailPage() {
             </div>
           )}
 
-          <footer className="track-detail__footer">
-            <div className="track-detail__footer-left">
-              <img src="/love-saintted.png" alt="love, saintted" className="track-detail__love-image" />
-            </div>
-            <SocialLinks
-              className="track-detail__footer-links"
-              linkClassName="track-detail__footer-icon"
-            />
-            <div className="track-detail__footer-time">
-              {new Date().toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-              })}
-            </div>
-          </footer>
+          <Footer />
             </>
           )}
           {showSlowLoadingUi ? (
