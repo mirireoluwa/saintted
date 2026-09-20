@@ -13,11 +13,21 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import FeaturedVideo, GalleryImage, MailingListSubscriber, ReleaseCountdown, Track
+from .models import (
+    AboutContent,
+    FeaturedVideo,
+    GalleryImage,
+    LiveShow,
+    MailingListSubscriber,
+    ReleaseCountdown,
+    Track,
+)
 from .permissions import ReadOnlyOrAuthenticated
 from .serializers import (
+    AboutContentSerializer,
     FeaturedVideoSerializer,
     GalleryImageSerializer,
+    LiveShowSerializer,
     MailingListSubscriberSerializer,
     ReleaseCountdownSerializer,
     TrackDetailSerializer,
@@ -462,3 +472,24 @@ class BroadcastEmailView(APIView):
                 {"error": str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class LiveShowViewSet(viewsets.ModelViewSet):
+    """Live shows: public GET; writes need authentication."""
+    queryset = LiveShow.objects.all()
+    serializer_class = LiveShowSerializer
+    permission_classes = [ReadOnlyOrAuthenticated]
+
+
+class AboutContentDetailView(generics.RetrieveUpdateAPIView):
+    """
+    Singleton content for the home-page About section.
+    GET is public; PATCH/PUT require authentication.
+    """
+    serializer_class = AboutContentSerializer
+    permission_classes = [ReadOnlyOrAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_object(self):
+        obj, _ = AboutContent.objects.get_or_create(pk=1)
+        return obj

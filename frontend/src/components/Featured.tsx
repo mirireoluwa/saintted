@@ -7,23 +7,37 @@ import { SectionLabel } from "./SectionLabel";
 
 const EMBED_BASE = "https://www.youtube.com/embed";
 
-export function Featured() {
+type FeaturedProps = {
+  /** Render the ".videos" section label (off when the page supplies its own heading). */
+  showLabel?: boolean;
+  /** Reports how many videos loaded (0 on error), so a parent page can show a combined empty state. */
+  onCount?: (count: number) => void;
+};
+
+export function Featured({ showLabel = true, onCount }: FeaturedProps = {}) {
   const [videos, setVideos] = useState<FeaturedVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const reduceMotion = useReducedMotion() ?? false;
 
   useEffect(() => {
     fetchFeaturedVideos()
-      .then(setVideos)
-      .catch(() => setVideos([]))
+      .then((list) => {
+        setVideos(list);
+        onCount?.(list.length);
+      })
+      .catch(() => {
+        setVideos([]);
+        onCount?.(0);
+      })
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (videos.length === 0 && !loading) return null;
 
   return (
     <section className="featured-section" id="featured-section">
-      <SectionLabel text=".videos" />
+      {showLabel ? <SectionLabel text=".videos" /> : null}
       {loading ? (
         <div className="featured-videos">
           {Array.from({ length: 2 }).map((_, idx) => (

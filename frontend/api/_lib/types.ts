@@ -84,3 +84,35 @@ export const DEFAULT_COUNTDOWN: ReleaseCountdown = {
   header_video_url: "",
   header_video_file_url: "",
 };
+
+export interface LiveShow {
+  id: number;
+  /** ISO datetime the show starts. */
+  starts_at: string;
+  venue: string;
+  city: string;
+  ticket_url: string;
+  note: string;
+  is_sold_out: boolean;
+  created_at: string;
+}
+
+export interface AboutContent {
+  id: 1;
+  heading: string;
+  /** Optional bio; blank lines separate paragraphs. */
+  body: string;
+  booking_email: string;
+  /** Absolute URL of the uploaded portrait, or "" to use the site default. */
+  portrait_url: string;
+  updated_at: string;
+}
+
+export const DEFAULT_ABOUT: AboutContent = {
+  id: 1,
+  heading: "free like a hummingbird",
+  body: "",
+  booking_email: "beingsaintted@gmail.com",
+  portrait_url: "",
+  updated_at: "",
+};

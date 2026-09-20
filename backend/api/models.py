@@ -174,3 +174,46 @@ class ReleaseCountdown(models.Model):
 
     def __str__(self) -> str:
         return self.song_title.strip() or "Release countdown"
+
+
+class LiveShow(models.Model):
+    """A live show / event listed on the public Shows page."""
+
+    starts_at = models.DateTimeField(help_text="Date and time the show starts")
+    venue = models.CharField(max_length=255)
+    city = models.CharField(max_length=255, blank=True, help_text="e.g. Lagos, Nigeria")
+    ticket_url = models.URLField(blank=True, help_text="Optional tickets / RSVP link")
+    note = models.CharField(max_length=255, blank=True, help_text="Optional short note, e.g. 'doors 7pm'")
+    is_sold_out = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["starts_at", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.venue} — {self.starts_at:%Y-%m-%d}"
+
+
+class AboutContent(models.Model):
+    """Singleton (pk=1): editable content for the homepage About section."""
+
+    heading = models.CharField(max_length=255, default="free like a hummingbird")
+    body = models.TextField(
+        blank=True,
+        default="",
+        help_text="Optional bio text shown under the heading. Blank lines start a new paragraph.",
+    )
+    booking_email = models.EmailField(blank=True, default="beingsaintted@gmail.com")
+    portrait = models.ImageField(
+        upload_to="about/",
+        blank=True,
+        null=True,
+        help_text="Optional. When empty, the site's default portrait is used.",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "About content"
+
+    def __str__(self) -> str:
+        return "About section"

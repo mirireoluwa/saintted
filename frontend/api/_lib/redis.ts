@@ -7,6 +7,8 @@ export const TRACKS_KEY = "saintted:tracks";
 export const VIDEOS_KEY = "saintted:featured-videos";
 export const GALLERY_KEY = "saintted:gallery-images";
 export const COUNTDOWN_KEY = "saintted:release-countdown";
+export const SHOWS_KEY = "saintted:shows";
+export const ABOUT_KEY = "saintted:about";
 export const SUBSCRIBERS_KEY = "saintted:subscribers";
 export const PENDING_SUBSCRIBERS_KEY = "saintted:pending-subscribers";
 

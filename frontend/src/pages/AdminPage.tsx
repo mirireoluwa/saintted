@@ -49,6 +49,8 @@ import {
   type MailingListSubscriber,
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
+import { AdminAboutPanel } from "../components/AdminAboutPanel";
+import { AdminShowsPanel } from "../components/AdminShowsPanel";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 import "./AdminPage.css";
@@ -2007,6 +2009,9 @@ export function AdminPage() {
           </table>
         </div>
       </div>
+
+      <AdminAboutPanel notify={notify} />
+      <AdminShowsPanel notify={notify} />
 
       {/* ── Mailing list ───────────────────────────────────────────── */}
       <div className="admin-page__toolbar" style={{ marginTop: "2.5rem" }}>

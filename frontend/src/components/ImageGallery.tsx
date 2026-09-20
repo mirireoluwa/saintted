@@ -5,7 +5,16 @@ import type { GalleryImage } from "../types/galleryImage";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
 import { SectionLabel } from "./SectionLabel";
 
-export function ImageGallery() {
+type ImageGalleryProps = {
+  /** Render the ".images" section label (off when the page supplies its own heading). */
+  showLabel?: boolean;
+  /** Shown instead of nothing when there are no images. */
+  emptyMessage?: React.ReactNode;
+  /** Reports how many images loaded (0 on error), so a parent page can show a combined empty state. */
+  onCount?: (count: number) => void;
+};
+
+export function ImageGallery({ showLabel = true, emptyMessage = null, onCount }: ImageGalleryProps = {}) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -14,9 +23,16 @@ export function ImageGallery() {
 
   useEffect(() => {
     fetchGalleryImages()
-      .then(setImages)
-      .catch(() => setImages([]))
+      .then((list) => {
+        setImages(list);
+        onCount?.(list.length);
+      })
+      .catch(() => {
+        setImages([]);
+        onCount?.(0);
+      })
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const prev = useCallback(() => {
@@ -58,13 +74,13 @@ export function ImageGallery() {
     touchStartX.current = null;
   };
 
-  if (images.length === 0 && !loading) return null;
+  if (images.length === 0 && !loading) return emptyMessage ? <>{emptyMessage}</> : null;
 
   const activeImage = lightboxIndex !== null ? images[lightboxIndex] : null;
 
   return (
     <section className="image-gallery-section" id="image-gallery-section">
-      <SectionLabel text=".images" />
+      {showLabel ? <SectionLabel text=".images" /> : null}
       {loading ? (
         <div className="image-gallery image-gallery--skeleton">
           {Array.from({ length: 6 }).map((_, idx) => (

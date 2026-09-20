@@ -6,6 +6,8 @@ const TRACKS_KEY = "saintted:tracks";
 const VIDEOS_KEY = "saintted:featured-videos";
 const GALLERY_KEY = "saintted:gallery-images";
 const COUNTDOWN_KEY = "saintted:release-countdown";
+const SHOWS_KEY = "saintted:shows";
+const ABOUT_KEY = "saintted:about";
 const SUBSCRIBERS_KEY = "saintted:subscribers";
 const PENDING_SUBSCRIBERS_KEY = "saintted:pending-subscribers";
 function ensureLocalEnvLoaded() {
@@ -41,9 +43,11 @@ function getRedis() {
   return new Redis({ url, token });
 }
 export {
+  ABOUT_KEY,
   COUNTDOWN_KEY,
   GALLERY_KEY,
   PENDING_SUBSCRIBERS_KEY,
+  SHOWS_KEY,
   SUBSCRIBERS_KEY,
   TRACKS_KEY,
   VIDEOS_KEY,

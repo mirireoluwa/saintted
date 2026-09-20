@@ -2,6 +2,8 @@ import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
+import type { LiveShow } from "../types/liveShow";
+import type { AboutContent } from "../types/aboutContent";
 import { fetchLive } from "./fetchLive";
 
 export async function fetchTracks(): Promise<Track[]> {
@@ -31,6 +33,19 @@ export async function fetchReleaseCountdown(): Promise<ReleaseCountdown | null> 
 export async function fetchGalleryImages(): Promise<GalleryImage[]> {
   const res = await fetchLive("/api/gallery-images");
   if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchShows(): Promise<LiveShow[]> {
+  const res = await fetchLive("/api/shows");
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+export async function fetchAbout(): Promise<AboutContent | null> {
+  const res = await fetchLive("/api/about");
+  if (!res.ok) return null;
   return res.json();
 }
 

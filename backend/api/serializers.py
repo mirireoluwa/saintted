@@ -6,7 +6,15 @@ from rest_framework.fields import empty
 
 from .cover_art import resolve_external_cover_url
 from .media_urls import public_media_url
-from .models import FeaturedVideo, GalleryImage, MailingListSubscriber, ReleaseCountdown, Track
+from .models import (
+    AboutContent,
+    FeaturedVideo,
+    GalleryImage,
+    LiveShow,
+    MailingListSubscriber,
+    ReleaseCountdown,
+    Track,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -250,3 +258,33 @@ class MailingListSubscriberSerializer(serializers.ModelSerializer):
     class Meta:
         model = MailingListSubscriber
         fields = ["first_name", "last_name", "email"]
+
+
+class LiveShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LiveShow
+        fields = ["id", "starts_at", "venue", "city", "ticket_url", "note", "is_sold_out", "created_at"]
+        read_only_fields = ["created_at"]
+
+
+class AboutContentSerializer(serializers.ModelSerializer):
+    portrait_url = serializers.SerializerMethodField(read_only=True)
+    # Lets the admin clear an uploaded portrait (falls back to the site default).
+    remove_portrait = serializers.BooleanField(write_only=True, required=False, default=False)
+
+    class Meta:
+        model = AboutContent
+        fields = ["id", "heading", "body", "booking_email", "portrait", "portrait_url", "remove_portrait", "updated_at"]
+        read_only_fields = ["updated_at"]
+
+    def get_portrait_url(self, obj):
+        if obj.portrait:
+            request = self.context.get("request")
+            return public_media_url(request, obj.portrait.url)
+        return ""
+
+    def update(self, instance, validated_data):
+        if validated_data.pop("remove_portrait", False) and instance.portrait:
+            instance.portrait.delete(save=False)
+            instance.portrait = None
+        return super().update(instance, validated_data)

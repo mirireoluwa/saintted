@@ -4,12 +4,19 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { sectionTransition } from "../utils/motion";
 import "./SiteHeader.css";
 
-const NAV_LINKS = [
-  { id: "music-section", label: "music" },
-  { id: "featured-section", label: "videos" },
-  { id: "image-gallery-section", label: "images" },
-  { id: "about-section", label: "about" },
-] as const;
+type NavItem =
+  | { kind: "section"; id: string; label: string }
+  | { kind: "page"; to: string; label: string };
+
+// Sections scroll within the homepage; pages open their own route.
+const NAV_ITEMS: NavItem[] = [
+  { kind: "section", id: "music-section", label: "music" },
+  { kind: "page", to: "/media", label: "media" },
+  { kind: "page", to: "/shows", label: "shows" },
+  { kind: "section", id: "about-section", label: "about" },
+];
+
+const SECTION_IDS = NAV_ITEMS.flatMap((n) => (n.kind === "section" ? [n.id] : []));
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,7 +47,7 @@ export function SiteHeader() {
       raf = 0;
       const mid = window.innerHeight / 2;
       let current: string | null = null;
-      for (const { id } of NAV_LINKS) {
+      for (const id of SECTION_IDS) {
         const el = document.getElementById(id);
         if (!el) continue;
         const rect = el.getBoundingClientRect();
@@ -74,17 +81,29 @@ export function SiteHeader() {
 
         <div className="site-header__right">
           <nav className="site-header__nav" aria-label="Primary">
-            {NAV_LINKS.map(({ id, label }) => (
-              <a
-                key={id}
-                href={`/#${id}`}
-                className={`site-header__nav-link${activeId === id ? " site-header__nav-link--active" : ""}`}
-                aria-current={activeId === id ? "true" : undefined}
-                onClick={(e) => handleSectionClick(e, id)}
-              >
-                {label}
-              </a>
-            ))}
+            {NAV_ITEMS.map((item) =>
+              item.kind === "page" ? (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`site-header__nav-link${location.pathname === item.to ? " site-header__nav-link--active" : ""}`}
+                  aria-current={location.pathname === item.to ? "page" : undefined}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.id}
+                  href={`/#${item.id}`}
+                  className={`site-header__nav-link${activeId === item.id ? " site-header__nav-link--active" : ""}`}
+                  aria-current={activeId === item.id ? "true" : undefined}
+                  onClick={(e) => handleSectionClick(e, item.id)}
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
           </nav>
 
           <button
@@ -108,23 +127,39 @@ export function SiteHeader() {
               exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
               transition={sectionTransition(reduceMotion)}
             >
-              {NAV_LINKS.map(({ id, label }, i) => (
-                <motion.a
-                  key={id}
-                  href={`/#${id}`}
-                  className={`site-header__mobile-link${activeId === id ? " site-header__mobile-link--active" : ""}`}
-                  aria-current={activeId === id ? "true" : undefined}
-                  initial={reduceMotion ? false : { opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
+              {NAV_ITEMS.map((item, i) => {
+                const motionProps = {
+                  initial: reduceMotion ? (false as const) : { opacity: 0, x: -10 },
+                  animate: { opacity: 1, x: 0 },
+                  transition: {
                     ...sectionTransition(reduceMotion),
                     delay: reduceMotion ? 0 : 0.05 + i * 0.045,
-                  }}
-                  onClick={(e) => handleSectionClick(e, id)}
-                >
-                  {label}
-                </motion.a>
-              ))}
+                  },
+                };
+                return item.kind === "page" ? (
+                  <motion.div key={item.to} {...motionProps}>
+                    <Link
+                      to={item.to}
+                      className={`site-header__mobile-link${location.pathname === item.to ? " site-header__mobile-link--active" : ""}`}
+                      aria-current={location.pathname === item.to ? "page" : undefined}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <motion.a
+                    key={item.id}
+                    href={`/#${item.id}`}
+                    className={`site-header__mobile-link${activeId === item.id ? " site-header__mobile-link--active" : ""}`}
+                    aria-current={activeId === item.id ? "true" : undefined}
+                    {...motionProps}
+                    onClick={(e) => handleSectionClick(e, item.id)}
+                  >
+                    {item.label}
+                  </motion.a>
+                );
+              })}
             </motion.nav>
           ) : null}
         </AnimatePresence>

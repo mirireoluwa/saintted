@@ -8,12 +8,9 @@ import { fetchReleaseCountdown } from "../api/client";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { writeHeroCache } from "../utils/heroCache";
 import { MusicSection } from "../components/MusicSection";
-import { Featured } from "../components/Featured";
-import { ImageGallery } from "../components/ImageGallery";
 import { MailingListSection } from "../components/MailingListSection";
 import { Footer } from "../components/Footer";
 import { About } from "../components/About";
-import { Shows } from "../components/Shows";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
@@ -161,15 +158,6 @@ export function HomePage() {
         <div className="site-main">
           <AnimatedSection>
             <MusicSection tracks={tracks} loading={loading} />
-          </AnimatedSection>
-          <AnimatedSection>
-            <Featured />
-          </AnimatedSection>
-          <AnimatedSection>
-            <Shows />
-          </AnimatedSection>
-          <AnimatedSection>
-            <ImageGallery />
           </AnimatedSection>
           <AnimatedSection>
             <About />

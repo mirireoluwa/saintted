@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import FeaturedVideo, GalleryImage, MailingListSubscriber, ReleaseCountdown, Track
+from .models import AboutContent, FeaturedVideo, GalleryImage, LiveShow, MailingListSubscriber, ReleaseCountdown, Track
 
 
 @admin.register(MailingListSubscriber)
@@ -90,3 +90,16 @@ class TrackAdmin(admin.ModelAdmin):
         ),
         ("Detail page", {"fields": ("description", "year", "youtube_url", "apple_music_url", "spotify_url")}),
     )
+
+
+@admin.register(LiveShow)
+class LiveShowAdmin(admin.ModelAdmin):
+    list_display = ["venue", "city", "starts_at", "is_sold_out"]
+    list_filter = ["is_sold_out"]
+    search_fields = ["venue", "city"]
+    ordering = ["starts_at"]
+
+
+@admin.register(AboutContent)
+class AboutContentAdmin(admin.ModelAdmin):
+    list_display = ["heading", "booking_email", "updated_at"]

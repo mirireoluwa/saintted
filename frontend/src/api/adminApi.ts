@@ -2,6 +2,8 @@ import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
+import type { LiveShow } from "../types/liveShow";
+import type { AboutContent } from "../types/aboutContent";
 import { fetchLive } from "./fetchLive";
 
 const ADMIN_FETCH: RequestInit = { credentials: "include" };
@@ -307,6 +309,80 @@ export async function deleteGalleryImage(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+}
+
+// ── Live shows ────────────────────────────────────────────────────────────────
+
+export type LiveShowPayload = Pick<LiveShow, "starts_at" | "venue" | "city" | "ticket_url" | "note" | "is_sold_out">;
+
+/** Prefer the server's { message } over a raw JSON dump. */
+async function failMessage(res: Response, fallback: string): Promise<Error> {
+  const err = (await res.json().catch(() => ({}))) as { message?: string };
+  return new Error(err.message || `${fallback} (HTTP ${res.status})`);
+}
+
+export async function fetchShowsAuth(req?: RequestInit): Promise<LiveShow[]> {
+  const res = await fetchLive("/api/admin/shows", { ...ADMIN_FETCH, ...req });
+  return guardJson<LiveShow[]>(res, "shows");
+}
+
+export async function createShow(body: LiveShowPayload): Promise<LiveShow> {
+  const res = await fetchLive("/api/admin/shows", {
+    ...ADMIN_FETCH,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await failMessage(res, "Could not add show");
+  return res.json();
+}
+
+export async function updateShow(id: number, body: Partial<LiveShowPayload>): Promise<LiveShow> {
+  const res = await fetchLive(`/api/admin/shows?id=${id}`, {
+    ...ADMIN_FETCH,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await failMessage(res, "Could not update show");
+  return res.json();
+}
+
+export async function deleteShow(id: number): Promise<void> {
+  const res = await fetchLive(`/api/admin/shows?id=${id}`, { ...ADMIN_FETCH, method: "DELETE" });
+  if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+}
+
+// ── About section ─────────────────────────────────────────────────────────────
+
+export async function fetchAboutAuth(req?: RequestInit): Promise<AboutContent> {
+  const res = await fetchLive("/api/admin/about", { ...ADMIN_FETCH, ...req });
+  return guardJson<AboutContent>(res, "about content");
+}
+
+export async function updateAbout(payload: {
+  heading: string;
+  body: string;
+  booking_email: string;
+  portrait?: File | null;
+  removePortrait?: boolean;
+}): Promise<AboutContent> {
+  const body: Record<string, unknown> = {
+    heading: payload.heading,
+    body: payload.body,
+    booking_email: payload.booking_email,
+  };
+  if (payload.portrait) body.portrait_url = await uploadFile(payload.portrait);
+  else if (payload.removePortrait) body.portrait_url = "";
+
+  const res = await fetchLive("/api/admin/about", {
+    ...ADMIN_FETCH,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await failMessage(res, "Could not save About section");
+  return res.json();
 }
 
 // ── Mailing list ──────────────────────────────────────────────────────────────

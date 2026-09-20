@@ -4,8 +4,8 @@ import "./Footer.css";
 
 const FOOTER_LINKS = [
   { to: "/#music-section", label: "music" },
-  { to: "/#featured-section", label: "videos" },
-  { to: "/#image-gallery-section", label: "images" },
+  { to: "/media", label: "media" },
+  { to: "/shows", label: "shows" },
   { to: "/#about-section", label: "about" },
   { to: "/#mailing-list-section", label: "mailing list" },
 ];

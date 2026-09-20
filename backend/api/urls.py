@@ -4,9 +4,11 @@ from rest_framework.routers import DefaultRouter
 
 from .auth_views import AdminPasswordResetView
 from .views import (
+    AboutContentDetailView,
     BroadcastEmailView,
     FeaturedVideoViewSet,
     GalleryImageViewSet,
+    LiveShowViewSet,
     MailingListSubscribeView,
     MailingListSubscriberDetailView,
     MailingListSubscribersView,
@@ -20,12 +22,14 @@ router = DefaultRouter()
 router.register(r"tracks", TrackViewSet, basename="track")
 router.register(r"featured-videos", FeaturedVideoViewSet, basename="featured-video")
 router.register(r"gallery-images", GalleryImageViewSet, basename="gallery-image")
+router.register(r"shows", LiveShowViewSet, basename="show")
 
 urlpatterns = [
     path("diagnostic/db/", api_db_diagnostic),
     path("diagnostic/email/", api_email_diagnostic),
     path("auth/token/", obtain_auth_token),
     path("auth/reset-password/", AdminPasswordResetView.as_view(), name="auth-reset-password"),
+    path("about/", AboutContentDetailView.as_view(), name="about-content"),
     path("release-countdown/", ReleaseCountdownDetailView.as_view(), name="release-countdown"),
     path("mailing-list/subscribe/", MailingListSubscribeView.as_view(), name="mailing-list-subscribe"),
     path("mailing-list/subscribers/", MailingListSubscribersView.as_view(), name="mailing-list-subscribers"),
