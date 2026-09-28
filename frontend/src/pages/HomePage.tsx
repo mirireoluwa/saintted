@@ -170,7 +170,7 @@ export function HomePage() {
         </section>
       ) : null}
 
-      <section className="section" id="latest" aria-labelledby="latest-title">
+      <section className="section section--tight" id="latest" aria-labelledby="latest-title">
         <div className="wrap">
           <div className="section-head">
             <h2 id="latest-title">latest release</h2>

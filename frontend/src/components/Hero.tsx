@@ -164,6 +164,9 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
           loop
           playsInline
           preload="auto"
+          controlsList="nodownload noplaybackrate noremoteplayback"
+          disablePictureInPicture
+          disableRemotePlayback
           aria-hidden
         />
       ) : null}

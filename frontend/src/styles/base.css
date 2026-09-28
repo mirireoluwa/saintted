@@ -190,6 +190,10 @@ p {
 }
 
 .section--tight {
+  padding-top: var(--section-sm);
+}
+/* the page header already carries its own bottom margin */
+.page-head + .section--tight {
   padding-top: 0;
 }
 
@@ -540,4 +544,14 @@ p {
 }
 .track__menu {
   overflow: hidden;
+}
+
+/* ------------------- Media protection (public site only) -------------------
+   Images and video can't be selected, dragged out, or long-press-saved. */
+.protect-media img,
+.protect-media video {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }

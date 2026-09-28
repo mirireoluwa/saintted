@@ -1,5 +1,5 @@
 .site-footer {
-  margin-top: var(--section);
+  margin-top: clamp(4rem, 9vw, 7rem);
   padding-block: clamp(3rem, 6vw, 4.5rem) 2.5rem;
   border-top: 1px solid var(--line);
 }

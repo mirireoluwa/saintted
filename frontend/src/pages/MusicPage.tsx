@@ -62,7 +62,7 @@ export function MusicPage() {
         </section>
       ) : null}
 
-      <section className="section" aria-labelledby="releases-title">
+      <section className="section section--tight" aria-labelledby="releases-title">
         <div className="wrap">
           <div className="section-head">
             <h2 id="releases-title">releases</h2>

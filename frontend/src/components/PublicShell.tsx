@@ -18,6 +18,25 @@ export function PublicShell() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname, location.hash]);
 
+  // Discourage saving media: no right-click "save image", no drag-out, no long-press menu.
+  // (Anything shown in a browser can still be screenshotted; this only stops casual saving.)
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("protect-media");
+    const isMedia = (t: EventTarget | null) =>
+      t instanceof Element && !!t.closest("img, video, picture, canvas, .hero, .feature__backdrop, .lightbox__overlay");
+    const block = (e: Event) => {
+      if (isMedia(e.target)) e.preventDefault();
+    };
+    document.addEventListener("contextmenu", block);
+    document.addEventListener("dragstart", block);
+    return () => {
+      root.classList.remove("protect-media");
+      document.removeEventListener("contextmenu", block);
+      document.removeEventListener("dragstart", block);
+    };
+  }, []);
+
   // One page view per route change; a track page also counts as a view of that track.
   useEffect(() => {
     trackEvent("pageview", { path: location.pathname });
