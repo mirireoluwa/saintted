@@ -141,11 +141,31 @@
 .sortable__chip--accent { border-color: var(--accent); color: var(--accent); }
 .sortable__chip--warn { border-color: rgba(251, 191, 36, 0.5); color: rgb(251, 191, 36); }
 
+/* phones: one tidy line per item: grip, thumbnail, title, then small icon buttons */
 @media (max-width: 720px) {
-  .sortable__row { flex-wrap: wrap; row-gap: 0.6rem; }
-  .sortable__main { flex-basis: calc(100% - 4.5rem); }
-  .sortable__move { margin-left: auto; }
-  .sortable__actions { flex-basis: 100%; justify-content: flex-end; }
-  .sortable__actions .admin-btn__label { display: inline; }
-  .sortable__actions .admin-btn__icon { display: none; }
+  .sortable__row {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding: 0.7rem 0;
+  }
+  .sortable__pos { display: none; }
+  .sortable__grip { width: 1.4rem; height: 2.2rem; }
+  .sortable__main { flex: 1 1 0; gap: 0.6rem; }
+  .sortable__thumb { width: 2.8rem; height: 2.8rem; }
+  .sortable__thumb--wide { width: 4rem; height: 2.4rem; }
+  .sortable__title { font-size: 0.98rem; }
+  .sortable__sub { flex-wrap: nowrap; overflow: hidden; margin-top: 0.15rem; }
+  .sortable__sub > * { flex: none; }
+  /* arrows stack vertically so they take a single narrow column */
+  .sortable__move { flex-direction: column; gap: 0.15rem; margin-left: 0; }
+  .sortable__move button { width: 1.7rem; height: 1.3rem; font-size: 0.75rem; line-height: 1; }
+  .sortable__actions { flex: none; flex-basis: auto; gap: 0.3rem; justify-content: flex-end; }
+  .sortable__actions .admin-btn {
+    width: 2.1rem;
+    height: 2.1rem;
+    min-height: 0;
+    padding: 0;
+  }
+  .sortable__actions .admin-btn__icon { display: inline-flex; }
+  .sortable__actions .admin-btn__label { display: none; }
 }

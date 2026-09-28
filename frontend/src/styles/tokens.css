@@ -60,7 +60,7 @@
   --max: 1360px;
   --col-gap: clamp(1rem, 2vw, 2rem);
   --section: clamp(5.5rem, 13vw, 11rem);
-  --section-sm: clamp(3.5rem, 8vw, 6.5rem); /* between sections that belong to one page */
+  --section-sm: clamp(5rem, 11vw, 9rem); /* between sections that belong to one page */
   --radius: 8px; /* the site-wide corner: slightly softened */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }

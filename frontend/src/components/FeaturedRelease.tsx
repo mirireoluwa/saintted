@@ -1,47 +1,46 @@
 import { Link } from "react-router-dom";
 import type { Track } from "../types/track";
-import { getTrackArtSrcSet, getTrackArtUrl } from "../utils/trackArt";
 import { trackEvent } from "../utils/analytics";
+import { getTrackArtSrcSet, getTrackArtUrl } from "../utils/trackArt";
 import { TrackCoverPlaceholder } from "./TrackCoverPlaceholder";
 import "./Releases.css";
 
 type FeaturedReleaseProps = { track: Track; isNew?: boolean };
 
-/** The newest release, given room: blurred-cover backdrop, framed cover, blurb and listen link. */
+/** The newest release as one solid card: the cover fills its left half edge to edge, the story sits beside it. */
 export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) {
   const art = getTrackArtUrl(track);
   const detail = `/music/${track.slug}`;
   const blurb = (track.description || "").trim().split(/\n\n+/)[0] || "";
   const meta = [track.year, (track.meta || "").toLowerCase()].filter(Boolean).join(" · ");
+  const open = () => trackEvent("track_click", { slug: track.slug });
 
   return (
-    <div className="feature">
-      {art ? <span className="feature__backdrop" style={{ backgroundImage: `url(${art})` }} aria-hidden /> : null}
-      <div className="wrap feature__grid">
-        <Link to={detail} onClick={() => trackEvent("track_click", { slug: track.slug })} className="feature__frame" aria-label={`${track.title}, latest release`}>
-          <span className="feature__art">
-            {art ? (
-              <img src={art} srcSet={getTrackArtSrcSet(track)} sizes="(max-width: 1000px) 92vw, 560px" alt={`${track.title} cover art`} decoding="async" />
-            ) : (
-              <TrackCoverPlaceholder variant="detail" />
-            )}
-          </span>
+    <div className="wrap">
+      <article className="feature">
+        <Link to={detail} onClick={open} className="feature__cover" aria-label={`${track.title}, latest release`}>
+          {art ? (
+            <img src={art} srcSet={getTrackArtSrcSet(track)} sizes="(max-width: 900px) 92vw, 640px" alt={`${track.title} cover art`} decoding="async" />
+          ) : (
+            <TrackCoverPlaceholder variant="detail" />
+          )}
+          {isNew ? <span className="card__tag">new</span> : null}
         </Link>
 
         <div className="feature__body">
-          <p className="eyebrow">latest release{isNew ? " · new" : ""}</p>
+          <p className="eyebrow">latest release</p>
           <h3 className="feature__title">
-            <Link to={detail}>{track.title}</Link>
+            <Link to={detail} onClick={open}>{track.title}</Link>
           </h3>
           <p className="feature__meta">{meta}</p>
           {blurb ? <p className="feature__blurb">{blurb}</p> : null}
           <div className="btn-row">
-            <Link to={detail} onClick={() => trackEvent("track_click", { slug: track.slug })} className="btn btn--primary">
+            <Link to={detail} onClick={open} className="btn btn--primary">
               listen <span className="arrow" aria-hidden>↗</span>
             </Link>
           </div>
         </div>
-      </div>
+      </article>
     </div>
   );
 }

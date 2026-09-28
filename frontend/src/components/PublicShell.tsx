@@ -24,7 +24,7 @@ export function PublicShell() {
     const root = document.documentElement;
     root.classList.add("protect-media");
     const isMedia = (t: EventTarget | null) =>
-      t instanceof Element && !!t.closest("img, video, picture, canvas, .hero, .feature__backdrop, .lightbox__overlay");
+      t instanceof Element && !!t.closest("img, video, picture, canvas, .hero, .lightbox__overlay");
     const block = (e: Event) => {
       if (isMedia(e.target)) e.preventDefault();
     };

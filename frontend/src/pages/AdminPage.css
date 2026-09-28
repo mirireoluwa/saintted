@@ -773,6 +773,14 @@
 @media (max-width: 640px) {
   .admin-form__row--2 { grid-template-columns: 1fr; }
   .admin-card { padding: 1.1rem 0.95rem; }
+  .admin-card__title { font-size: 1.3rem; margin-bottom: 1rem; }
+  .admin-card__lead { font-size: 0.85rem; margin-bottom: 1.1rem; }
+  /* the hero panels sit inside a card: drop their own heavy padding and border on phones */
+  .admin-hero-media-col { padding: 0; border: 0; background: transparent; gap: 1rem; }
+  .admin-hero-media-col + .admin-hero-media-col { padding-top: 1.25rem; border-top: 1px solid var(--line); }
+  .admin-hero-media-grid { gap: 1.25rem; }
+  .admin-tracks-head { flex-wrap: nowrap; }
+  .admin-tracks-head .admin-btn { flex: none; }
   .admin-table { min-width: 420px; font-size: 0.82rem; }
   .admin-table__actions .admin-btn {
     width: 2.2rem;
