@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { fetchShows } from "../api/client";
 import type { LiveShow } from "../types/liveShow";
-import { SectionLabel } from "./SectionLabel";
 import "./Shows.css";
-
-type ShowsProps = {
-  /** Render the ".shows" section label (off when the page supplies its own heading). */
-  showLabel?: boolean;
-};
 
 function parts(iso: string) {
   const d = new Date(iso);
@@ -21,8 +14,7 @@ function parts(iso: string) {
   };
 }
 
-export function Shows({ showLabel = true }: ShowsProps) {
-  const reduceMotion = useReducedMotion() ?? false;
+export function Shows() {
   const [shows, setShows] = useState<LiveShow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,9 +41,8 @@ export function Shows({ showLabel = true }: ShowsProps) {
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
 
   return (
-    <section className="shows" id="shows-section">
-      {showLabel ? <SectionLabel text=".shows" /> : null}
-
+    <section className="section section--tight shows" id="shows-section">
+      <div className="wrap">
       {loading ? (
         <ul className="shows__list" aria-hidden>
           {[0, 1, 2].map((i) => (
@@ -63,14 +54,7 @@ export function Shows({ showLabel = true }: ShowsProps) {
           {upcoming.map((s) => {
             const p = parts(s.starts_at);
             return (
-              <motion.li
-                className="shows__row"
-                key={s.id}
-                initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5 }}
-              >
+              <li className="shows__row" key={s.id}>
                 <span className="shows__date">
                   <strong>{p.day}</strong>
                   {p.month} {p.year}
@@ -84,11 +68,11 @@ export function Shows({ showLabel = true }: ShowsProps) {
                 {s.is_sold_out ? (
                   <span className="shows__soldout">sold out</span>
                 ) : s.ticket_url ? (
-                  <a className="shows__cta" href={s.ticket_url} target="_blank" rel="noopener noreferrer">
-                    tickets <span aria-hidden>↗</span>
+                  <a className="btn btn--sm" href={s.ticket_url} target="_blank" rel="noopener noreferrer">
+                    tickets <span className="arrow" aria-hidden>↗</span>
                   </a>
                 ) : null}
-              </motion.li>
+              </li>
             );
           })}
         </ul>
@@ -96,11 +80,12 @@ export function Shows({ showLabel = true }: ShowsProps) {
         <div className="shows__empty">
           <p className="shows__empty-title">no shows announced yet</p>
           <p className="shows__empty-sub">join the mailing list and you'll hear first when dates drop.</p>
-          <a href="/#mailing-list-section" className="shows__empty-link">
-            join the list <span aria-hidden>↓</span>
+          <a href="/#mailing-list-section" className="textlink">
+            join the list <span className="arrow" aria-hidden>↓</span>
           </a>
         </div>
       )}
+      </div>
     </section>
   );
 }

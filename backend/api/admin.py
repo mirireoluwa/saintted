@@ -84,7 +84,7 @@ class TrackAdmin(admin.ModelAdmin):
         (
             "Unreleased / upcoming",
             {
-                "fields": ("is_unreleased", "release_at", "presave_url"),
+                "fields": ("is_unreleased", "release_at", "presave_url", "accent_color"),
                 "description": "When unreleased is checked, set release time and optional pre-save URL for the countdown page.",
             },
         ),

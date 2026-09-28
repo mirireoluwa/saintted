@@ -1,0 +1,94 @@
+/* ==========================================================================
+   saintted — design tokens
+
+   Principles (borrowed from Japanese aesthetics, applied without any Japanese text)
+   ma       — generous negative space; the page is mostly silence
+   kanso    — simplicity; one typeface, one accent, no ornament
+   fukinsei — asymmetry; layouts are deliberately off-centre and staggered
+   shibui   — understated; hairlines, muted paper and ink tones
+   Every control has square corners. No exceptions.
+   ========================================================================== */
+
+/* Apfel Grotezk — self-hosted; falls back to a locally installed copy first. */
+@font-face {
+  font-family: "Apfel Grotezk";
+  src: local("Apfel Grotezk"), local("ApfelGrotezk-Regular"),
+       url("/fonts/ApfelGrotezk-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  /* Mittel covers medium → bold (no separate Fett file self-hosted) */
+  font-family: "Apfel Grotezk";
+  src: local("Apfel Grotezk Mittel"), local("ApfelGrotezk-Mittel"),
+       url("/fonts/ApfelGrotezk-Mittel.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* the site is dark only */
+  --paper: #0a0b0f;
+  --page-gradient: radial-gradient(circle at top, #17181f 0, #0a0b0f 55%, #06070a 100%);
+  --paper-deep: #1a1b1e;
+  --field: #17181a;
+  --field-focus: #202124;
+  --ink: #ecebe6;
+  --ink-soft: #a3a5a9;
+  --prose: #cfcfca;
+  --line: #2c2e32;
+  --grey: #26272b;
+  --grey-deep: #323439;
+
+  /* the one accent */
+  --sky: #87ceeb;
+  --accent: var(--sky); /* fills: buttons, markers, the closing panel */
+  --accent-text: #87ceeb;
+  --on-accent: #0b1620; /* text on a sky fill (8.8:1) */
+  --danger: #ef5a3c;
+  --on-danger: #111214;
+  --icon-filter: invert(1); /* social/streaming glyphs are black svg */
+
+  --font-ui: "Apfel Grotezk", "Space Grotesk", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-ui);
+
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --max: 1360px;
+  --col-gap: clamp(1rem, 2vw, 2rem);
+  --section: clamp(5.5rem, 13vw, 11rem);
+  --radius: 8px; /* the site-wide corner: slightly softened */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Legacy names. The admin (and a few untouched styles) still read these; they
+   simply follow the new tokens. Radii are all zero: the site is square.
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: var(--paper);
+  --text: var(--ink);
+  --text-muted: var(--ink-soft);
+  --border: var(--line);
+  --bg-hover: color-mix(in srgb, var(--ink) 6%, transparent);
+  --surface: var(--paper-deep);
+  --header-bg: color-mix(in srgb, var(--paper) 88%, transparent);
+  --header-border: var(--line);
+  --header-float-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --section-line: var(--line);
+  --footer-border: var(--line);
+  --accent-green: var(--accent);
+  --accent-saintted: var(--accent);
+  --hover-green-text: var(--accent-text);
+  --hover-green-border: color-mix(in srgb, var(--accent) 45%, transparent);
+  --hover-green-bg: color-mix(in srgb, var(--accent) 8%, transparent);
+  --font-body: var(--font-ui);
+  --font-mono: var(--font-ui);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.35);
+}

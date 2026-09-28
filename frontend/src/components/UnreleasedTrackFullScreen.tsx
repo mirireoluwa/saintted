@@ -3,23 +3,27 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Track } from "../types/track";
 import { getTrackArtUrl } from "../utils/trackArt";
+import { trackEvent } from "../utils/analytics";
+import { accentVars } from "../utils/accent";
 import { pad2, remainingPartsFromMs } from "../utils/countdownParts";
-import "../pages/TrackDetailPage.css";
+import { TrackCoverPlaceholder } from "./TrackCoverPlaceholder";
 import "./UnreleasedTrackFullScreen.css";
 
 type Props = {
   track: Track;
 };
 
+/**
+ * A track that hasn't dropped: the countdown is the page. Huge numerals fill the width,
+ * the title sits above them, and a slim footer carries the cover, date and pre-save.
+ */
 export function UnreleasedTrackFullScreen({ track }: Props) {
   const [nowTick, setNowTick] = useState(() => Date.now());
   const reduceMotion = useReducedMotion() ?? false;
-  const releaseIso = track.release_at || "";
-  const targetMs = releaseIso ? new Date(releaseIso).getTime() : NaN;
+  const targetMs = track.release_at ? new Date(track.release_at).getTime() : NaN;
   const validTarget = Number.isFinite(targetMs);
   const isLive = validTarget && nowTick >= targetMs;
-  const remainingMs = validTarget ? Math.max(0, targetMs - nowTick) : 0;
-  const parts = remainingPartsFromMs(remainingMs);
+  const parts = remainingPartsFromMs(validTarget ? Math.max(0, targetMs - nowTick) : 0);
   const presave = (track.presave_url || "").trim();
   const coverUrl = getTrackArtUrl(track);
 
@@ -29,142 +33,80 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
     return () => window.clearInterval(id);
   }, [validTarget, targetMs]);
 
-  const ariaRemaining = `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds until release`;
-
   const units = [
     ...(parts.days > 0 ? [{ key: "days", value: String(parts.days), label: "days" }] : []),
     { key: "hrs", value: pad2(parts.hours), label: "hours" },
     { key: "min", value: pad2(parts.minutes), label: "minutes" },
-    { key: "sec", value: pad2(parts.seconds), label: "seconds" },
+    { key: "sec", value: pad2(parts.seconds), label: "seconds", live: true },
   ];
 
+  const dateLabel = validTarget
+    ? new Date(targetMs).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }).toLowerCase()
+    : null;
+
   const ease = [0.22, 1, 0.36, 1] as const;
+  const ariaRemaining = `${parts.days} days, ${parts.hours} hours, ${parts.minutes} minutes, ${parts.seconds} seconds until release`;
 
   return (
-    <div
-      className="uf2"
-      style={
-        coverUrl
-          ? ({ "--uf2-cover": `url("${coverUrl}")` } as React.CSSProperties)
-          : undefined
-      }
-    >
-      <div
-        className="uf2__bg"
-        style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
-        aria-hidden
-      />
-      <div className="uf2__scrim" aria-hidden />
-      <div className="uf2__aurora" aria-hidden>
-        <span className="uf2__blob uf2__blob--a" />
-        <span className="uf2__blob uf2__blob--b" />
-        <span className="uf2__grain" />
+    <div className="wrap uf" style={accentVars(track.accent_color)}>
+      <div className="uf__top">
+        <Link to="/music" className="back-link">
+          <span className="arrow" aria-hidden>←</span> music
+        </Link>
+        <p className="uf__state">
+          <span className="uf__pulse" aria-hidden />
+          {isLive ? "out now" : "arriving soon"}
+        </p>
       </div>
 
-      <nav className="uf2__nav" aria-label="Site">
-        <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
-          <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden>
-            <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          home
-        </Link>
-      </nav>
-
-      <div className="uf2__inner">
-        <motion.header
-          className="uf2__head"
-          initial={reduceMotion ? false : { opacity: 0, y: -14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease }}
-        >
-          {coverUrl ? (
-            <span className="uf2__thumb">
-              <img src={coverUrl} alt={`${track.title} cover art`} />
-            </span>
-          ) : null}
-          <span className="uf2__head-text">
-            <span className="uf2__badge">
-              <span className="uf2__badge-dot" aria-hidden />
-              {isLive ? "just released" : "arriving soon"}
-            </span>
-            <h1 className="uf2__title">{track.title}</h1>
-            {track.meta ? <span className="uf2__meta">{track.meta}</span> : null}
-          </span>
-        </motion.header>
+      <div className="uf__main">
+        <h1 className="uf__title rise">{track.title}</h1>
 
         {validTarget && !isLive ? (
-          <motion.div
-            className="uf2__countdown"
-            role="timer"
-            aria-label={ariaRemaining}
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.85, ease, delay: 0.1 }}
-          >
-            <span className="uf2__rings" aria-hidden>
-              <span className="uf2__ring" />
-              <span className="uf2__ring" />
-              <span className="uf2__ring" />
-            </span>
-
-            <div className="uf2__units">
-              {units.map((u, i) => (
-                <div className="uf2__unit" key={u.key}>
-                  <span className="uf2__value">
-                    <AnimatePresence initial={false} mode="popLayout">
-                      <motion.span
-                        key={u.value}
-                        className="uf2__digit"
-                        initial={reduceMotion ? false : { y: "48%", opacity: 0, filter: "blur(6px)" }}
-                        animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                        exit={reduceMotion ? { opacity: 0 } : { y: "-48%", opacity: 0, filter: "blur(6px)" }}
-                        transition={{ duration: 0.5, ease }}
-                      >
-                        {u.value}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
-                  <span className="uf2__label">{u.label}</span>
-                  {i < units.length - 1 ? <span className="uf2__colon" aria-hidden>:</span> : null}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        ) : isLive ? (
-          <motion.p
-            className="uf2__live"
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease }}
-          >
-            out now
-          </motion.p>
+          <div className="uf__units rise" style={{ "--i": 2 } as React.CSSProperties} role="timer" aria-label={ariaRemaining}>
+            {units.map((u) => (
+              <div className="uf__unit" key={u.key}>
+                <span className={`uf__value${u.live ? " uf__value--live" : ""}`}>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.span
+                      key={u.value}
+                      className="uf__digit"
+                      initial={reduceMotion ? false : { y: "35%", opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={reduceMotion ? { opacity: 0 } : { y: "-35%", opacity: 0 }}
+                      transition={{ duration: 0.4, ease }}
+                    >
+                      {u.value}
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+                <span className="uf__label">{u.label}</span>
+              </div>
+            ))}
+          </div>
         ) : (
-          <motion.p
-            className="uf2__soon"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease }}
-          >
-            coming soon
-          </motion.p>
+          <p className="uf__status rise" style={{ "--i": 2 } as React.CSSProperties}>
+            {isLive ? "out now" : "coming soon"}
+          </p>
         )}
-
-        {presave ? (
-          <motion.a
-            href={presave}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="uf2__cta"
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease, delay: 0.3 }}
-          >
-            {isLive ? "listen / save" : "pre-save"}
-            <span className="uf2__cta-arrow" aria-hidden>↗</span>
-          </motion.a>
-        ) : null}
       </div>
+
+      <footer className="uf__foot rise" style={{ "--i": 4 } as React.CSSProperties}>
+        <div className="uf__release">
+          <span className="uf__thumb">
+            {coverUrl ? <img src={coverUrl} alt={`${track.title} cover art`} /> : <TrackCoverPlaceholder variant="card" />}
+          </span>
+          <span className="uf__release-text">
+            <strong>{track.title}</strong>
+            <small>{[(track.meta || "single").toLowerCase(), dateLabel].filter(Boolean).join(" · ")}</small>
+          </span>
+        </div>
+        {presave ? (
+          <a href={presave} target="_blank" rel="noopener noreferrer" className="btn btn--primary" onClick={() => trackEvent("presave", { slug: track.slug })}>
+            {isLive ? "listen / save" : "pre-save"} <span className="arrow" aria-hidden>↗</span>
+          </a>
+        ) : null}
+      </footer>
     </div>
   );
 }

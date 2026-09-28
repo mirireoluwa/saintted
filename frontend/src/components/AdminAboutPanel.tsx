@@ -1,3 +1,4 @@
+import { AdminDropzone } from "./AdminDropzone";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAboutAuth, updateAbout } from "../api/adminApi";
 import { DEFAULT_ABOUT, type AboutContent } from "../types/aboutContent";
@@ -110,22 +111,16 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
           </div>
           <div className="admin-form__row">
             <label htmlFor="about-portrait">Portrait (optional)</label>
-            {currentPortrait ? (
-              <img
-                src={currentPortrait}
-                alt="Current portrait"
-                style={{ width: 120, aspectRatio: "3 / 4", objectFit: "cover", borderRadius: 8, marginBottom: 8 }}
-              />
-            ) : (
-              <p className="admin-form__hint">Using the site's default portrait.</p>
-            )}
-            <input
+            <AdminDropzone
               id="about-portrait"
-              type="file"
+              kind="image"
               accept="image/*"
-              onChange={(e) => {
-                setFile(e.target.files?.[0] || null);
-                setRemovePortrait(false);
+              file={file}
+              currentUrl={removePortrait ? null : currentPortrait}
+              hint="portrait, 4:5 works best"
+              onFile={(f) => {
+                setFile(f);
+                if (f) setRemovePortrait(false);
               }}
             />
             {about.portrait_url ? (

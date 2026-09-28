@@ -1,137 +1,82 @@
-.shows {
-  padding: 3rem 0 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .shows__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  border-top: 1px solid var(--line);
 }
-
 .shows__row {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr) auto;
+  grid-template-columns: 11rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.25rem 0;
-  border-bottom: 1px solid var(--section-line);
+  gap: 1rem clamp(1.5rem, 4vw, 3rem);
+  padding-block: 1.6rem;
+  border-bottom: 1px solid var(--line);
 }
-
+.shows__row--skeleton {
+  height: 5.5rem;
+  animation: pulse 1.6s ease-in-out infinite;
+}
 .shows__date {
   display: flex;
-  flex-direction: column;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent-green);
 }
-
 .shows__date strong {
   font-family: var(--font-display);
-  font-size: 2rem;
   font-weight: 500;
+  font-size: 2.6rem;
+  letter-spacing: -0.04em;
   line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--text);
+  color: var(--ink);
 }
-
 .shows__where {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
   min-width: 0;
 }
-
 .shows__venue {
-  font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-family: var(--font-display);
   font-weight: 500;
-  color: var(--text);
+  font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+  letter-spacing: -0.03em;
 }
-
 .shows__city {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-  color: var(--text-muted);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
 }
-
-.shows__cta,
-.shows__empty-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  color: var(--text);
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+.shows__soldout {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--line);
 }
-
-.shows__cta:hover,
-.shows__empty-link:hover {
-  border-color: color-mix(in srgb, var(--accent-green) 55%, transparent);
-  background: color-mix(in srgb, var(--accent-green) 9%, transparent);
-  transform: translateY(-2px);
-}
-
 .shows__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.5rem 0 0.5rem;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
-
 .shows__empty-title {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  text-transform: lowercase;
-  color: var(--text);
-}
-
-.shows__empty-sub {
-  font-family: var(--font-body);
-  font-size: 0.98rem;
-  color: var(--text-muted);
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  letter-spacing: -0.035em;
   margin-bottom: 0.6rem;
 }
-
-@media (max-width: 560px) {
+.shows__empty-sub {
+  color: var(--ink-soft);
+  margin-bottom: 1.5rem;
+  max-width: 34rem;
+}
+@media (max-width: 800px) {
   .shows__row {
-    grid-template-columns: 4rem minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
-  .shows__cta {
-    grid-column: 2;
+  .shows__row > .btn,
+  .shows__soldout {
     justify-self: start;
   }
-}
-
-.shows__soldout {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 0.65rem 0;
-}
-
-.shows__row--skeleton {
-  height: 5.25rem;
-  background: linear-gradient(90deg, rgba(128,128,128,0.06), rgba(128,128,128,0.14), rgba(128,128,128,0.06));
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.2s ease-in-out infinite;
-  border-radius: var(--radius-sm);
-  margin-bottom: 0.6rem;
 }

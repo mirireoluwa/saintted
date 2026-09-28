@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useLocation } from "react-router-dom";
-import { AnimatedSection } from "../components/AnimatedSection";
+import { Link, useLocation } from "react-router-dom";
 import { Hero } from "../components/Hero";
 import { ReleaseCountdownBar } from "../components/ReleaseCountdownBar";
 import { fetchReleaseCountdown } from "../api/client";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import { writeHeroCache } from "../utils/heroCache";
-import { MusicSection } from "../components/MusicSection";
+import { TrackCard } from "../components/TrackCard";
+import { FeaturedRelease } from "../components/FeaturedRelease";
+import { UpcomingRelease } from "../components/UpcomingRelease";
 import { MailingListSection } from "../components/MailingListSection";
-import { Footer } from "../components/Footer";
 import { About } from "../components/About";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
 import { getSiteUrl } from "../utils/siteUrl";
+import { useReleaseGroups } from "../utils/releaseGroups";
 
 const HOMEPAGE_DESCRIPTION =
   "A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
@@ -24,7 +25,7 @@ const HERO_TAGLINE =
   "a Nigerian artist + producer communicating the human experience through his perspective.";
 
 const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
-const FALLBACK_TRACKS: Track[] = [
+export const FALLBACK_TRACKS: Track[] = [
   {
     id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0,
     description: "the song talks about giving someone a chance to prove themselves after a mistake but realizing that sometimes apologies are not enough.\n\nthe lyrics express the struggle of holding onto special memories and feelings while trying to move on from a relationship that may not be working out, symbolized by the metaphor of giving one dance to prove wrong.",
@@ -78,6 +79,10 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [releaseConfig, setReleaseConfig] = useState<ReleaseCountdown | null>(null);
   const [releaseLoaded, setReleaseLoaded] = useState(false);
+
+  const { upcoming, released, now } = useReleaseGroups(tracks);
+  const [newest, ...others] = released;
+  const more = others.slice(0, 4);
 
   const jsonLd = useMemo(() => {
     const site = getSiteUrl();
@@ -142,38 +147,69 @@ export function HomePage() {
       <Helmet>
         <script type="application/ld+json">{jsonLd}</script>
       </Helmet>
-      <main
-        id="main"
-        className={`page${releaseBarVisible(releaseConfig) ? " page--release-countdown" : ""}`}
-      >
-        <div className="home-landing">
-          <Hero
-            releaseConfig={releaseConfig}
-            releaseLoaded={releaseLoaded}
-            summaryText={HERO_TAGLINE}
-            tracks={tracks}
-          />
-          {releaseBarVisible(releaseConfig) ? (
-            <div className="home-landing__countdown">
-              <ReleaseCountdownBar config={releaseConfig} />
+      <Hero
+        releaseConfig={releaseConfig}
+        releaseLoaded={releaseLoaded}
+        summaryText={HERO_TAGLINE}
+        tracks={tracks}
+      />
+      {releaseBarVisible(releaseConfig) ? <ReleaseCountdownBar config={releaseConfig} /> : null}
+
+      {!loading && upcoming.length > 0 ? (
+        <section className="section section--tight" aria-labelledby="upcoming-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 id="upcoming-title">coming soon</h2>
             </div>
-          ) : null}
+            <div className="upcoming-list">
+              {upcoming.map((t) => (
+                <UpcomingRelease key={t.id} track={t} now={now} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="section" id="latest" aria-labelledby="latest-title">
+        <div className="wrap">
+          <div className="section-head">
+            <h2 id="latest-title">latest release</h2>
+            <Link to="/music" className="textlink">
+              all music <span className="arrow" aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
-        <div className="site-main">
-          <AnimatedSection>
-            <MusicSection tracks={tracks} loading={loading} />
-          </AnimatedSection>
-          <AnimatedSection>
-            <About />
-          </AnimatedSection>
-          <AnimatedSection>
-            <MailingListSection />
-          </AnimatedSection>
-          <AnimatedSection>
-            <Footer />
-          </AnimatedSection>
-        </div>
-      </main>
+        {loading ? (
+          <div className="wrap">
+            <div className="card-grid card-grid--skeleton" aria-hidden>
+              {[0, 1, 2].map((i) => (
+                <div key={i}><span className="card__art" /></div>
+              ))}
+            </div>
+          </div>
+        ) : newest ? (
+          <>
+            <FeaturedRelease track={newest.track} isNew={newest.highlighted} />
+            {more.length > 0 ? (
+              <div className="wrap">
+                <p className="eyebrow releases-eyebrow">more releases</p>
+                <div className="card-grid card-grid--4">
+                  {more.map(({ track, highlighted }, i) => (
+                    <TrackCard key={track.id} track={track} index={i} isNew={highlighted} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="wrap">
+            <p className="empty">nothing released yet, check back soon.</p>
+          </div>
+        )}
+      </section>
+
+      <About teaser />
+      <MailingListSection />
     </>
   );
 }

@@ -426,3 +426,8 @@ export async function deleteSubscriber(id: number): Promise<void> {
   });
   if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
 }
+
+export async function fetchInsights(days: number): Promise<import("../types/insights").Insights> {
+  const res = await fetchLive(`/api/admin/insights?days=${days}`, ADMIN_FETCH);
+  return guardJson(res, "insights");
+}

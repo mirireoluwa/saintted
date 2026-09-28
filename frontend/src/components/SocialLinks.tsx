@@ -1,7 +1,6 @@
+import { trackEvent } from "../utils/analytics";
 import instagramIcon from "../assets/instagram.svg";
-import linkIcon from "../assets/link.svg";
 import xIcon from "../assets/x.svg";
-import untitledIcon from "../assets/untitled-in-brackets.svg";
 import appleMusicIcon from "../assets/apple-music.svg";
 import spotifyIcon from "../assets/spotify.svg";
 import youtubeIcon from "../assets/youtube.svg";
@@ -22,20 +21,16 @@ const SOCIAL_LINKS = [
   },
   { href: "https://www.youtube.com/@saintted", label: "YouTube", icon: youtubeIcon },
   { href: "https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF", label: "WhatsApp Community", icon: whatsappIcon },
-  { href: "https://linktr.ee/saintted", label: "Linktree", icon: linkIcon },
-  {
-    href: "https://untitled.stream/library/project/jWQL4g2PdE8woebBo6Wgv",
-    label: "Untitled — silence, selah",
-    icon: untitledIcon,
-  },
 ] as const;
 
 interface SocialLinksProps {
   className?: string;
   linkClassName?: string;
+  /** Show the platform name beside its icon (footer list) instead of an icon-only row. */
+  showLabels?: boolean;
 }
 
-export function SocialLinks({ className, linkClassName }: SocialLinksProps) {
+export function SocialLinks({ className, linkClassName, showLabels = false }: SocialLinksProps) {
   return (
     <div className={className} role="navigation" aria-label="Social links">
       {SOCIAL_LINKS.map(({ href, label, icon }) => (
@@ -46,8 +41,10 @@ export function SocialLinks({ className, linkClassName }: SocialLinksProps) {
           rel="noopener noreferrer"
           className={linkClassName}
           aria-label={label}
+          onClick={() => trackEvent("social", { platform: label })}
         >
-          <img src={icon} alt="" width={24} height={24} />
+          <img src={icon} alt="" width={showLabels ? 16 : 24} height={showLabels ? 16 : 24} />
+          {showLabels ? <span>{label}</span> : null}
         </a>
       ))}
     </div>

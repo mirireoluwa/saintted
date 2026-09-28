@@ -55,6 +55,12 @@ class Track(models.Model):
         blank=True,
         help_text="Pre-save / pre-add link for this track (shown on unreleased detail page).",
     )
+    accent_color = models.CharField(
+        max_length=7,
+        blank=True,
+        default="",
+        help_text="Optional #rrggbb accent for this track's countdown page. Blank = site default.",
+    )
     is_highlighted = models.BooleanField(
         default=False,
         help_text="Highlight this track as a featured/new release on the public site.",

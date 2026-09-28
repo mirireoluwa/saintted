@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { ThemeProvider } from "./contexts/ThemeContext";
 import { prefetchReleaseCountdown } from "./api/prefetch";
 import "./index.css";
 import App from "./App.tsx";
@@ -22,11 +21,9 @@ if (typeof sentryDsn === "string" && sentryDsn.trim()) {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HelmetProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </ThemeProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </HelmetProvider>
   </StrictMode>
 );

@@ -3,18 +3,16 @@ import { useEffect, useState } from "react";
 import { fetchFeaturedVideos } from "../api/client";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import { staggerChildren, sectionTransition } from "../utils/motion";
-import { SectionLabel } from "./SectionLabel";
+import "./Media.css";
 
 const EMBED_BASE = "https://www.youtube.com/embed";
 
 type FeaturedProps = {
-  /** Render the ".videos" section label (off when the page supplies its own heading). */
-  showLabel?: boolean;
   /** Reports how many videos loaded (0 on error), so a parent page can show a combined empty state. */
   onCount?: (count: number) => void;
 };
 
-export function Featured({ showLabel = true, onCount }: FeaturedProps = {}) {
+export function Featured({ onCount }: FeaturedProps = {}) {
   const [videos, setVideos] = useState<FeaturedVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const reduceMotion = useReducedMotion() ?? false;
@@ -36,8 +34,11 @@ export function Featured({ showLabel = true, onCount }: FeaturedProps = {}) {
   if (videos.length === 0 && !loading) return null;
 
   return (
-    <section className="featured-section" id="featured-section">
-      {showLabel ? <SectionLabel text=".videos" /> : null}
+    <section className="section section--tight" id="featured-section" aria-labelledby="videos-title">
+     <div className="wrap">
+      <div className="section-head">
+        <h2 id="videos-title">videos</h2>
+      </div>
       {loading ? (
         <div className="featured-videos">
           {Array.from({ length: 2 }).map((_, idx) => (
@@ -90,6 +91,7 @@ export function Featured({ showLabel = true, onCount }: FeaturedProps = {}) {
           ))}
         </motion.div>
       )}
+     </div>
     </section>
   );
 }

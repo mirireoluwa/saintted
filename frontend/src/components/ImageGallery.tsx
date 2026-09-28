@@ -3,18 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchGalleryImages } from "../api/client";
 import type { GalleryImage } from "../types/galleryImage";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
-import { SectionLabel } from "./SectionLabel";
+import "./Media.css";
 
 type ImageGalleryProps = {
-  /** Render the ".images" section label (off when the page supplies its own heading). */
-  showLabel?: boolean;
   /** Shown instead of nothing when there are no images. */
   emptyMessage?: React.ReactNode;
   /** Reports how many images loaded (0 on error), so a parent page can show a combined empty state. */
   onCount?: (count: number) => void;
 };
 
-export function ImageGallery({ showLabel = true, emptyMessage = null, onCount }: ImageGalleryProps = {}) {
+export function ImageGallery({ emptyMessage = null, onCount }: ImageGalleryProps = {}) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -79,8 +77,11 @@ export function ImageGallery({ showLabel = true, emptyMessage = null, onCount }:
   const activeImage = lightboxIndex !== null ? images[lightboxIndex] : null;
 
   return (
-    <section className="image-gallery-section" id="image-gallery-section">
-      {showLabel ? <SectionLabel text=".images" /> : null}
+    <section className="section section--tight" id="image-gallery-section" aria-labelledby="photos-title">
+     <div className="wrap">
+      <div className="section-head">
+        <h2 id="photos-title">photos</h2>
+      </div>
       {loading ? (
         <div className="image-gallery image-gallery--skeleton">
           {Array.from({ length: 6 }).map((_, idx) => (
@@ -99,8 +100,8 @@ export function ImageGallery({ showLabel = true, emptyMessage = null, onCount }:
               variants={{
                 hidden: reduceMotion
                   ? {}
-                  : { opacity: 0, y: 28, scale: 0.96, filter: "blur(6px)" },
-                visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
+                  : { opacity: 0, y: 24 },
+                visible: { opacity: 1, y: 0 },
               }}
               transition={{ duration: reduceMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setLightboxIndex(idx)}
@@ -122,6 +123,7 @@ export function ImageGallery({ showLabel = true, emptyMessage = null, onCount }:
           ))}
         </div>
       )}
+     </div>
 
       <AnimatePresence>
         {activeImage !== null && lightboxIndex !== null ? (

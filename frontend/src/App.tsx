@@ -4,6 +4,8 @@ import { PublicShell } from "./components/PublicShell";
 import { HomePage } from "./pages/HomePage";
 import { TrackDetailPage } from "./pages/TrackDetailPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { MusicPage } from "./pages/MusicPage";
+import { AboutPage } from "./pages/AboutPage";
 import { MediaPage } from "./pages/MediaPage";
 import { ShowsPage } from "./pages/ShowsPage";
 import { isAdminHostname } from "./utils/adminHost";
@@ -35,6 +37,8 @@ function App() {
       ) : (
         <Route path="/" element={<PublicShell />}>
           <Route index element={<HomePage />} />
+          <Route path="music" element={<MusicPage />} />
+          <Route path="about" element={<AboutPage />} />
           <Route path="music/:slug" element={<TrackDetailPage />} />
           <Route path="media" element={<MediaPage />} />
           <Route path="images" element={<Navigate to="/media" replace />} />

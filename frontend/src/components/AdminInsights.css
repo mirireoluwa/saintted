@@ -1,0 +1,204 @@
+/* ---------- notifications ---------- */
+.notif__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.notif__head .admin-card__title { margin: 0; }
+.notif__empty { margin: 0; color: var(--ink-soft); }
+.notif {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.notif__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.05rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.notif__dot {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.5rem;
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
+.notif__item--action .notif__dot { background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+.notif__item--soon .notif__dot { background: rgb(251, 191, 36); }
+.notif__body { flex: 1; min-width: 0; }
+.notif__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.25rem;
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.notif__new {
+  padding: 0.05rem 0.45rem;
+  border-radius: 99px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+.notif__title { margin: 0; font-family: var(--font-display); font-size: 1.1rem; font-weight: 500; letter-spacing: -0.02em; }
+.notif__detail { margin: 0.3rem 0 0; color: var(--ink-soft); font-size: 0.88rem; line-height: 1.55; }
+.notif__actions { display: flex; flex: none; align-items: center; gap: 0.5rem; }
+.notif__actions .admin-btn { min-height: 2.2rem; padding: 0.3rem 0.9rem; }
+.notif__x {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+.notif__x:hover { color: var(--ink); background: var(--paper-deep); }
+@media (max-width: 640px) {
+  .notif__item { flex-wrap: wrap; }
+  .notif__actions { flex-basis: 100%; justify-content: flex-end; }
+}
+
+/* ---------- stat tiles ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.stat-grid--6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.stat__value {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat__label {
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+@media (max-width: 900px) { .stat-grid, .stat-grid--6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- insights ---------- */
+.insights__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.insights__ranges { display: flex; gap: 0.4rem; }
+.insights__ranges button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.insights__ranges button:hover { color: var(--ink); border-color: var(--ink); }
+.insights__ranges button[aria-pressed="true"] {
+  color: var(--on-accent);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.insights__note { margin: 0; color: var(--ink-soft); font-size: 0.78rem; }
+.insights__sub { display: block; margin-top: 0.15rem; color: var(--ink-soft); font-size: 0.72rem; }
+.insights__h3 {
+  margin: 1.5rem 0 0.6rem;
+  color: var(--ink-soft);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.insights__split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+@media (max-width: 900px) { .insights__split { grid-template-columns: minmax(0, 1fr); } }
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11rem;
+  padding-top: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.chart__col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-width: 2px;
+}
+.chart__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 1px;
+  border-radius: 2px 2px 0 0;
+}
+.chart__bar--views { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.chart__bar--visitors { background: var(--accent); right: 25%; left: 25%; }
+.chart__col:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.chart__axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+.chart__legend { display: inline-flex; align-items: center; gap: 0.5rem; }
+.chart__key { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 2px; margin-left: 0.6rem; }
+.chart__key--visitors { background: var(--accent); }
+.chart__key--views { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+.meter { display: block; height: 4px; margin-top: 0.4rem; border-radius: 4px; background: var(--paper-deep); overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--accent); }
+
+.rank { margin: 0; padding: 0; list-style: none; }
+.rank li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.rank li:last-child { border-bottom: 0; }
+.rank .chart__key { margin: 0 0.4rem 0 0; }
+.devices { display: flex; height: 0.7rem; margin-bottom: 0.9rem; border-radius: 99px; overflow: hidden; background: var(--paper-deep); }
+.devices__seg--a { background: var(--accent); }
+.devices__seg--b { background: color-mix(in srgb, var(--accent) 55%, var(--ink)); }
+.devices__seg--c { background: color-mix(in srgb, var(--ink) 55%, transparent); }

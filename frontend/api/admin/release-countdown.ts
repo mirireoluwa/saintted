@@ -3,6 +3,7 @@ import { getRedis, COUNTDOWN_KEY, SHOWS_KEY, ABOUT_KEY } from "../_lib-js/redis.
 import type { LiveShow, ReleaseCountdown } from "../_lib/types.js";
 import { DEFAULT_COUNTDOWN } from "../_lib/types.js";
 import { aboutOrDefault, parseList, sortShows, validateAbout, validateShow } from "../_lib/siteContent.js";
+import { buildInsights, dayKey, visitorsKey } from "../_lib/analytics.js";
 
 /**
  * Admin site-settings endpoint. Handles the release countdown by default, and — to stay within
@@ -31,6 +32,34 @@ export default async function handler(req: Req, res: Res) {
   if (!redis) return res.status(503).json({ ok: false, message: "Redis not configured" });
 
   const resource = typeof req.query?.resource === "string" ? req.query.resource : "";
+
+  // ── Insights (site analytics report) ─────────────────────────────────────
+  if (resource === "insights") {
+    if (req.method !== "GET") return res.status(405).json({ ok: false, message: "Method not allowed" });
+    try {
+      const asked = parseInt(typeof req.query?.days === "string" ? req.query.days : "30", 10);
+      const days = Math.min(90, Math.max(1, Number.isFinite(asked) ? asked : 30));
+      const dates: Date[] = [];
+      for (let i = days - 1; i >= 0; i--) dates.push(new Date(Date.now() - i * 86400000));
+      const pipe = redis.pipeline();
+      for (const d of dates) {
+        pipe.hgetall(dayKey(d));
+        pipe.scard(visitorsKey(d));
+      }
+      const results = (await pipe.exec()) as unknown[];
+      const hashes: Array<Record<string, string | number> | null> = [];
+      const visitors: number[] = [];
+      for (let i = 0; i < dates.length; i++) {
+        hashes.push((results[i * 2] as Record<string, string | number> | null) ?? null);
+        visitors.push(Number(results[i * 2 + 1]) || 0);
+      }
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json(buildInsights(dates.map((d) => d.toISOString().slice(0, 10)), hashes, visitors));
+    } catch (e) {
+      console.error("admin insights error:", e);
+      return res.status(500).json({ ok: false, message: "Failed to load insights" });
+    }
+  }
 
   // ── Shows ────────────────────────────────────────────────────────────────
   if (resource === "shows") {

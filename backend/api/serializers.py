@@ -30,8 +30,15 @@ class TrackSerializer(serializers.ModelSerializer):
             "id", "title", "slug", "meta", "art_url", "art_file", "clear_art_file", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
             "is_published", "is_highlighted",
-            "is_unreleased", "release_at", "presave_url",
+            "is_unreleased", "release_at", "presave_url", "accent_color",
         ]
+
+    def validate_accent_color(self, value):
+        import re
+        value = (value or "").strip().lower()
+        if value and not re.fullmatch(r"#[0-9a-f]{6}", value):
+            raise serializers.ValidationError("Use a #rrggbb colour.")
+        return value
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

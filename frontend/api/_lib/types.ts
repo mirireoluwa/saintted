@@ -16,6 +16,8 @@ export interface Track {
   is_unreleased: boolean;
   release_at?: string | null;
   presave_url?: string;
+  /** Optional #rrggbb accent for the unreleased page; empty = the site default. */
+  accent_color?: string;
   release_email_sent?: boolean;
   /** ISO datetime after which is_highlighted should be ignored (auto-expires). */
   highlighted_until?: string | null;

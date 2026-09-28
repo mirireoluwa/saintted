@@ -1,0 +1,543 @@
+/* ==========================================================================
+   Base: reset, type, layout, buttons, utilities, forms, motion
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  background-image: var(--page-gradient, none);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+img,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+}
+
+main:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: -4rem;
+  z-index: 200;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------ Type ------------------------------ */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+h1 {
+  font-size: clamp(2.6rem, 6vw, 5.25rem);
+}
+h2 {
+  font-size: clamp(1.75rem, 3.1vw, 2.6rem);
+}
+h3 {
+  font-size: 1.5rem;
+}
+p {
+  margin: 0 0 1.25em;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin: 0 0 1.5rem;
+  line-height: 1.4;
+}
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.8rem;
+  background: var(--accent);
+  vertical-align: 0.05em;
+}
+
+.lede {
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 30ch;
+}
+
+.prose {
+  max-width: 58ch;
+  color: var(--prose);
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.seal {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: var(--accent);
+  flex: none;
+}
+
+/* ------------------------------ Layout ------------------------------ */
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--max) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+}
+
+.section {
+  padding-top: var(--section);
+}
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.section--tight {
+  padding-top: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: last baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.page-head {
+  padding-top: clamp(2.5rem, 6vw, 5rem);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(3rem, 6vw, 5.5rem);
+}
+.page-head .eyebrow {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+.page-head h1 {
+  flex: 1 1 auto;
+}
+.page-head__sub {
+  flex: 1 1 100%;
+  max-width: 46ch;
+  margin: 1.5rem 0 0;
+  color: var(--ink-soft);
+}
+
+.empty {
+  padding-block: 4rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+  font-size: 1.05rem;
+}
+
+/* ------------------------------ Buttons (square) ------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  min-height: 3rem;
+  padding: 0.85rem 1.7rem;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 500 0.75rem/1 var(--font-ui);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.35s var(--ease),
+    color 0.35s var(--ease),
+    border-color 0.35s var(--ease);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.btn .arrow {
+  display: inline-block;
+  transition: transform 0.35s var(--ease);
+}
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+.btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.btn--primary:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.btn--sm {
+  min-height: 2.25rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+}
+.btn[disabled],
+.btn:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.textlink {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding-bottom: 0.35rem;
+  color: var(--accent-text);
+  border-bottom: 1px solid var(--accent-text);
+  transition: border-color 0.3s var(--ease), color 0.3s var(--ease);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.textlink:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-top: 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: color 0.3s var(--ease);
+}
+.back-link:hover {
+  color: var(--ink);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.tag::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--accent);
+}
+
+/* ------------------------------ Forms (scoped to .field) ------------------------------ */
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.6rem;
+}
+.field > label {
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  font: 400 1rem/1.5 var(--font-ui);
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  padding: 0.8rem 0.9rem;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease);
+}
+.field textarea {
+  resize: vertical;
+  min-height: 9rem;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--ink-soft);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--ink);
+  background: var(--field-focus);
+}
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+.field input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border: 1px solid var(--ink);
+  font-size: 0.92rem;
+}
+.notice--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ------------------------------ Motion ------------------------------ */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes line-up {
+  from { transform: translateY(105%); }
+  to { transform: none; }
+}
+@keyframes wipe-up {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes wipe-down {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes scroll-line {
+  0% { top: -4rem; }
+  100% { top: 100%; }
+}
+
+.rise {
+  animation: rise 0.9s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .rise {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ------------------------------ Responsive ------------------------------ */
+
+@media (max-width: 800px) {
+  .page-head {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .btn-row .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* hairline key/value list (track and about details) */
+.specs {
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.specs > div {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.specs dt {
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding-top: 0.2rem;
+}
+.specs dd {
+  margin: 0;
+}
+
+/* ------------------------- Softened corners -------------------------
+   One small radius on surfaces you can touch or that hold an image.
+   Hairlines, rules, the countdown cells and the little square markers stay sharp. */
+.btn,
+.tag,
+.card__art,
+.card__tag,
+.card__go,
+.feature__art,
+.upcoming__art,
+.track__art,
+.uf__art,
+.about__art,
+.cta,
+.ml-popup,
+.ml-popup__close,
+.track__menu,
+.track__option,
+.notice,
+.mform__tick,
+.shows__soldout,
+.featured-video__embed-wrap,
+.featured-video__iframe,
+.image-gallery__img,
+.image-gallery__item--skeleton,
+.lightbox__img,
+.lightbox__close,
+.lightbox__nav,
+.track__skeleton,
+.track__embed iframe,
+.field input,
+.field textarea,
+.field select {
+  border-radius: var(--radius);
+}
+.card__tag {
+  border-radius: var(--radius) 0 var(--radius) 0; /* tucks into the cover's corner */
+}
+.track__menu {
+  overflow: hidden;
+}

@@ -2,10 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/api/event", "destination": "/api/release-countdown?resource=event" },
     { "source": "/api/shows", "destination": "/api/release-countdown?resource=shows" },
     { "source": "/api/about", "destination": "/api/release-countdown?resource=about" },
     { "source": "/api/admin/shows", "destination": "/api/admin/release-countdown?resource=shows" },
     { "source": "/api/admin/about", "destination": "/api/admin/release-countdown?resource=about" },
+    { "source": "/api/admin/insights", "destination": "/api/admin/release-countdown?resource=insights" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

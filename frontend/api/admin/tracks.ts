@@ -36,6 +36,11 @@ function parse(raw: unknown): Track[] {
   return (typeof raw === "string" ? JSON.parse(raw) : raw) as Track[];
 }
 
+/** Accept only #rrggbb (or empty for "use the site default"). */
+function cleanAccent(v: unknown): string {
+  return typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v.trim()) ? v.trim().toLowerCase() : "";
+}
+
 export default async function handler(req: Req, res: Res) {
   res.setHeader("Content-Type", "application/json");
 
@@ -234,6 +239,7 @@ export default async function handler(req: Req, res: Res) {
         is_unreleased: isUnreleased,
         release_at: releaseAt,
         presave_url: typeof body.presave_url === "string" ? body.presave_url.trim() : "",
+        accent_color: cleanAccent(body.accent_color),
       };
 
       tracks.push(track);
@@ -259,6 +265,7 @@ export default async function handler(req: Req, res: Res) {
       const updated: Track = {
         ...tracks[idx],
         ...body,
+        accent_color: "accent_color" in body ? cleanAccent(body.accent_color) : tracks[idx].accent_color ?? "",
         id: tracks[idx].id,
         slug: (typeof body.slug === "string" && body.slug.trim()) ? body.slug.trim() : tracks[idx].slug,
       };

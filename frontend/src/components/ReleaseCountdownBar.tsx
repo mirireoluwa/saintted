@@ -76,6 +76,8 @@ export function ReleaseCountdownBar({ config }: Props) {
                 <span>{marqueeText}</span>
                 <span>{marqueeText}</span>
                 <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
+                <span>{marqueeText}</span>
               </span>
             </div>
           )}

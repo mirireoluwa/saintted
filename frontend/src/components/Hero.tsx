@@ -1,10 +1,11 @@
-import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ReleaseCountdown } from "../types/releaseCountdown";
 import type { Track } from "../types/track";
+import { trackEvent } from "../utils/analytics";
 import { readHeroCache } from "../utils/heroCache";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
+import "./Hero.css";
 
 type HeroProps = {
   releaseConfig: ReleaseCountdown | null;
@@ -13,24 +14,32 @@ type HeroProps = {
   tracks?: Track[];
 };
 
-/** Pick the hero's primary action from the release cycle: upcoming → pre-save, else latest release. */
-function pickHeroCta(tracks: Track[]): { to: string; label: string; kind: "presave" | "listen" } | null {
+type Featured = { track: Track; kind: "presave" | "listen" };
+
+/** The release the hero points at: the next upcoming drop, otherwise the latest release. */
+function pickFeatured(tracks: Track[]): Featured | null {
   const now = Date.now();
   const upcoming = tracks
     .filter((t) => t.is_unreleased && t.release_at && new Date(t.release_at).getTime() > now)
     .sort((a, b) => new Date(a.release_at!).getTime() - new Date(b.release_at!).getTime())[0];
-  if (upcoming) return { to: `/music/${upcoming.slug}`, label: `pre-save ${upcoming.title}`, kind: "presave" };
+  if (upcoming) return { track: upcoming, kind: "presave" };
   const released = tracks.filter((t) => !t.is_unreleased);
   const latest = released.find((t) => t.is_highlighted) ?? released[0];
-  if (latest) return { to: `/music/${latest.slug}`, label: `listen to ${latest.title}`, kind: "listen" };
-  return null;
+  return latest ? { track: latest, kind: "listen" } : null;
+}
+
+function captionMeta(f: Featured): string {
+  if (f.kind === "presave" && f.track.release_at) {
+    const d = new Date(f.track.release_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return `arriving ${d.toLowerCase()}`;
+  }
+  return [f.track.year, (f.track.meta || "").toLowerCase()].filter(Boolean).join(" · ");
 }
 
 export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }: HeroProps) {
-  const cta = pickHeroCta(tracks);
+  const featured = pickFeatured(tracks);
   const [showAltTag, setShowAltTag] = useState(false);
   const [showDesc, setShowDesc] = useState(false);
-  const reduceMotion = useReducedMotion() ?? false;
 
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(null);
   const [headerVideoUrl, setHeaderVideoUrl] = useState<string | null>(null);
@@ -42,15 +51,11 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setShowAltTag((prev) => !prev);
-    }, 3200);
+    const interval = window.setInterval(() => setShowAltTag((prev) => !prev), 3200);
     return () => window.clearInterval(interval);
   }, []);
 
-
   useEffect(() => {
-
     if (!releaseLoaded) {
       const cached = readHeroCache();
       if (cached) {
@@ -62,29 +67,24 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
       }
       return;
     }
-
     if (!releaseConfig) {
       setHeaderImageUrl(null);
       setHeaderVideoUrl(null);
       setHeaderImageFocus({ x: 50, y: 50 });
       return;
     }
-
     const uploadedVideo = (releaseConfig.header_video_file_url || "").trim();
     const customVideo = (releaseConfig.header_video_url || "").trim();
     const uploadedUrl = (releaseConfig.header_image_file_url || "").trim();
     const customUrl = (releaseConfig.header_image_url || "").trim();
     const imageUrlRaw = uploadedUrl || customUrl;
     const videoUrlRaw = uploadedVideo || customVideo;
-    const imageUrl = imageUrlRaw ? resolvePublicMediaUrl(imageUrlRaw) : null;
-    const videoUrl = videoUrlRaw ? resolvePublicMediaUrl(videoUrlRaw) : null;
-    const focus = {
+    setHeaderImageUrl(imageUrlRaw ? resolvePublicMediaUrl(imageUrlRaw) : null);
+    setHeaderVideoUrl(videoUrlRaw ? resolvePublicMediaUrl(videoUrlRaw) : null);
+    setHeaderImageFocus({
       x: typeof releaseConfig.header_image_focus_x === "number" ? releaseConfig.header_image_focus_x : 50,
       y: typeof releaseConfig.header_image_focus_y === "number" ? releaseConfig.header_image_focus_y : 50,
-    };
-    setHeaderImageUrl(imageUrl);
-    setHeaderVideoUrl(videoUrl);
-    setHeaderImageFocus(focus);
+    });
   }, [releaseLoaded, releaseConfig]);
 
   const activeVideoUrl = headerVideoUrl || "/hero-bg.mp4";
@@ -96,9 +96,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
       setHeroPhotoVisible(false);
       return;
     }
-    if (prevHeroMediaRef.current === mediaKey) {
-      return;
-    }
+    if (prevHeroMediaRef.current === mediaKey) return;
     prevHeroMediaRef.current = mediaKey;
     setHeroPhotoVisible(false);
     const id = window.requestAnimationFrame(() => setHeroPhotoVisible(true));
@@ -111,7 +109,6 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
       setHeroVideoError(false);
       return;
     }
-
     const el = heroVideoRef.current;
     if (!el) return;
 
@@ -119,31 +116,12 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
       el.muted = true;
       el.defaultMuted = true;
       const p = el.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          // Silent catch: browser can still require user gesture in rare cases.
-        });
-      }
+      if (p && typeof p.catch === "function") p.catch(() => {});
     };
-
-    const handleCanPlay = () => {
-      setHeroVideoReady(true);
-      setHeroVideoError(false);
-      tryPlay();
-    };
-    const handlePlaying = () => {
-      setHeroVideoReady(true);
-      setHeroVideoError(false);
-    };
-    const handleError = () => {
-      setHeroVideoReady(false);
-      setHeroVideoError(true);
-    };
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        tryPlay();
-      }
-    };
+    const handleCanPlay = () => { setHeroVideoReady(true); setHeroVideoError(false); tryPlay(); };
+    const handlePlaying = () => { setHeroVideoReady(true); setHeroVideoError(false); };
+    const handleError = () => { setHeroVideoReady(false); setHeroVideoError(true); };
+    const handleVisibility = () => { if (document.visibilityState === "visible") tryPlay(); };
 
     setHeroVideoReady(false);
     setHeroVideoError(false);
@@ -153,7 +131,6 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("pageshow", tryPlay);
     tryPlay();
-
     return () => {
       el.removeEventListener("canplay", handleCanPlay);
       el.removeEventListener("playing", handlePlaying);
@@ -164,10 +141,10 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
   }, [activeVideoUrl]);
 
   return (
-    <section id="hero-section" className="hero-section">
+    <section className="hero" aria-labelledby="hero-title">
       {headerImageUrl ? (
         <div
-          className={`hero-section__photo${heroPhotoVisible ? " hero-section__photo--visible" : ""}`}
+          className={`hero__photo${heroPhotoVisible ? " hero__photo--visible" : ""}`}
           style={{
             backgroundImage: `url(${headerImageUrl})`,
             backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
@@ -180,7 +157,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
         <video
           key={activeVideoUrl}
           ref={heroVideoRef}
-          className={`hero-section__video${heroVideoReady ? " hero-section__video--visible" : ""}`}
+          className={`hero__video${heroVideoReady ? " hero__video--visible" : ""}`}
           src={activeVideoUrl}
           autoPlay
           muted
@@ -190,51 +167,75 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
           aria-hidden
         />
       ) : null}
-      <div className="hero-inner">
-        <div className="hero-content">
-          <div className="hero-meta">
-            <span className="hero-tag">ARTIST</span>
-            <span className="hero-meta__sep" aria-hidden>+</span>
-            <span className={`hero-tag hero-tag--swap${showAltTag ? " hero-tag--alt" : ""}`}>
-              <span className="hero-tag__line hero-tag__line--primary">PRODUCER</span>
-              <span className="hero-tag__line hero-tag__line--alt">silence, selah</span>
-            </span>
+      <div className="hero__scrim" aria-hidden />
+
+      <div className="wrap hero__inner">
+        <p className="eyebrow hero__eyebrow rise">
+          artist +{" "}
+          <span className={`hero-swap${showAltTag ? " hero-swap--alt" : ""}`}>
+            <span className="hero-swap__line hero-swap__line--a">producer</span>
+            <span className="hero-swap__line hero-swap__line--b">silence, selah</span>
+          </span>
+        </p>
+
+        {/* hover (or tap) the name to reveal the tagline */}
+        <h1
+          id="hero-title"
+          className="hero__name"
+          aria-label="saintted"
+          onMouseEnter={() => setShowDesc(true)}
+          onMouseLeave={() => setShowDesc(false)}
+          onClick={() => setShowDesc((v) => !v)}
+        >
+          <span className="hero__line" aria-hidden>
+            <span>SAINTTED</span>
+          </span>
+        </h1>
+
+        {summaryText ? (
+          <div className={`hero__lede${showDesc ? " hero__lede--visible" : ""}`}>
+            <span className="hero__rule" aria-hidden />
+            <p>{summaryText}</p>
           </div>
+        ) : null}
 
-          <motion.h1
-            className="hero-title"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            onMouseEnter={() => setShowDesc(true)}
-            onMouseLeave={() => setShowDesc(false)}
-            onClick={() => setShowDesc((v) => !v)}
-          >
-            <span className="hero-title__inner">SAINTTED</span>
-          </motion.h1>
-
-          {summaryText ? (
-            <p className={`hero-lede${showDesc ? " hero-lede--visible" : ""}`}>{summaryText}</p>
-          ) : null}
-
-          <div className="hero-cta-row">
-            {cta ? (
-              <div className="hero-actions">
-                <Link to={cta.to} className={`hero-btn hero-btn--primary hero-btn--${cta.kind}`}>
-                  {cta.kind === "presave" ? <span className="hero-btn__dot" aria-hidden /> : null}
-                  {cta.label}
-                  <span className="hero-btn__arrow" aria-hidden>↗</span>
-                </Link>
-                <a href="#music-section" className="hero-btn hero-btn--ghost">all music</a>
-              </div>
-            ) : <span />}
-            <a href="#music-section" className="hero-scroll" aria-label="Scroll to music">
-              <span className="hero-scroll__text">scroll</span>
-              <span className="hero-scroll__line" aria-hidden />
-            </a>
+        <div className="hero__cta rise" style={{ "--i": 3 } as React.CSSProperties}>
+          <div className="btn-row">
+            {featured ? (
+              <Link
+                to={`/music/${featured.track.slug}`}
+                className="btn btn--primary"
+                onClick={() => trackEvent(featured.kind === "presave" ? "presave" : "track_click", { slug: featured.track.slug })}
+              >
+                {featured.kind === "presave" ? <span className="hero__dot" aria-hidden /> : null}
+                {featured.kind === "presave" ? "pre-save" : "listen now"} <span className="arrow" aria-hidden>↗</span>
+              </Link>
+            ) : null}
+            <Link to="/music" className="btn">all music</Link>
           </div>
         </div>
+
+        {featured ? (
+          <Link
+            to={`/music/${featured.track.slug}`}
+            className="hero__caption"
+            onClick={() => trackEvent("track_click", { slug: featured.track.slug })}
+          >
+            <span className="hero__index">01</span>
+            <span className="hero__caption-text">
+              <strong>{featured.track.title}</strong>
+              <small>{captionMeta(featured)}</small>
+            </span>
+            <span className="hero__caption-icon" aria-hidden>↗</span>
+          </Link>
+        ) : null}
       </div>
+
+      {/* vertical rail on the right edge; the accent segment slides down it */}
+      <a href="#latest" className="hero__scroll" aria-label="Scroll to the latest releases">
+        <span className="hero__scroll-text">scroll</span>
+        <span className="hero__scroll-line" aria-hidden />
+      </a>
     </section>
   );
 }

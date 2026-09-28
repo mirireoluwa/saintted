@@ -6,7 +6,10 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTrackBySlug, fetchTracks } from "../api/client";
 import { getTrackArtUrl, getTrackArtSrcSet } from "../utils/trackArt";
-import { Footer } from "../components/Footer";
+import { FALLBACK_TRACKS } from "./HomePage";
+import { trackEvent } from "../utils/analytics";
+import { TrackCard } from "../components/TrackCard";
+import { TrackCoverPlaceholder } from "../components/TrackCoverPlaceholder";
 import { UnreleasedTrackFullScreen } from "../components/UnreleasedTrackFullScreen";
 import {
   appleMusicSearchUrl,
@@ -18,51 +21,6 @@ import spotifyIcon from "../assets/spotify.svg";
 import appleMusicIcon from "../assets/apple-music.svg";
 import youtubeIcon from "../assets/youtube.svg";
 import "./TrackDetailPage.css";
-
-// Shared with HomePage — canonical fallback data shown before API responds.
-const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
-const FALLBACK_TRACKS: Track[] = [
-  {
-    id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0,
-    description: "the song talks about giving someone a chance to prove themselves after a mistake but realizing that sometimes apologies are not enough.\n\nthe lyrics express the struggle of holding onto special memories and feelings while trying to move on from a relationship that may not be working out, symbolized by the metaphor of giving one dance to prove wrong.",
-    year: 2025,
-    youtube_url: `https://www.youtube.com/results?search_query=${_q("one chance")}`,
-    apple_music_url: `https://music.apple.com/us/search?term=${_q("one chance")}`,
-    spotify_url: `https://open.spotify.com/search/${_q("one chance")}`,
-  },
-  {
-    id: 2, title: "shimmer", slug: "shimmer", meta: "Single (Sound)", art_url: "", link_url: "", order: 1,
-    description: "i decided to do something really unconventional. This one has no vocals and I'm sure you all might be wondering, \"why?\". The truth is, it's the best way I could express how i was feeling at the time: \"i've got no words to say\".\n\n\"shimmer\" tells a story of solitude and how i've come to enjoy finding some quiet time alone to think and process life. This song is supposed to help with that. It is designed to help go through those moments of solitude.",
-    year: 2025,
-    youtube_url: `https://www.youtube.com/results?search_query=${_q("shimmer")}`,
-    apple_music_url: `https://music.apple.com/us/search?term=${_q("shimmer")}`,
-    spotify_url: `https://open.spotify.com/search/${_q("shimmer")}`,
-  },
-  {
-    id: 3, title: "hyperphoria", slug: "hyperphoria", meta: "Single", art_url: "", link_url: "", order: 2,
-    description: "This song was actually written in the summer of 2023. I was at a point where I was just trying to figure out my life. It speaks about my aspirations to be a great person, the challenges I will face to get there, and leaving some pain from my past behind.",
-    year: 2024,
-    youtube_url: `https://www.youtube.com/results?search_query=${_q("hyperphoria")}`,
-    apple_music_url: `https://music.apple.com/us/search?term=${_q("hyperphoria")}`,
-    spotify_url: `https://open.spotify.com/search/${_q("hyperphoria")}`,
-  },
-  {
-    id: 4, title: "runaway", slug: "runaway", meta: "Single", art_url: "", link_url: "", order: 3,
-    description: "Runaway speaks about a transition period in my life. I wanted things to change so badly and I thought that the best way to express that was by essentially running away from the old to the new.",
-    year: 2022,
-    youtube_url: `https://www.youtube.com/results?search_query=${_q("runaway")}`,
-    apple_music_url: `https://music.apple.com/us/search?term=${_q("runaway")}`,
-    spotify_url: `https://open.spotify.com/search/${_q("runaway")}`,
-  },
-  {
-    id: 5, title: "home", slug: "home", meta: "Single", art_url: "", link_url: "", order: 4,
-    description: "this song stems from two perspectives.\n\nthe first, from a quote that says, \"sometimes home is a person\". The idea for this song was developed from this quote.\n\nthe second, a vision for a better world where love is everything we express.",
-    year: 2022,
-    youtube_url: `https://www.youtube.com/results?search_query=${_q("home")}`,
-    apple_music_url: `https://music.apple.com/us/search?term=${_q("home")}`,
-    spotify_url: `https://open.spotify.com/search/${_q("home")}`,
-  },
-];
 
 function pickUrl(stored: string | undefined | null, fallback: string): string {
   const t = (stored ?? "").trim();
@@ -101,29 +59,25 @@ function neighborSlugsFromList(list: Track[], currentSlug: string, isUnreleased:
 
 function TrackDetailSkeletonBlocks() {
   return (
-    <>
-      <div className="track-detail__skeleton-nav" />
-      <div className="track-detail__skeleton-title" />
-      <div className="track-detail__main track-detail__main--skeleton">
-        <div className="track-detail__skeleton-cover" />
-        <div className="track-detail__skeleton-about">
-          <div className="track-detail__skeleton-line track-detail__skeleton-line--short" />
-          <div className="track-detail__skeleton-line" />
-          <div className="track-detail__skeleton-line" />
-          <div className="track-detail__skeleton-line track-detail__skeleton-line--med" />
-        </div>
+    <div className="grid-12 track__grid" aria-hidden>
+      <div className="track__media">
+        <div className="track__skeleton" />
       </div>
-      <div className="track-detail__skeleton-meta" />
-    </>
+      <div className="track__info">
+        <div className="track__skeleton-line track__skeleton-line--short" />
+        <div className="track__skeleton-line track__skeleton-line--title" />
+        <div className="track__skeleton-line" />
+        <div className="track__skeleton-line" />
+        <div className="track__skeleton-line track__skeleton-line--med" />
+      </div>
+    </div>
   );
 }
 
 function TrackDetailSkeleton() {
   return (
-    <div className="track-detail">
-      <div className="track-detail__inner track-detail__inner--skeleton">
-        <TrackDetailSkeletonBlocks />
-      </div>
+    <div className="wrap track">
+      <TrackDetailSkeletonBlocks />
     </div>
   );
 }
@@ -297,17 +251,14 @@ export function TrackDetailPage() {
     return (
       <>
         <SeoHead title="Track not found · saintted" description="love, saintted" canonicalPath={canonicalPath} />
-        <div className="track-detail">
-          <div className="track-detail__inner">
-            <p className="track-detail__loading">Track not found.</p>
-            <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
-              home
-            </Link>
-            <p className="track-detail__empty-hint">
-              <Link to="/#music-section">Browse music</Link>
-            </p>
+        <header className="wrap page-head">
+          <p className="eyebrow">404</p>
+          <h1>track not found</h1>
+          <div className="btn-row" style={{ flex: "1 1 100%", marginTop: "2rem" }}>
+            <Link to="/music" className="btn btn--primary">browse music <span className="arrow" aria-hidden>→</span></Link>
+            <Link to="/" className="btn">home</Link>
           </div>
-        </div>
+        </header>
       </>
     );
   }
@@ -338,12 +289,7 @@ export function TrackDetailPage() {
           ogImage={ogU ? absoluteUrl(ogU) : undefined}
           ogType="music.song"
         />
-        <div className="track-detail track-detail--unreleased">
-          <UnreleasedTrackFullScreen track={uTrack} />
-          <div className="track-detail__unreleased-footer">
-            <Footer />
-          </div>
-        </div>
+        <UnreleasedTrackFullScreen track={uTrack} />
       </>
     );
   }
@@ -368,9 +314,8 @@ export function TrackDetailPage() {
   const spotifyEmbedId = displayTrack != null ? spotifyTrackId(displayTrack.spotify_url) : null;
   const coverSrcSet = displayTrack != null ? getTrackArtSrcSet(displayTrack) : undefined;
 
-  const panelClassName = showInterstitial
-    ? "track-detail__inner track-detail__inner--skeleton"
-    : `track-detail__inner${showSlowLoadingUi ? " track-detail__inner--pending" : ""}`;
+  const meta = (displayTrack?.meta || "single").toLowerCase();
+  const moreSongs = breadcrumbSongs.filter((t) => t.slug !== slug).slice(0, 4);
 
   return (
     <>
@@ -388,267 +333,216 @@ export function TrackDetailPage() {
           <script type="application/ld+json">{trackJsonLd}</script>
         </Helmet>
       ) : null}
-      <div className="track-detail">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={slug}
-            className={panelClassName}
-            initial={reduceMotion ? false : { opacity: 0, y: 44 }}
-            animate={{
-              opacity: showSlowLoadingUi ? 0.62 : 1,
-              y: 0,
-              transition: reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.95, ease: [0.14, 1, 0.28, 1] as const },
-            }}
-            exit={
-              reduceMotion
-                ? { opacity: 0, transition: { duration: 0 } }
-                : {
-                    opacity: 0,
-                    y: -36,
-                    transition: { duration: 0.68, ease: [0.5, 0, 0.55, 1] as const },
-                  }
-            }
-            aria-busy={showSlowLoadingUi}
-          >
+      <div className="track-page">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={slug}
+          className={`wrap track${showSlowLoadingUi ? " track--pending" : ""}`}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={{
+            opacity: showSlowLoadingUi ? 0.62 : 1,
+            y: 0,
+            transition: reduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+          }}
+          exit={
+            reduceMotion
+              ? { opacity: 0, transition: { duration: 0 } }
+              : { opacity: 0, y: -12, transition: { duration: 0.3, ease: [0.5, 0, 0.55, 1] as const } }
+          }
+          aria-busy={showSlowLoadingUi}
+        >
           {showInterstitial ? (
             <TrackDetailSkeletonBlocks />
           ) : (
             <>
-          {presaved && (
-            <div className="track-detail__presave-banner" role="status" aria-live="polite">
-              <span className="track-detail__presave-banner__check">✓</span>
-              <span>you're all set — you'll be the first to hear it. love, saintted.</span>
-            </div>
-          )}
-          <nav className="track-detail__nav" aria-label="Track navigation">
-            <Link to="/" className="track-detail__nav-btn track-detail__nav-btn--home">
-              <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-                <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              home
-            </Link>
-            <span className="track-detail__breadcrumb">
-              <Link to="/#music-section" className="track-detail__breadcrumb-link">my music</Link>
-              <span className="track-detail__breadcrumb-sep" aria-hidden>
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none">
-                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="track-detail__crumb-wrap" ref={crumbRef}>
-                <button
-                  type="button"
-                  className="track-detail__breadcrumb-current"
-                  aria-haspopup="listbox"
-                  aria-expanded={crumbOpen}
-                  disabled={breadcrumbSongs.length <= 1}
-                  onClick={() => setCrumbOpen((o) => !o)}
-                >
-                  <span className="track-detail__breadcrumb-current-text">{displayTrack!.title}</span>
-                  {breadcrumbSongs.length > 1 ? (
-                    <svg
-                      className={`track-detail__crumb-caret${crumbOpen ? " track-detail__crumb-caret--open" : ""}`}
-                      viewBox="0 0 24 24"
-                      width="11"
-                      height="11"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ) : null}
-                </button>
-                <AnimatePresence>
-                  {crumbOpen ? (
-                    <motion.ul
-                      className="track-detail__crumb-menu"
-                      role="listbox"
-                      aria-label="Jump to a song"
-                      initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.97 }}
-                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      {breadcrumbSongs.map((t, i) => {
-                        const active = t.slug === displayTrack!.slug;
-                        return (
-                          <motion.li
-                            key={t.slug}
-                            role="option"
-                            aria-selected={active}
-                            initial={reduceMotion ? false : { opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                              duration: reduceMotion ? 0 : 0.22,
-                              ease: [0.22, 1, 0.36, 1],
-                              delay: reduceMotion ? 0 : 0.03 + i * 0.025,
-                            }}
-                          >
-                            <Link
-                              to={`/music/${t.slug}`}
-                              className={`track-detail__crumb-option${active ? " track-detail__crumb-option--active" : ""}`}
-                              onClick={() => setCrumbOpen(false)}
-                            >
-                              {t.title}
-                              {active ? <span className="track-detail__crumb-dot" aria-hidden /> : null}
-                            </Link>
-                          </motion.li>
-                        );
-                      })}
-                    </motion.ul>
-                  ) : null}
-                </AnimatePresence>
-              </span>
-            </span>
-            <div className="track-detail__nav-pair">
-              {prevSlug ? (
-                <Link
-                  to={`/music/${prevSlug}`}
-                  className="track-detail__nav-btn track-detail__nav-btn--prev"
-                  aria-label="Previous track"
-                >
-                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="track-detail__nav-label">previous</span>
+              {presaved && (
+                <div className="notice" role="status" aria-live="polite">
+                  <span aria-hidden>✓</span>
+                  <span>you're all set. you'll be the first to hear it. love, saintted.</span>
+                </div>
+              )}
+
+              <nav className="track__nav" aria-label="Track navigation">
+                <Link to="/music" className="back-link">
+                  <span className="arrow" aria-hidden>←</span> music
                 </Link>
-              ) : (
-                <span
-                  className="track-detail__nav-btn track-detail__nav-btn--prev track-detail__nav-btn--inactive"
-                  aria-disabled="true"
-                >
-                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-                    <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="track-detail__nav-label">previous</span>
+
+                <span className="track__crumb-wrap" ref={crumbRef}>
+                  <button
+                    type="button"
+                    className="track__crumb"
+                    aria-haspopup="listbox"
+                    aria-expanded={crumbOpen}
+                    disabled={breadcrumbSongs.length <= 1}
+                    onClick={() => setCrumbOpen((o) => !o)}
+                  >
+                    <span>{displayTrack!.title}</span>
+                    {breadcrumbSongs.length > 1 ? (
+                      <svg
+                        className={`track__caret${crumbOpen ? " track__caret--open" : ""}`}
+                        viewBox="0 0 24 24"
+                        width="11"
+                        height="11"
+                        fill="none"
+                        aria-hidden
+                      >
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : null}
+                  </button>
+                  <AnimatePresence>
+                    {crumbOpen ? (
+                      <motion.ul
+                        className="track__menu"
+                        role="listbox"
+                        aria-label="Jump to a song"
+                        initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        {breadcrumbSongs.map((t) => {
+                          const active = t.slug === displayTrack!.slug;
+                          return (
+                            <li key={t.slug} role="option" aria-selected={active}>
+                              <Link
+                                to={`/music/${t.slug}`}
+                                className={`track__option${active ? " track__option--active" : ""}`}
+                                onClick={() => setCrumbOpen(false)}
+                              >
+                                {t.title}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </motion.ul>
+                    ) : null}
+                  </AnimatePresence>
                 </span>
-              )}
-              {nextSlug ? (
-                <Link
-                  to={`/music/${nextSlug}`}
-                  className="track-detail__nav-btn track-detail__nav-btn--next"
-                  aria-label="Next track"
-                >
-                  <span className="track-detail__nav-label">next</span>
-                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </Link>
-              ) : (
-                <span
-                  className="track-detail__nav-btn track-detail__nav-btn--next track-detail__nav-btn--inactive"
-                  aria-disabled="true"
-                >
-                  <span className="track-detail__nav-label">next</span>
-                  <svg className="track-detail__nav-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden>
-                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              )}
-            </div>
-          </nav>
 
-          <div className="track-detail__hero">
-            <div className="track-detail__cover">
-              {coverUrl ? (
-                <img
-                  src={coverUrl}
-                  srcSet={coverSrcSet}
-                  alt={`${displayTrack!.title} cover art`}
-                  className="track-detail__cover-img"
-                  decoding="async"
-                  fetchPriority="high"
-                  sizes="(max-width: 720px) 92vw, 380px"
-                />
-              ) : (
-                <div className="track-detail__cover-fallback" aria-hidden />
-              )}
-            </div>
+                <div className="track__pair">
+                  {prevSlug ? (
+                    <Link to={`/music/${prevSlug}`} className="textlink" aria-label="Previous track">
+                      <span className="arrow" aria-hidden>←</span> previous
+                    </Link>
+                  ) : (
+                    <span className="textlink textlink--off" aria-disabled="true">
+                      <span className="arrow" aria-hidden>←</span> previous
+                    </span>
+                  )}
+                  {nextSlug ? (
+                    <Link to={`/music/${nextSlug}`} className="textlink" aria-label="Next track">
+                      next <span className="arrow" aria-hidden>→</span>
+                    </Link>
+                  ) : (
+                    <span className="textlink textlink--off" aria-disabled="true">
+                      next <span className="arrow" aria-hidden>→</span>
+                    </span>
+                  )}
+                </div>
+              </nav>
 
-            <div className="track-detail__info">
-              <span className="track-detail__eyebrow">
-                {(displayTrack!.meta || "single").toLowerCase()}
-                {displayTrack!.year ? ` · ${displayTrack!.year}` : ""}
-              </span>
-              <div className="track-detail__title-line">
-                <h1 className="track-detail__title">{displayTrack!.title}</h1>
-                {displayTrack!.is_highlighted ? <span className="track-card__new-pill">NEW</span> : null}
-              </div>
+              <div className="grid-12 track__grid">
+                <div className="track__media">
+                  <div className="track__frame">
+                    <span className="track__art">
+                      {coverUrl ? (
+                        <img
+                          src={coverUrl}
+                          srcSet={coverSrcSet}
+                          alt={`${displayTrack!.title} cover art`}
+                          decoding="async"
+                          fetchPriority="high"
+                          sizes="(max-width: 1000px) 92vw, 640px"
+                        />
+                      ) : (
+                        <TrackCoverPlaceholder variant="detail" />
+                      )}
+                    </span>
+                  </div>
+                </div>
 
-              {(displayTrack!.description || "").trim() ? (
-                <div className="track-detail__desc">
-                  {(displayTrack!.description || "")
-                    .trim()
-                    .split(/\n\n+/)
-                    .map((para, i) => (
-                      <p key={i} className="track-detail__desc-text">{para}</p>
+                <div className="track__info">
+                  <p className="eyebrow">{displayTrack!.is_highlighted ? "latest release" : "release"}</p>
+                  <div className="track__title-line">
+                    <h1 className="track__title">{displayTrack!.title}</h1>
+                    {displayTrack!.is_highlighted ? <span className="tag">new</span> : null}
+                  </div>
+
+                  <p className="track__meta">
+                    {[displayTrack!.year, meta].filter(Boolean).join(" · ")}
+                  </p>
+
+                  {(displayTrack!.description || "").trim() ? (
+                    <div className="prose track__desc">
+                      {(displayTrack!.description || "")
+                        .trim()
+                        .split(/\n\n+/)
+                        .map((para, i) => (
+                          <p key={i}>{para}</p>
+                        ))}
+                    </div>
+                  ) : null}
+
+                  <p className="eyebrow track__listen-label">listen on</p>
+                  <ul className="listen">
+                    {[
+                      { name: "Spotify", key: "spotify", href: sp, icon: spotifyIcon },
+                      { name: "Apple Music", key: "apple", href: am, icon: appleMusicIcon },
+                      { name: "YouTube", key: "youtube", href: yt, icon: youtubeIcon },
+                    ].map((p) => (
+                      <li key={p.name}>
+                        <a href={p.href} target="_blank" rel="noopener noreferrer" aria-label={`Listen on ${p.name}`} className={`listen__${p.key}`} onClick={() => trackEvent("listen", { slug: displayTrack!.slug, platform: p.key })}>
+                          <img src={p.icon} alt="" aria-hidden />
+                          <span className="listen__name">{p.name}</span>
+                          <span className="listen__go" aria-hidden>↗</span>
+                        </a>
+                      </li>
                     ))}
-                </div>
-              ) : null}
-
-              <div className="track-detail__listen">
-                <span className="track-detail__listen-label">.listen on</span>
-                <div className="track-detail__streaming">
-              <a
-                href={sp}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Listen on Spotify"
-                className="track-detail__stream-link track-detail__stream-link--spotify"
-              >
-                <img className="track-detail__stream-logo" src={spotifyIcon} alt="" aria-hidden />
-                <span className="track-detail__stream-label">Spotify</span>
-              </a>
-              <a
-                href={am}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Listen on Apple Music"
-                className="track-detail__stream-link track-detail__stream-link--apple"
-              >
-                <img className="track-detail__stream-logo" src={appleMusicIcon} alt="" aria-hidden />
-                <span className="track-detail__stream-label">Apple Music</span>
-              </a>
-              <a
-                href={yt}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Listen on YouTube"
-                className="track-detail__stream-link track-detail__stream-link--youtube"
-              >
-                <img className="track-detail__stream-logo" src={youtubeIcon} alt="" aria-hidden />
-                <span className="track-detail__stream-label">YouTube</span>
-              </a>
+                  </ul>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {spotifyEmbedId && (
-            <div className="track-detail__spotify-embed">
-              <iframe
-                title={`Listen to ${displayTrack!.title} on Spotify`}
-                src={`https://open.spotify.com/embed/track/${spotifyEmbedId}?utm_source=generator&theme=0`}
-                width="100%"
-                height="152"
-                frameBorder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          <Footer />
+              {spotifyEmbedId && (
+                <div className="track__embed">
+                  <iframe
+                    title={`Listen to ${displayTrack!.title} on Spotify`}
+                    src={`https://open.spotify.com/embed/track/${spotifyEmbedId}?utm_source=generator&theme=0`}
+                    width="100%"
+                    height="152"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                  />
+                </div>
+              )}
             </>
           )}
           {showSlowLoadingUi ? (
-            <div className="track-detail__pending-bar" aria-hidden>
-              <span className="track-detail__pending-bar__fill" />
+            <div className="track__pending-bar" aria-hidden>
+              <span />
             </div>
           ) : null}
         </motion.div>
-        </AnimatePresence>
+      </AnimatePresence>
+
+      {!showInterstitial && moreSongs.length > 0 ? (
+        <section className="section track-more" aria-labelledby="more-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 id="more-title">more releases</h2>
+              <Link to="/music" className="textlink">
+                all music <span className="arrow" aria-hidden>→</span>
+              </Link>
+            </div>
+            <div className="card-grid card-grid--4">
+              {moreSongs.map((t, i) => (
+                <TrackCard key={t.slug} track={t} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
       </div>
     </>
   );

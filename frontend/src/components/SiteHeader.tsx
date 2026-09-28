@@ -1,168 +1,65 @@
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { sectionTransition } from "../utils/motion";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./SiteHeader.css";
 
-type NavItem =
-  | { kind: "section"; id: string; label: string }
-  | { kind: "page"; to: string; label: string };
-
-// Sections scroll within the homepage; pages open their own route.
-const NAV_ITEMS: NavItem[] = [
-  { kind: "section", id: "music-section", label: "music" },
-  { kind: "page", to: "/media", label: "media" },
-  { kind: "page", to: "/shows", label: "shows" },
-  { kind: "section", id: "about-section", label: "about" },
+const NAV = [
+  { to: "/music", label: "music" },
+  { to: "/media", label: "media" },
+  { to: "/shows", label: "shows" },
+  { to: "/about", label: "about" },
 ];
 
-const SECTION_IDS = NAV_ITEMS.flatMap((n) => (n.kind === "section" ? [n.id] : []));
-
 export function SiteHeader() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const reduceMotion = useReducedMotion() ?? false;
+  const { pathname } = useLocation();
+  const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
 
-  const handleSectionClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    setMenuOpen(false);
-    const targetHash = `#${id}`;
-    if (location.pathname === "/" && location.hash === targetHash) {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    navigate({ pathname: "/", hash: targetHash }, { replace: location.pathname === "/" });
-  };
-
-  // Scroll-spy: highlight the nav item whose section is crossing the viewport centre.
+  // Phones: the nav is a dropdown. Close it on navigation, Escape, or a tap outside.
+  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
-    if (location.pathname !== "/") {
-      setActiveId(null);
-      return;
-    }
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const mid = window.innerHeight / 2;
-      let current: string | null = null;
-      for (const id of SECTION_IDS) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= mid && rect.bottom >= mid) {
-          current = id;
-          break;
-        }
-      }
-      setActiveId(current);
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onPointer = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setOpen(false);
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
     };
-  }, [location.pathname]);
+  }, [open]);
 
   return (
-    <header className="site-header">
-      <div className="site-header__inner">
-        <Link to="/" className="site-header__brand" onClick={() => setMenuOpen(false)}>
-          <span className="site-header__brand-dot" aria-hidden>.</span>
+    <header ref={headerRef} className={`site-header${pathname === "/" ? " site-header--overlay" : ""}${open ? " site-header--open" : ""}`} id="top">
+      <div className="wrap">
+        <Link to="/" className="brand" aria-label="saintted — home">
           saintted
+          <span className="seal" aria-hidden />
         </Link>
 
-        <div className="site-header__right">
-          <nav className="site-header__nav" aria-label="Primary">
-            {NAV_ITEMS.map((item) =>
-              item.kind === "page" ? (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`site-header__nav-link${location.pathname === item.to ? " site-header__nav-link--active" : ""}`}
-                  aria-current={location.pathname === item.to ? "page" : undefined}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <a
-                  key={item.id}
-                  href={`/#${item.id}`}
-                  className={`site-header__nav-link${activeId === item.id ? " site-header__nav-link--active" : ""}`}
-                  aria-current={activeId === item.id ? "true" : undefined}
-                  onClick={(e) => handleSectionClick(e, item.id)}
-                >
-                  {item.label}
-                </a>
-              ),
-            )}
-          </nav>
+        <button
+          type="button"
+          className="menu-btn"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          onClick={() => setOpen((o) => !o)}
+        >
+          <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
+          <span className="menu-btn__icon" aria-hidden />
+        </button>
 
-          <button
-            type="button"
-            className="site-header__menu-btn"
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            <span className="site-header__menu-icon" aria-hidden />
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {menuOpen ? (
-            <motion.nav
-              className="site-header__mobile"
-              aria-label="Mobile"
-              initial={reduceMotion ? false : { opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
-              transition={sectionTransition(reduceMotion)}
+        <nav className="nav" id="site-nav" aria-label="Main">
+          {NAV.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              aria-current={pathname === l.to || pathname.startsWith(`${l.to}/`) ? "page" : undefined}
             >
-              {NAV_ITEMS.map((item, i) => {
-                const motionProps = {
-                  initial: reduceMotion ? (false as const) : { opacity: 0, x: -10 },
-                  animate: { opacity: 1, x: 0 },
-                  transition: {
-                    ...sectionTransition(reduceMotion),
-                    delay: reduceMotion ? 0 : 0.05 + i * 0.045,
-                  },
-                };
-                return item.kind === "page" ? (
-                  <motion.div key={item.to} {...motionProps}>
-                    <Link
-                      to={item.to}
-                      className={`site-header__mobile-link${location.pathname === item.to ? " site-header__mobile-link--active" : ""}`}
-                      aria-current={location.pathname === item.to ? "page" : undefined}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                ) : (
-                  <motion.a
-                    key={item.id}
-                    href={`/#${item.id}`}
-                    className={`site-header__mobile-link${activeId === item.id ? " site-header__mobile-link--active" : ""}`}
-                    aria-current={activeId === item.id ? "true" : undefined}
-                    {...motionProps}
-                    onClick={(e) => handleSectionClick(e, item.id)}
-                  >
-                    {item.label}
-                  </motion.a>
-                );
-              })}
-            </motion.nav>
-          ) : null}
-        </AnimatePresence>
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   );

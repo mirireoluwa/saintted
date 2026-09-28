@@ -21,6 +21,8 @@ export interface Track {
   release_at?: string | null;
   /** Pre-save URL for unreleased detail page. */
   presave_url?: string;
+  /** Optional #rrggbb accent for the unreleased/upcoming presentation. Empty = site default. */
+  accent_color?: string;
   /** Present on GET /api/tracks/<slug>/ (detail); enables prev/next before the list loads. */
   previous_slug?: string | null;
   next_slug?: string | null;

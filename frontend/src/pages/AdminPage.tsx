@@ -49,6 +49,14 @@ import {
   type MailingListSubscriber,
 } from "../api/adminApi";
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
+import { AdminDropzone } from "../components/AdminDropzone";
+import { AdminSortableList } from "../components/AdminSortableList";
+import { AdminNotifications } from "../components/AdminNotifications";
+import { AdminInsights } from "../components/AdminInsights";
+import { buildNotices, type AdminNotice } from "../components/noticeRules";
+import { markAdminBrowser } from "../utils/analytics";
+import { getTrackArtUrl } from "../utils/trackArt";
+import { FocalPointEditor } from "../components/FocalPointEditor";
 import { AdminAboutPanel } from "../components/AdminAboutPanel";
 import { AdminShowsPanel } from "../components/AdminShowsPanel";
 import { getAdminSiteOrigin, shouldSuggestAdminSubdomain } from "../utils/adminHost";
@@ -100,6 +108,7 @@ function emptyTrackForm(): Record<string, string | number> {
     is_unreleased: 0,
     release_at_local: "",
     presave_url: "",
+    accent_color: "",
     highlighted_until_local: "",
     publish_at_local: "",
   };
@@ -123,6 +132,7 @@ function trackToForm(t: Track): Record<string, string | number> {
     is_unreleased: t.is_unreleased ? 1 : 0,
     release_at_local: isoToDatetimeLocal(t.release_at),
     presave_url: t.presave_url || "",
+    accent_color: t.accent_color || "",
     highlighted_until_local: isoToDatetimeLocal(t.highlighted_until),
     publish_at_local: isoToDatetimeLocal(t.publish_at),
   };
@@ -191,9 +201,6 @@ function arrayMove<T>(arr: readonly T[], from: number, to: number): T[] {
   return result;
 }
 
-const DND_TYPE_TRACK = "application/x-saintted-admin-track";
-const DND_TYPE_VIDEO = "application/x-saintted-admin-video";
-const DND_TYPE_GALLERY = "application/x-saintted-admin-gallery";
 
 /** How long to wait with no new reorder success before showing one "order updated" toast (per list). */
 const REORDER_SUCCESS_TOAST_QUIET_MS = 2500;
@@ -224,7 +231,63 @@ const SESSION_LOGIN_KEY = "saintted_admin_login_at";
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SESSION_WARN_BEFORE_MS = 24 * 60 * 60 * 1000;  // warn 1 day before expiry
 
+const SUBSCRIBER_PREVIEW = 8;
+const SUBSCRIBER_PAGE_SIZE = 20;
+
+const ACCENT_PRESETS = ["#87ceeb", "#f472b6", "#fbbf24", "#a3e635", "#a78bfa", "#fb7185", "#34d399", "#f97316"];
+
+type AdminSection = "notifications" | "home" | "music" | "media" | "pages" | "audience" | "insights";
+
+const ADMIN_SECTIONS: { id: AdminSection; label: string; hint: string }[] = [
+  { id: "notifications", label: "Notifications", hint: "what needs you" },
+  { id: "home", label: "Homepage", hint: "countdown + hero" },
+  { id: "music", label: "Music", hint: "tracks" },
+  { id: "media", label: "Media", hint: "videos + photos" },
+  { id: "pages", label: "Pages", hint: "about + shows" },
+  { id: "audience", label: "Audience", hint: "mailing list" },
+  { id: "insights", label: "Insights", hint: "who visits + clicks" },
+];
+
+const SEEN_KEY = "saintted:admin-seen";
+const READ_KEY = "saintted:admin-read";
+const DISMISSED_KEY = "saintted:admin-dismissed";
+
+function loadSet(key: string): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) || "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+}
+function saveSet(key: string, v: Set<string>) {
+  try {
+    localStorage.setItem(key, JSON.stringify([...v].slice(-300)));
+  } catch {
+    /* ignore */
+  }
+}
+
+function sectionFromHash(): AdminSection {
+  const h = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+  return ADMIN_SECTIONS.some((x) => x.id === h) ? (h as AdminSection) : "notifications";
+}
+
 export function AdminPage() {
+  const [section, setSectionState] = useState<AdminSection>(sectionFromHash);
+  const [lastSeen, setLastSeen] = useState<number>(() => {
+    try {
+      return Number(localStorage.getItem(SEEN_KEY)) || 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [readIds, setReadIds] = useState<Set<string>>(() => loadSet(READ_KEY));
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => loadSet(DISMISSED_KEY));
+  const setSection = (next: AdminSection) => {
+    setSectionState(next);
+    window.history.replaceState(null, "", `#${next}`);
+    window.scrollTo({ top: 0 });
+  };
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
@@ -239,6 +302,9 @@ export function AdminPage() {
 
   // Mailing list
   const [mlSubscribers, setMlSubscribers] = useState<MailingListSubscriber[]>([]);
+  const [subsFullView, setSubsFullView] = useState(false);
+  const [subsQuery, setSubsQuery] = useState("");
+  const [subsPage, setSubsPage] = useState(1);
   const [mlCount, setMlCount] = useState<number | null>(null);
   const [mlLoading, setMlLoading] = useState(false);
   const [broadcastSubject, setBroadcastSubject] = useState("");
@@ -253,6 +319,12 @@ export function AdminPage() {
 
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [trackDrawerOpen, setTrackDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) markAdminBrowser();
+  }, [isLoggedIn]);
+
   const [trackCoverFile, setTrackCoverFile] = useState<File | null>(null);
   const [clearTrackCover, setClearTrackCover] = useState(false);
   const [trackCoverBlobUrl, setTrackCoverBlobUrl] = useState<string | null>(null);
@@ -298,21 +370,6 @@ export function AdminPage() {
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
   const [editingGalleryId, setEditingGalleryId] = useState<number | null>(null);
 
-  const [dndDragging, setDndDragging] = useState<
-    | { kind: "track"; key: string }
-    | { kind: "video"; id: number }
-    | { kind: "gallery"; id: number }
-    | null
-  >(null);
-
-  // Touch drag state for mobile reorder
-  const touchDragRef = useRef<{
-    kind: "track" | "video" | "gallery";
-    key: string | number;
-    startY: number;
-    currentY: number;
-  } | null>(null);
-
   const [countdownForm, setCountdownForm] = useState(emptyCountdownForm);
   const [heroImageForm, setHeroImageForm] = useState(emptyHeroImageForm);
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
@@ -357,30 +414,6 @@ export function AdminPage() {
     () => [...galleryImages].sort((a, b) => a.order - b.order || a.id - b.id),
     [galleryImages],
   );
-
-  const trackOrderConflict = useMemo(() => {
-    const currentOrder = Number(trackForm.order) || 0;
-    return tracks.some((item) => {
-      if (editingSlug && item.slug === editingSlug) return false;
-      return item.order === currentOrder;
-    });
-  }, [editingSlug, trackForm.order, tracks]);
-
-  const videoOrderConflict = useMemo(() => {
-    const currentOrder = Number(videoForm.order) || 0;
-    return videos.some((item) => {
-      if (editingVideoId != null && item.id === editingVideoId) return false;
-      return item.order === currentOrder;
-    });
-  }, [editingVideoId, videoForm.order, videos]);
-
-  const galleryOrderConflict = useMemo(() => {
-    const currentOrder = Number(galleryForm.order) || 0;
-    return galleryImages.some((item) => {
-      if (editingGalleryId != null && item.id === editingGalleryId) return false;
-      return item.order === currentOrder;
-    });
-  }, [editingGalleryId, galleryForm.order, galleryImages]);
 
   const dismissToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -600,7 +633,7 @@ export function AdminPage() {
     setEditingSlug(null);
     setEditingVideoId(null);
     setEditingGalleryId(null);
-    setGalleryForm(emptyGalleryForm());
+    setGalleryForm({ ...emptyGalleryForm(), order: sortedGalleryImages.length ? Math.max(...sortedGalleryImages.map((g) => g.order)) + 1 : 0 });
     setGalleryFile(null);
     setCountdownForm(emptyCountdownForm());
     setHeroImageForm(emptyHeroImageForm());
@@ -667,14 +700,41 @@ export function AdminPage() {
     }
   }
 
+  useEffect(() => {
+    if (!trackDrawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeTrackDrawer();
+    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trackDrawerOpen]);
+
   function startNewTrack() {
     setEditingSlug(null);
-    setTrackForm(emptyTrackForm());
+    // new items join the end of the list; reorder them from the list afterwards
+    setTrackForm({ ...emptyTrackForm(), order: sortedTracks.length ? Math.max(...sortedTracks.map((t) => t.order)) + 1 : 0 });
     setTrackCoverFile(null);
     setClearTrackCover(false);
   }
 
+  function openNewTrack() {
+    startNewTrack();
+    setTrackDrawerOpen(true);
+  }
+
+  function closeTrackDrawer() {
+    startNewTrack();
+    setTrackDrawerOpen(false);
+  }
+
   function startEditTrack(t: Track) {
+    setTrackDrawerOpen(true);
     setEditingSlug(t.slug);
     setTrackForm(trackToForm(t));
     setTrackCoverFile(null);
@@ -713,6 +773,7 @@ export function AdminPage() {
       is_unreleased: isUnreleased,
       release_at,
       presave_url: String(trackForm.presave_url).trim(),
+      accent_color: String(trackForm.accent_color || "").trim(),
       highlighted_until,
       publish_at,
     };
@@ -748,7 +809,7 @@ export function AdminPage() {
         notify("ok", "Track created.");
       }
       await loadData();
-      startNewTrack();
+      closeTrackDrawer();
     } catch (err) {
       notify("error", String(err));
     }
@@ -759,7 +820,7 @@ export function AdminPage() {
     try {
       await deleteTrack(slug);
       notify("ok", "Track deleted.");
-      if (editingSlug === slug) startNewTrack();
+      if (editingSlug === slug) closeTrackDrawer();
       await loadData();
     } catch (err) {
       notify("error", String(err));
@@ -796,7 +857,7 @@ export function AdminPage() {
 
   function startNewVideo() {
     setEditingVideoId(null);
-    setVideoForm({ title: "", youtube_id: "", order: 0 });
+    setVideoForm({ title: "", youtube_id: "", order: sortedVideos.length ? Math.max(...sortedVideos.map((v) => v.order)) + 1 : 0 });
   }
 
   function startEditVideo(v: FeaturedVideo) {
@@ -959,29 +1020,67 @@ export function AdminPage() {
     }
   }
 
-  // ── Touch drag-to-reorder helpers ────────────────────────────────────────
-  function handleTouchStart(
-    kind: "track" | "video" | "gallery",
-    key: string | number,
-    e: React.TouchEvent
-  ) {
-    const touch = e.touches[0];
-    touchDragRef.current = { kind, key, startY: touch.clientY, currentY: touch.clientY };
-    setDndDragging(
-      kind === "track"
-        ? { kind, key: key as string }
-        : { kind, id: key as number }
-    );
-  }
-
-  function handleTouchMove(e: React.TouchEvent) {
-    if (!touchDragRef.current) return;
-    e.preventDefault(); // prevent page scroll while dragging
-    touchDragRef.current.currentY = e.touches[0].clientY;
-  }
-
   if (!sessionChecked) {
     return null;
+  }
+
+  const renderSubscriberRow = (s: MailingListSubscriber) => (
+    <tr key={s.id}>
+      <td>{s.first_name} {s.last_name}</td>
+      <td>{s.email}</td>
+      <td>{new Date(s.subscribed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
+      <td className="admin-table__actions">
+        <button
+          type="button"
+          className="admin-btn admin-btn--danger"
+          aria-label={`Remove ${s.email}`}
+          onClick={() => void handleDeleteSubscriber(s.id, s.email)}
+        >
+          <span className="admin-btn__icon"><TrashIcon /></span>
+          <span className="admin-btn__label">Remove</span>
+        </button>
+      </td>
+    </tr>
+  );
+
+  const subsQ = subsQuery.trim().toLowerCase();
+  const subsFiltered = subsQ
+    ? mlSubscribers.filter((x) => `${x.first_name} ${x.last_name} ${x.email}`.toLowerCase().includes(subsQ))
+    : mlSubscribers;
+  const subsPages = Math.max(1, Math.ceil(subsFiltered.length / SUBSCRIBER_PAGE_SIZE));
+  const subsPageSafe = Math.min(subsPage, subsPages);
+  const subsSlice = subsFiltered.slice((subsPageSafe - 1) * SUBSCRIBER_PAGE_SIZE, subsPageSafe * SUBSCRIBER_PAGE_SIZE);
+
+  const notices: AdminNotice[] = buildNotices(tracks, mlSubscribers, lastSeen).filter((n) => !dismissedIds.has(n.id));
+  const unreadCount = notices.filter((n) => n.unread && !readIds.has(n.id)).length;
+  const trackTitles = Object.fromEntries(tracks.map((t) => [t.slug, t.title]));
+
+  function markAllNoticesRead() {
+    const now = Date.now();
+    setLastSeen(now);
+    try {
+      localStorage.setItem(SEEN_KEY, String(now));
+    } catch {
+      /* ignore */
+    }
+    const next = new Set(readIds);
+    notices.forEach((n) => next.add(n.id));
+    setReadIds(next);
+    saveSet(READ_KEY, next);
+  }
+  function dismissNotice(id: string) {
+    const next = new Set(dismissedIds);
+    next.add(id);
+    setDismissedIds(next);
+    saveSet(DISMISSED_KEY, next);
+  }
+  function openNotice(n: AdminNotice) {
+    if (!n.action) return;
+    setSection(n.action.section);
+    if (n.action.trackSlug) {
+      const t = tracks.find((x) => x.slug === n.action!.trackSlug);
+      if (t) startEditTrack(t);
+    }
   }
 
   if (!isLoggedIn) {
@@ -1044,23 +1143,62 @@ export function AdminPage() {
         </div>
       )}
 
-      <div className="admin-page__toolbar">
-        <div className="admin-page__toolbar-label">
-          <p>.tracks &amp; videos</p>
-          <span className="admin-page__toolbar-line" aria-hidden />
-        </div>
-        <div className="admin-page__actions">
-          <button type="button" className="admin-btn" onClick={() => void loadData()}>
-            Refresh
-          </button>
-          <button type="button" className="admin-btn admin-btn--danger" onClick={() => void logout()}>
-            Log out
-          </button>
-        </div>
-      </div>
+      <div className="admin-shell">
+        <aside className="admin-side">
+          <nav className="admin-side__nav" aria-label="Admin sections">
+            {ADMIN_SECTIONS.map((x) => {
+              const count =
+                x.id === "notifications" ? (unreadCount || null)
+                : x.id === "music" ? tracks.length
+                : x.id === "media" ? videos.length + galleryImages.length
+                : x.id === "audience" ? mlCount
+                : null;
+              return (
+                <button
+                  key={x.id}
+                  type="button"
+                  className="admin-side__link"
+                  aria-current={section === x.id ? "page" : undefined}
+                  onClick={() => setSection(x.id)}
+                >
+                  <span className="admin-side__label">{x.label}</span>
+                  <span className="admin-side__hint">{x.hint}</span>
+                  {count != null ? <span className={`admin-side__count${x.id === "notifications" ? " admin-side__count--alert" : ""}`}>{count}</span> : null}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="admin-side__foot">
+            <button type="button" className="admin-btn" onClick={() => void loadData()}>
+              Refresh
+            </button>
+            <button type="button" className="admin-btn admin-btn--danger" onClick={() => void logout()}>
+              Log out
+            </button>
+          </div>
+        </aside>
 
-      {loading && <p className="admin-page__loading">Loading…</p>}
+        <main className="admin-main">
+          <header className="admin-main__head">
+            <p className="admin-main__eyebrow">admin</p>
+            <h1 className="admin-main__title">{ADMIN_SECTIONS.find((x) => x.id === section)?.label}</h1>
+            {loading && <p className="admin-page__loading">Loading…</p>}
+          </header>
 
+
+      {section === "notifications" && (
+        <AdminNotifications
+          notices={notices}
+          onOpen={openNotice}
+          onDismiss={dismissNotice}
+          onMarkAllRead={markAllNoticesRead}
+          subscriberTotal={mlCount ?? (mlSubscribers.length || null)}
+        />
+      )}
+
+      {section === "insights" && <AdminInsights trackTitles={trackTitles} />}
+
+      {section === "home" && (<>
       <div className="admin-card">
         <h2 className="admin-card__title">Release countdown</h2>
         <p className="admin-card__lead">
@@ -1131,21 +1269,30 @@ export function AdminPage() {
         <div className="admin-hero-media-grid">
           <form className="admin-form admin-hero-media-col" onSubmit={saveHeroImageSettings}>
             <h3 className="admin-hero-media-col__title">Image</h3>
-            <div
-              className="admin-crop-editor__preview admin-hero-media-col__preview"
-              style={
-                heroImagePreviewUrl
-                  ? {
-                      backgroundImage: `url(${heroImagePreviewUrl})`,
-                      backgroundPosition: `${heroImageForm.header_image_focus_x}% ${heroImageForm.header_image_focus_y}%`,
-                    }
-                  : undefined
-              }
-              aria-hidden
+            <AdminDropzone
+              id="hero-image-upload"
+              kind="image"
+              accept="image/*"
+              file={heroImageFile}
+              currentUrl={clearHeroImageUpload ? null : heroImagePreviewUrl}
+              hint="landscape, at least 1920px wide"
+              onFile={(f) => {
+                setHeroImageFile(f);
+                if (f) setClearHeroImageUpload(false);
+              }}
             />
-            {!heroImagePreviewUrl ? <p className="admin-form__hint">No image selected yet.</p> : null}
+            {heroImageForm.header_image_file_url ? (
+              <label className="admin-form__check">
+                <input
+                  type="checkbox"
+                  checked={clearHeroImageUpload}
+                  onChange={(e) => setClearHeroImageUpload(e.target.checked)}
+                />
+                <span>Remove the current uploaded image</span>
+              </label>
+            ) : null}
             <div className="admin-form__row">
-              <label htmlFor="hero-image-url">Image URL (optional)</label>
+              <label htmlFor="hero-image-url">Or use an image URL</label>
               <input
                 id="hero-image-url"
                 type="url"
@@ -1156,69 +1303,19 @@ export function AdminPage() {
                 }
               />
             </div>
-            <div className="admin-form__row">
-              <label htmlFor="hero-image-upload">Upload image (optional)</label>
-              <input
-                id="hero-image-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setHeroImageFile(e.target.files?.[0] || null)}
-              />
-              {heroImageForm.header_image_file_url ? (
-                <p className="admin-form__hint">
-                  Current upload:{" "}
-                  <a href={heroImageForm.header_image_file_url} target="_blank" rel="noreferrer">
-                    open image
-                  </a>
-                </p>
-              ) : null}
-              <label className="admin-form__check">
-                <input
-                  type="checkbox"
-                  checked={clearHeroImageUpload}
-                  onChange={(e) => setClearHeroImageUpload(e.target.checked)}
+            {heroImagePreviewUrl ? (
+              <div className="admin-form__row">
+                <label>Crop</label>
+                <FocalPointEditor
+                  src={heroImagePreviewUrl}
+                  x={Math.round(heroImageForm.header_image_focus_x)}
+                  y={Math.round(heroImageForm.header_image_focus_y)}
+                  onChange={(x, y) =>
+                    setHeroImageForm((f) => ({ ...f, header_image_focus_x: x, header_image_focus_y: y }))
+                  }
                 />
-                <span>Remove current uploaded image</span>
-              </label>
-            </div>
-            <div className="admin-form__row">
-              <label>Image alignment (crop editor)</label>
-              <div className="admin-crop-editor">
-                <div className="admin-crop-editor__controls">
-                  <label htmlFor="hero-image-focus-x">
-                    Horizontal position: {Math.round(heroImageForm.header_image_focus_x)}%
-                  </label>
-                  <input
-                    id="hero-image-focus-x"
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={heroImageForm.header_image_focus_x}
-                    onChange={(e) =>
-                      setHeroImageForm((f) => ({ ...f, header_image_focus_x: Number(e.target.value) }))
-                    }
-                  />
-                  <label htmlFor="hero-image-focus-y">
-                    Vertical position: {Math.round(heroImageForm.header_image_focus_y)}%
-                  </label>
-                  <input
-                    id="hero-image-focus-y"
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={heroImageForm.header_image_focus_y}
-                    onChange={(e) =>
-                      setHeroImageForm((f) => ({ ...f, header_image_focus_y: Number(e.target.value) }))
-                    }
-                  />
-                </div>
               </div>
-              <p className="admin-form__hint">
-                Adjust what stays in frame in the hero crop.
-              </p>
-            </div>
+            ) : null}
             <div className="admin-page__actions">
               <button
                 type="submit"
@@ -1231,19 +1328,30 @@ export function AdminPage() {
 
           <form className="admin-form admin-hero-media-col" onSubmit={saveHeroVideoSettings}>
             <h3 className="admin-hero-media-col__title">Video</h3>
-            {heroVideoPreviewUrl ? (
-              <video
-                className="admin-hero-video-preview admin-hero-media-col__preview"
-                src={heroVideoPreviewUrl}
-                controls
-                muted
-                playsInline
-              />
-            ) : (
-              <div className="admin-hero-media-col__empty">No video selected yet.</div>
-            )}
+            <AdminDropzone
+              id="hero-video-upload"
+              kind="video"
+              accept="video/*"
+              file={heroVideoFile}
+              currentUrl={clearHeroVideoUpload ? null : heroVideoPreviewUrl}
+              hint="short, muted loop, MP4"
+              onFile={(f) => {
+                setHeroVideoFile(f);
+                if (f) setClearHeroVideoUpload(false);
+              }}
+            />
+            {heroImageForm.header_video_file_url ? (
+              <label className="admin-form__check">
+                <input
+                  type="checkbox"
+                  checked={clearHeroVideoUpload}
+                  onChange={(e) => setClearHeroVideoUpload(e.target.checked)}
+                />
+                <span>Remove the current uploaded video</span>
+              </label>
+            ) : null}
             <div className="admin-form__row">
-              <label htmlFor="hero-video-url">Video URL (optional)</label>
+              <label htmlFor="hero-video-url">Or use a video URL</label>
               <input
                 id="hero-video-url"
                 type="url"
@@ -1254,33 +1362,8 @@ export function AdminPage() {
                 }
               />
               <p className="admin-form__hint">
-                Video autoplay is attempted on the public site. Keep an image set as visual fallback.
+                The video autoplays on the public site. Keep an image set as the fallback.
               </p>
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="hero-video-upload">Upload video (optional)</label>
-              <input
-                id="hero-video-upload"
-                type="file"
-                accept="video/*"
-                onChange={(e) => setHeroVideoFile(e.target.files?.[0] || null)}
-              />
-              {heroImageForm.header_video_file_url ? (
-                <p className="admin-form__hint">
-                  Current upload:{" "}
-                  <a href={heroImageForm.header_video_file_url} target="_blank" rel="noreferrer">
-                    open video
-                  </a>
-                </p>
-              ) : null}
-              <label className="admin-form__check">
-                <input
-                  type="checkbox"
-                  checked={clearHeroVideoUpload}
-                  onChange={(e) => setClearHeroVideoUpload(e.target.checked)}
-                />
-                <span>Remove current uploaded video</span>
-              </label>
             </div>
             <div className="admin-page__actions">
               <button
@@ -1294,269 +1377,313 @@ export function AdminPage() {
         </div>
       </div>
 
-      <div className="admin-card">
-        <h2 className="admin-card__title">{editingSlug ? "Edit track" : "Add track"}</h2>
-        <form className="admin-form" onSubmit={saveTrack}>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-title">Title *</label>
-              <input
-                id="t-title"
-                value={String(trackForm.title)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, title: e.target.value }))}
-              />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="t-slug">Slug (URL)</label>
-              <input
-                id="t-slug"
-                placeholder="auto from title if empty"
-                value={String(trackForm.slug)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, slug: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-meta">Meta</label>
-              <input
-                id="t-meta"
-                placeholder="e.g. Single, EP"
-                value={String(trackForm.meta)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, meta: e.target.value }))}
-              />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="t-order">Order</label>
-              <input
-                id="t-order"
-                type="number"
-                className={trackOrderConflict ? "admin-input--error" : undefined}
-                value={trackForm.order}
-                onChange={(e) =>
-                  setTrackForm((f) => ({ ...f, order: parseInt(e.target.value, 10) || 0 }))
-                }
-              />
-              {trackOrderConflict ? (
-                <p className="admin-form__hint admin-form__hint--error">
-                  This order number is already used by another track.
-                </p>
-              ) : null}
-            </div>
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="t-art">Cover art URL</label>
-            <input
-              id="t-art"
-              placeholder="Optional — or upload a file below"
-              value={String(trackForm.art_url)}
-              onChange={(e) => setTrackForm((f) => ({ ...f, art_url: e.target.value }))}
-            />
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-art-file">Upload cover art</label>
-              <input
-                id="t-art-file"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setTrackCoverFile(f);
-                  if (f) setClearTrackCover(false);
-                }}
-              />
-              {coverArtWarning ? (
-                <p className="admin-form__hint admin-form__hint--warning">⚠ {coverArtWarning}</p>
-              ) : null}
-            </div>
-            {trackCoverPreviewUrl ? (
-              <div className="admin-form__row admin-form__preview">
-                <span className="admin-form__preview-label">Preview</span>
-                <img
-                  src={trackCoverPreviewUrl}
-                  alt=""
-                  className="admin-track-cover-preview"
-                />
-              </div>
-            ) : null}
-          </div>
-          {editingSlug ? (
-            <div className="admin-form__row admin-form__row--checkbox">
-              <label className="admin-form__checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={clearTrackCover}
-                  onChange={(e) => {
-                    setClearTrackCover(e.target.checked);
-                    if (e.target.checked) setTrackCoverFile(null);
-                  }}
-                />
-                <span>Remove uploaded cover (use URL above or automatic art only)</span>
-              </label>
-            </div>
-          ) : null}
-          <div className="admin-form__row">
-            <label htmlFor="t-link">General link</label>
-            <input
-              id="t-link"
-              placeholder="Streaming or purchase"
-              value={String(trackForm.link_url)}
-              onChange={(e) => setTrackForm((f) => ({ ...f, link_url: e.target.value }))}
-            />
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-spotify">Spotify URL</label>
-              <input
-                id="t-spotify"
-                value={String(trackForm.spotify_url)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, spotify_url: e.target.value }))}
-              />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="t-yt">YouTube URL</label>
-              <input
-                id="t-yt"
-                value={String(trackForm.youtube_url)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, youtube_url: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="t-am">Apple Music URL</label>
-            <input
-              id="t-am"
-              value={String(trackForm.apple_music_url)}
-              onChange={(e) => setTrackForm((f) => ({ ...f, apple_music_url: e.target.value }))}
-            />
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-year">Year</label>
-              <input
-                id="t-year"
-                type="number"
-                placeholder="e.g. 2024"
-                value={trackForm.year === "" ? "" : String(trackForm.year)}
-                onChange={(e) =>
-                  setTrackForm((f) => ({
-                    ...f,
-                    year: e.target.value === "" ? "" : parseInt(e.target.value, 10) || "",
-                  }))
-                }
-              />
-            </div>
-          </div>
-          <div className="admin-form__row">
-            <label htmlFor="t-desc">About the song</label>
-            <textarea
-              id="t-desc"
-              value={String(trackForm.description)}
-              onChange={(e) => setTrackForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </div>
-          <div className="admin-form__row admin-form__row--checkbox">
-            <label className="admin-form__checkbox-label">
-              <input
-                id="t-published"
-                type="checkbox"
-                checked={Number(trackForm.is_published) !== 0}
-                onChange={(e) =>
-                  setTrackForm((f) => ({ ...f, is_published: e.target.checked ? 1 : 0 }))
-                }
-              />
-              <span>Published (visible on public site and API)</span>
-            </label>
-          </div>
-          <div className="admin-form__row admin-form__row--checkbox">
-            <label className="admin-form__checkbox-label">
-              <input
-                id="t-highlighted"
-                type="checkbox"
-                checked={Number(trackForm.is_highlighted) !== 0}
-                onChange={(e) =>
-                  setTrackForm((f) => ({ ...f, is_highlighted: e.target.checked ? 1 : 0 }))
-                }
-              />
-              <span>Highlight as featured/new release on home page</span>
-            </label>
-          </div>
-          <div className="admin-form__row admin-form__row--checkbox">
-            <label className="admin-form__checkbox-label">
-              <input
-                id="t-unreleased"
-                type="checkbox"
-                checked={Number(trackForm.is_unreleased) !== 0}
-                onChange={(e) =>
-                  setTrackForm((f) => ({ ...f, is_unreleased: e.target.checked ? 1 : 0 }))
-                }
-              />
-              <span>Unreleased / upcoming (countdown page + "upcoming" row on home)</span>
-            </label>
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-release-at">Release date &amp; time (required if unreleased)</label>
-              <input
-                id="t-release-at"
-                type="datetime-local"
-                value={String(trackForm.release_at_local)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, release_at_local: e.target.value }))}
-              />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="t-presave">Pre-save URL (optional)</label>
-              <input
-                id="t-presave"
-                type="url"
-                placeholder="https://…"
-                value={String(trackForm.presave_url)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, presave_url: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="admin-form__row admin-form__row--2">
-            <div className="admin-form__row">
-              <label htmlFor="t-publish-at">Auto-publish at (optional)</label>
-              <input
-                id="t-publish-at"
-                type="datetime-local"
-                value={String(trackForm.publish_at_local)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, publish_at_local: e.target.value }))}
-              />
-              <p className="admin-form__hint">Leave the track unpublished; it will go live automatically at this time.</p>
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="t-highlighted-until">"New" badge expires at (optional)</label>
-              <input
-                id="t-highlighted-until"
-                type="datetime-local"
-                value={String(trackForm.highlighted_until_local)}
-                onChange={(e) => setTrackForm((f) => ({ ...f, highlighted_until_local: e.target.value }))}
-              />
-              <p className="admin-form__hint">The highlighted badge will auto-clear after this date.</p>
-            </div>
-          </div>
-          <div className="admin-page__actions">
-            <button type="submit" className="admin-btn admin-btn--primary">
-              {editingSlug ? "Save changes" : "Create track"}
-            </button>
-            {editingSlug && (
-              <button type="button" className="admin-btn" onClick={startNewTrack}>
-                Cancel edit
+      </>)}
+
+      {section === "music" && (<>
+      {trackDrawerOpen && (
+        <>
+          <div className="drawer__overlay" onClick={closeTrackDrawer} aria-hidden />
+          <aside className="drawer" role="dialog" aria-modal="true" aria-label={editingSlug ? "Edit track" : "Add track"}>
+            <div className="drawer__head">
+              <h2>{editingSlug ? "edit track" : "add track"}</h2>
+              <button type="button" className="drawer__close" onClick={closeTrackDrawer} aria-label="Close">
+                ✕
               </button>
-            )}
-          </div>
-        </form>
-      </div>
+            </div>
+            <form className="admin-form drawer__form" onSubmit={saveTrack}>
+              <div className="drawer__scroll">
+                <fieldset className="admin-group">
+                  <legend>Basics</legend>
+                  <div className="admin-form__row admin-form__row--2">
+                    <div className="admin-form__row">
+                      <label htmlFor="t-title">Title *</label>
+                      <input
+                        id="t-title"
+                        value={String(trackForm.title)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, title: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-form__row">
+                      <label htmlFor="t-slug">Slug (URL)</label>
+                      <input
+                        id="t-slug"
+                        placeholder="auto from title if empty"
+                        value={String(trackForm.slug)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, slug: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-form__row admin-form__row--2">
+                    <div className="admin-form__row">
+                      <label htmlFor="t-meta">Type</label>
+                      <input
+                        id="t-meta"
+                        placeholder="e.g. Single, EP"
+                        value={String(trackForm.meta)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, meta: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-form__row">
+                      <label htmlFor="t-year">Year</label>
+                      <input
+                        id="t-year"
+                        type="number"
+                        placeholder="e.g. 2024"
+                        value={trackForm.year === "" ? "" : String(trackForm.year)}
+                        onChange={(e) =>
+                          setTrackForm((f) => ({
+                            ...f,
+                            year: e.target.value === "" ? "" : parseInt(e.target.value, 10) || "",
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-form__row">
+                    <label htmlFor="t-desc">About the song</label>
+                    <textarea
+                      id="t-desc"
+                      value={String(trackForm.description)}
+                      onChange={(e) => setTrackForm((f) => ({ ...f, description: e.target.value }))}
+                    />
+                  </div>
+                </fieldset>
+
+                <fieldset className="admin-group">
+                  <legend>Cover art</legend>
+                  <AdminDropzone
+                    id="t-art-file"
+                    kind="image"
+                    accept="image/*"
+                    file={trackCoverFile}
+                    currentUrl={clearTrackCover ? null : trackCoverPreviewUrl}
+                    hint="square works best"
+                    onFile={(f) => {
+                      setTrackCoverFile(f);
+                      if (f) setClearTrackCover(false);
+                    }}
+                  />
+                  {coverArtWarning ? (
+                    <p className="admin-form__hint admin-form__hint--warning">⚠ {coverArtWarning}</p>
+                  ) : null}
+                  <div className="admin-form__row">
+                    <label htmlFor="t-art">Or use an image URL</label>
+                    <input
+                      id="t-art"
+                      placeholder="Optional"
+                      value={String(trackForm.art_url)}
+                      onChange={(e) => setTrackForm((f) => ({ ...f, art_url: e.target.value }))}
+                    />
+                  </div>
+                  {editingSlug ? (
+                    <label className="admin-form__checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clearTrackCover}
+                        onChange={(e) => {
+                          setClearTrackCover(e.target.checked);
+                          if (e.target.checked) setTrackCoverFile(null);
+                        }}
+                      />
+                      <span>Remove the uploaded cover (use the URL or automatic art)</span>
+                    </label>
+                  ) : null}
+                </fieldset>
+
+                <fieldset className="admin-group">
+                  <legend>Listen links</legend>
+                  <div className="admin-form__row admin-form__row--2">
+                    <div className="admin-form__row">
+                      <label htmlFor="t-spotify">Spotify</label>
+                      <input
+                        id="t-spotify"
+                        placeholder="https://open.spotify.com/track/…"
+                        value={String(trackForm.spotify_url)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, spotify_url: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-form__row">
+                      <label htmlFor="t-am">Apple Music</label>
+                      <input
+                        id="t-am"
+                        value={String(trackForm.apple_music_url)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, apple_music_url: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-form__row admin-form__row--2">
+                    <div className="admin-form__row">
+                      <label htmlFor="t-yt">YouTube</label>
+                      <input
+                        id="t-yt"
+                        value={String(trackForm.youtube_url)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, youtube_url: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-form__row">
+                      <label htmlFor="t-link">Other link</label>
+                      <input
+                        id="t-link"
+                        placeholder="Streaming or purchase"
+                        value={String(trackForm.link_url)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, link_url: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset className="admin-group">
+                  <legend>Release &amp; visibility</legend>
+                  <label className="admin-form__checkbox-label">
+                    <input
+                      id="t-published"
+                      type="checkbox"
+                      checked={Number(trackForm.is_published) !== 0}
+                      onChange={(e) =>
+                        setTrackForm((f) => ({ ...f, is_published: e.target.checked ? 1 : 0 }))
+                      }
+                    />
+                    <span>Published (visible on the public site)</span>
+                  </label>
+                  <label className="admin-form__checkbox-label">
+                    <input
+                      id="t-highlighted"
+                      type="checkbox"
+                      checked={Number(trackForm.is_highlighted) !== 0}
+                      onChange={(e) =>
+                        setTrackForm((f) => ({ ...f, is_highlighted: e.target.checked ? 1 : 0 }))
+                      }
+                    />
+                    <span>Feature as the new release on the home page</span>
+                  </label>
+                  <label className="admin-form__checkbox-label">
+                    <input
+                      id="t-unreleased"
+                      type="checkbox"
+                      checked={Number(trackForm.is_unreleased) !== 0}
+                      onChange={(e) =>
+                        setTrackForm((f) => ({ ...f, is_unreleased: e.target.checked ? 1 : 0 }))
+                      }
+                    />
+                    <span>Upcoming (shows a countdown page instead of the song page)</span>
+                  </label>
+                  {Number(trackForm.is_unreleased) !== 0 ? (
+                    <div className="admin-form__row admin-form__row--2">
+                      <div className="admin-form__row">
+                        <label htmlFor="t-release-at">Release date &amp; time *</label>
+                        <input
+                          id="t-release-at"
+                          type="datetime-local"
+                          value={String(trackForm.release_at_local)}
+                          onChange={(e) => setTrackForm((f) => ({ ...f, release_at_local: e.target.value }))}
+                        />
+                      </div>
+                      <div className="admin-form__row">
+                        <label htmlFor="t-presave">Pre-save URL</label>
+                        <input
+                          id="t-presave"
+                          type="url"
+                          placeholder="https://…"
+                          value={String(trackForm.presave_url)}
+                          onChange={(e) => setTrackForm((f) => ({ ...f, presave_url: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                  {Number(trackForm.is_unreleased) !== 0 ? (
+                    <div className="admin-form__row">
+                      <label htmlFor="t-accent">Accent colour for this track&rsquo;s countdown</label>
+                      <div className="admin-accent">
+                        <div className="admin-accent__swatches" role="group" aria-label="Preset colours">
+                          {ACCENT_PRESETS.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              className="admin-accent__swatch"
+                              style={{ background: c }}
+                              aria-label={`Use ${c}`}
+                              aria-pressed={String(trackForm.accent_color).toLowerCase() === c}
+                              onClick={() => setTrackForm((f) => ({ ...f, accent_color: c }))}
+                            />
+                          ))}
+                        </div>
+                        <input
+                          id="t-accent"
+                          type="color"
+                          className="admin-accent__picker"
+                          value={/^#[0-9a-f]{6}$/i.test(String(trackForm.accent_color)) ? String(trackForm.accent_color) : "#87ceeb"}
+                          onChange={(e) => setTrackForm((f) => ({ ...f, accent_color: e.target.value }))}
+                        />
+                        <input
+                          type="text"
+                          className="admin-accent__hex"
+                          placeholder="#87ceeb"
+                          maxLength={7}
+                          aria-label="Accent colour hex"
+                          value={String(trackForm.accent_color)}
+                          onChange={(e) => setTrackForm((f) => ({ ...f, accent_color: e.target.value }))}
+                        />
+                        <button
+                          type="button"
+                          className="admin-btn"
+                          disabled={!trackForm.accent_color}
+                          onClick={() => setTrackForm((f) => ({ ...f, accent_color: "" }))}
+                        >
+                          Use site default
+                        </button>
+                      </div>
+                      <p className="admin-form__hint">
+                        Tints the buttons, markers and ticking seconds on this track&rsquo;s countdown page and its
+                        &ldquo;coming soon&rdquo; block. Leave empty for the site&rsquo;s sky blue.
+                      </p>
+                    </div>
+                  ) : null}
+                  <div className="admin-form__row admin-form__row--2">
+                    <div className="admin-form__row">
+                      <label htmlFor="t-publish-at">Auto-publish at</label>
+                      <input
+                        id="t-publish-at"
+                        type="datetime-local"
+                        value={String(trackForm.publish_at_local)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, publish_at_local: e.target.value }))}
+                      />
+                      <p className="admin-form__hint">Leave unpublished; it goes live at this time.</p>
+                    </div>
+                    <div className="admin-form__row">
+                      <label htmlFor="t-highlighted-until">&ldquo;New&rdquo; tag expires</label>
+                      <input
+                        id="t-highlighted-until"
+                        type="datetime-local"
+                        value={String(trackForm.highlighted_until_local)}
+                        onChange={(e) => setTrackForm((f) => ({ ...f, highlighted_until_local: e.target.value }))}
+                      />
+                      <p className="admin-form__hint">The tag clears itself after this date.</p>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+
+              <div className="drawer__foot">
+                <button type="submit" className="admin-btn admin-btn--primary">
+                  {editingSlug ? "Save changes" : "Create track"}
+                </button>
+                <button type="button" className="admin-btn" onClick={closeTrackDrawer}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </aside>
+        </>
+      )}
 
       <div className="admin-card">
-        <h2 className="admin-card__title">All tracks</h2>
+        <div className="admin-tracks-head">
+          <h2 className="admin-card__title">tracks</h2>
+          <button type="button" className="admin-btn admin-btn--primary" onClick={openNewTrack}>
+            + Add track
+          </button>
+        </div>
         <div style={{ marginBottom: "1rem" }}>
-          {sortedTracks.length === 0 && (
-            <p style={{ marginBottom: "0.5rem", opacity: 0.7 }}>No tracks yet.</p>
-          )}
           <button
             type="button"
             className="admin-btn"
@@ -1580,117 +1707,51 @@ export function AdminPage() {
             {seedingTracks ? "Loading…" : "Restore original track details"}
           </button>
         </div>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Title</th>
-                <th>Slug</th>
-                <th>Year</th>
-                <th>Description</th>
-                <th>Public</th>
-                <th>Upcoming</th>
-                <th>Highlighted</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedTracks.map((t) => (
-                <tr
-                  key={t.id}
-                  data-track-slug={t.slug}
-                  className={
-                    dndDragging?.kind === "track" && dndDragging.key === t.slug
-                      ? "admin-table__row--dragging"
-                      : undefined
-                  }
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                  }}
-                  onDropCapture={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const dragged = e.dataTransfer.getData(DND_TYPE_TRACK) || e.dataTransfer.getData("text/plain");
-                    if (!dragged) return;
-                    if (dragged === t.slug) return;
-                    void reorderTrackRowsBySlug(dragged, t.slug);
-                  }}
-                >
-                  <td>
-                    <div className="admin-table__orderCell">
-                      <span
-                        className="admin-drag-handle"
-                        aria-label="Drag to reorder"
-                        title="Drag to reorder"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData(DND_TYPE_TRACK, t.slug);
-                          e.dataTransfer.setData("text/plain", t.slug);
-                          e.dataTransfer.effectAllowed = "move";
-                          setDndDragging({ kind: "track", key: t.slug });
-                        }}
-                        onDragEnd={() => setDndDragging(null)}
-                        onTouchStart={(e) => handleTouchStart("track", t.slug, e)}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={() => {
-                          const drag = touchDragRef.current;
-                          if (!drag) return;
-                          const y = drag.currentY;
-                          const el = document.elementFromPoint(0, y) ?? document.elementFromPoint(window.innerWidth / 2, y);
-                          const row = el?.closest("tr[data-track-slug]");
-                          const targetSlug = row?.getAttribute("data-track-slug");
-                          touchDragRef.current = null;
-                          setDndDragging(null);
-                          if (targetSlug && targetSlug !== t.slug) {
-                            void reorderTrackRowsBySlug(t.slug, targetSlug);
-                          }
-                        }}
-                      />
-                      <span>{t.order}</span>
-                    </div>
-                  </td>
-                  <td>{t.title}</td>
-                  <td>
-                    <Link draggable={false} to={`/music/${t.slug}`}>
-                      {t.slug}
-                    </Link>
-                  </td>
-                  <td>{t.year ?? "—"}</td>
-                  <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.7, fontSize: "0.85em" }} title={t.description || ""}>
-                    {t.description?.trim() ? t.description.trim().slice(0, 60) + (t.description.trim().length > 60 ? "…" : "") : <em>empty</em>}
-                  </td>
-                  <td>{t.is_published === false ? "draft" : "live"}</td>
-                  <td>{t.is_unreleased ? "yes" : "—"}</td>
-                  <td>{t.is_highlighted ? "yes" : "—"}</td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      aria-label={`Edit ${t.title}`}
-                      onClick={() => startEditTrack(t)}
-                    >
-                      <span className="admin-btn__icon"><PencilIcon /></span>
-                      <span className="admin-btn__label">Edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger"
-                      aria-label={`Delete ${t.title}`}
-                      onClick={() => void handleDeleteTrack(t.slug)}
-                    >
-                      <span className="admin-btn__icon"><TrashIcon /></span>
-                      <span className="admin-btn__label">Delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminSortableList
+          items={sortedTracks}
+          getKey={(t) => t.id}
+          getLabel={(t) => t.title}
+          onMove={(from, to) => void reorderTrackRowsBySlug(sortedTracks[from].slug, sortedTracks[to].slug)}
+          renderItem={(t) => {
+            const art = getTrackArtUrl(t);
+            return (
+              <>
+                {art ? <img className="sortable__thumb" src={art} alt="" loading="lazy" /> : <span className="sortable__thumb" />}
+                <div className="sortable__text">
+                  <Link draggable={false} to={`/music/${t.slug}`} className="sortable__title">
+                    {t.title}
+                  </Link>
+                  <div className="sortable__sub">
+                    {t.year ? <span>{t.year}</span> : null}
+                    <span className={`sortable__chip${t.is_published === false ? " sortable__chip--warn" : ""}`}>
+                      {t.is_published === false ? "draft" : "live"}
+                    </span>
+                    {t.is_unreleased ? <span className="sortable__chip sortable__chip--accent">upcoming</span> : null}
+                    {t.is_highlighted ? <span className="sortable__chip sortable__chip--accent">featured</span> : null}
+                  </div>
+                </div>
+              </>
+            );
+          }}
+          renderActions={(t) => (
+            <>
+              <button type="button" className="admin-btn" aria-label={`Edit ${t.title}`} onClick={() => startEditTrack(t)}>
+                <span className="admin-btn__icon"><PencilIcon /></span>
+                <span className="admin-btn__label">Edit</span>
+              </button>
+              <button type="button" className="admin-btn admin-btn--danger" aria-label={`Delete ${t.title}`} onClick={() => void handleDeleteTrack(t.slug)}>
+                <span className="admin-btn__icon"><TrashIcon /></span>
+                <span className="admin-btn__label">Delete</span>
+              </button>
+            </>
+          )}
+          empty={<p className="sortable__empty">No tracks yet.</p>}
+        />
       </div>
 
+      </>)}
+
+      {section === "media" && (<>
       <div className="admin-card">
         <h2 className="admin-card__title">{editingVideoId != null ? "Edit featured video" : "Add featured video"}</h2>
         <form className="admin-form" onSubmit={saveVideo}>
@@ -1712,26 +1773,6 @@ export function AdminPage() {
                 onChange={(e) => setVideoForm((f) => ({ ...f, youtube_id: e.target.value }))}
               />
             </div>
-            <div className="admin-form__row">
-              <label htmlFor="v-order">Order</label>
-              <input
-                id="v-order"
-                type="number"
-                className={videoOrderConflict ? "admin-input--error" : undefined}
-                value={videoForm.order}
-                onChange={(e) =>
-                  setVideoForm((f) => ({
-                    ...f,
-                    order: parseInt(e.target.value, 10) || 0,
-                  }))
-                }
-              />
-              {videoOrderConflict ? (
-                <p className="admin-form__hint admin-form__hint--error">
-                  This order number is already used by another featured video.
-                </p>
-              ) : null}
-            </div>
           </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary">
@@ -1748,102 +1789,36 @@ export function AdminPage() {
 
       <div className="admin-card">
         <h2 className="admin-card__title">Featured videos</h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Title</th>
-                <th>YouTube ID</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedVideos.map((v) => (
-                <tr
-                  key={v.id}
-                  data-video-id={v.id}
-                  className={
-                    dndDragging?.kind === "video" && dndDragging.id === v.id
-                      ? "admin-table__row--dragging"
-                      : undefined
-                  }
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                  }}
-                  onDropCapture={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const raw =
-                      e.dataTransfer.getData(DND_TYPE_VIDEO) || e.dataTransfer.getData("text/plain");
-                    const draggedId = parseInt(String(raw), 10);
-                    if (!Number.isFinite(draggedId)) return;
-                    if (draggedId === v.id) return;
-                    void reorderVideosById(draggedId, v.id);
-                  }}
-                >
-                  <td>
-                    <div className="admin-table__orderCell">
-                      <span
-                        className="admin-drag-handle"
-                        aria-label="Drag to reorder"
-                        title="Drag to reorder"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData(DND_TYPE_VIDEO, String(v.id));
-                          e.dataTransfer.setData("text/plain", String(v.id));
-                          e.dataTransfer.effectAllowed = "move";
-                          setDndDragging({ kind: "video", id: v.id });
-                        }}
-                        onDragEnd={() => setDndDragging(null)}
-                        onTouchStart={(e) => handleTouchStart("video", v.id, e)}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={() => {
-                          const drag = touchDragRef.current;
-                          if (!drag) return;
-                          const y = drag.currentY;
-                          const el = document.elementFromPoint(window.innerWidth / 2, y);
-                          const row = el?.closest("tr[data-video-id]");
-                          const targetIdStr = row?.getAttribute("data-video-id");
-                          const targetId = targetIdStr ? parseInt(targetIdStr, 10) : NaN;
-                          touchDragRef.current = null;
-                          setDndDragging(null);
-                          if (Number.isFinite(targetId) && targetId !== v.id) {
-                            void reorderVideosById(v.id, targetId);
-                          }
-                        }}
-                      />
-                      <span>{v.order}</span>
-                    </div>
-                  </td>
-                  <td>{v.title || "—"}</td>
-                  <td>{v.youtube_id}</td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      aria-label={`Edit ${v.title || v.youtube_id}`}
-                      onClick={() => startEditVideo(v)}
-                    >
-                      <span className="admin-btn__icon"><PencilIcon /></span>
-                      <span className="admin-btn__label">Edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger"
-                      aria-label={`Delete ${v.title || v.youtube_id}`}
-                      onClick={() => void handleDeleteVideo(v.id)}
-                    >
-                      <span className="admin-btn__icon"><TrashIcon /></span>
-                      <span className="admin-btn__label">Delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminSortableList
+          items={sortedVideos}
+          getKey={(v) => v.id}
+          getLabel={(v) => v.title || v.youtube_id}
+          onMove={(from, to) => void reorderVideosById(sortedVideos[from].id, sortedVideos[to].id)}
+          renderItem={(v) => (
+            <>
+              <img className="sortable__thumb sortable__thumb--wide" src={`https://i.ytimg.com/vi/${v.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" />
+              <div className="sortable__text">
+                <span className="sortable__title">{v.title || "Untitled video"}</span>
+                <div className="sortable__sub">
+                  <span>{v.youtube_id}</span>
+                </div>
+              </div>
+            </>
+          )}
+          renderActions={(v) => (
+            <>
+              <button type="button" className="admin-btn" aria-label={`Edit ${v.title || v.youtube_id}`} onClick={() => startEditVideo(v)}>
+                <span className="admin-btn__icon"><PencilIcon /></span>
+                <span className="admin-btn__label">Edit</span>
+              </button>
+              <button type="button" className="admin-btn admin-btn--danger" aria-label={`Delete ${v.title || v.youtube_id}`} onClick={() => void handleDeleteVideo(v.id)}>
+                <span className="admin-btn__icon"><TrashIcon /></span>
+                <span className="admin-btn__label">Delete</span>
+              </button>
+            </>
+          )}
+          empty={<p className="sortable__empty">No featured videos yet.</p>}
+        />
       </div>
 
       <div className="admin-card">
@@ -1854,11 +1829,12 @@ export function AdminPage() {
         <form className="admin-form" onSubmit={saveGalleryImage}>
           <div className="admin-form__row">
             <label htmlFor="g-file">Image {editingGalleryId == null ? "*" : "(optional to replace)"}</label>
-            <input
+            <AdminDropzone
               id="g-file"
-              type="file"
+              kind="image"
               accept="image/*"
-              onChange={(e) => setGalleryFile(e.target.files?.[0] || null)}
+              file={galleryFile}
+              onFile={setGalleryFile}
             />
           </div>
           <div className="admin-form__row admin-form__row--2">
@@ -1869,23 +1845,6 @@ export function AdminPage() {
                 value={galleryForm.caption}
                 onChange={(e) => setGalleryForm((f) => ({ ...f, caption: e.target.value }))}
               />
-            </div>
-            <div className="admin-form__row">
-              <label htmlFor="g-order">Order</label>
-              <input
-                id="g-order"
-                type="number"
-                className={galleryOrderConflict ? "admin-input--error" : undefined}
-                value={galleryForm.order}
-                onChange={(e) =>
-                  setGalleryForm((f) => ({ ...f, order: parseInt(e.target.value, 10) || 0 }))
-                }
-              />
-              {galleryOrderConflict ? (
-                <p className="admin-form__hint admin-form__hint--error">
-                  This order number is already used by another gallery image.
-                </p>
-              ) : null}
             </div>
           </div>
           <div className="admin-page__actions">
@@ -1903,118 +1862,49 @@ export function AdminPage() {
 
       <div className="admin-card">
         <h2 className="admin-card__title">Gallery images</h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Preview</th>
-                <th>Caption</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedGalleryImages.map((img) => (
-                <tr
-                  key={img.id}
-                  data-gallery-id={img.id}
-                  className={
-                    dndDragging?.kind === "gallery" && dndDragging.id === img.id
-                      ? "admin-table__row--dragging"
-                      : undefined
-                  }
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                  }}
-                  onDropCapture={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const raw =
-                      e.dataTransfer.getData(DND_TYPE_GALLERY) || e.dataTransfer.getData("text/plain");
-                    const draggedId = parseInt(String(raw), 10);
-                    if (!Number.isFinite(draggedId)) return;
-                    if (draggedId === img.id) return;
-                    void reorderGalleryById(draggedId, img.id);
-                  }}
-                >
-                  <td>
-                    <div className="admin-table__orderCell">
-                      <span
-                        className="admin-drag-handle"
-                        aria-label="Drag to reorder"
-                        title="Drag to reorder"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData(DND_TYPE_GALLERY, String(img.id));
-                          e.dataTransfer.setData("text/plain", String(img.id));
-                          e.dataTransfer.effectAllowed = "move";
-                          setDndDragging({ kind: "gallery", id: img.id });
-                        }}
-                        onDragEnd={() => setDndDragging(null)}
-                        onTouchStart={(e) => handleTouchStart("gallery", img.id, e)}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={() => {
-                          const drag = touchDragRef.current;
-                          if (!drag) return;
-                          const y = drag.currentY;
-                          const el = document.elementFromPoint(window.innerWidth / 2, y);
-                          const row = el?.closest("tr[data-gallery-id]");
-                          const targetIdStr = row?.getAttribute("data-gallery-id");
-                          const targetId = targetIdStr ? parseInt(targetIdStr, 10) : NaN;
-                          touchDragRef.current = null;
-                          setDndDragging(null);
-                          if (Number.isFinite(targetId) && targetId !== img.id) {
-                            void reorderGalleryById(img.id, targetId);
-                          }
-                        }}
-                      />
-                      <span>{img.order}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <a href={img.image_url || img.image} target="_blank" rel="noreferrer" draggable={false}>
-                      open
-                    </a>
-                  </td>
-                  <td>{img.caption || "—"}</td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn"
-                      aria-label={`Edit image ${img.id}`}
-                      onClick={() => startEditGalleryImage(img)}
-                    >
-                      <span className="admin-btn__icon"><PencilIcon /></span>
-                      <span className="admin-btn__label">Edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger"
-                      aria-label={`Delete image ${img.id}`}
-                      onClick={() => void handleDeleteGalleryImage(img.id)}
-                    >
-                      <span className="admin-btn__icon"><TrashIcon /></span>
-                      <span className="admin-btn__label">Delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {galleryImages.length === 0 ? (
-                <tr>
-                  <td colSpan={4}>No gallery images yet.</td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+        <AdminSortableList
+          items={sortedGalleryImages}
+          getKey={(g) => g.id}
+          getLabel={(g) => g.caption || `image ${g.id}`}
+          onMove={(from, to) => void reorderGalleryById(sortedGalleryImages[from].id, sortedGalleryImages[to].id)}
+          renderItem={(g) => (
+            <>
+              <img className="sortable__thumb" src={g.image_url || g.image} alt="" loading="lazy" />
+              <div className="sortable__text">
+                <span className="sortable__title">{g.caption || "No caption"}</span>
+                <div className="sortable__sub">
+                  <a href={g.image_url || g.image} target="_blank" rel="noreferrer" draggable={false}>open full size ↗</a>
+                </div>
+              </div>
+            </>
+          )}
+          renderActions={(g) => (
+            <>
+              <button type="button" className="admin-btn" aria-label={`Edit image ${g.id}`} onClick={() => startEditGalleryImage(g)}>
+                <span className="admin-btn__icon"><PencilIcon /></span>
+                <span className="admin-btn__label">Edit</span>
+              </button>
+              <button type="button" className="admin-btn admin-btn--danger" aria-label={`Delete image ${g.id}`} onClick={() => void handleDeleteGalleryImage(g.id)}>
+                <span className="admin-btn__icon"><TrashIcon /></span>
+                <span className="admin-btn__label">Delete</span>
+              </button>
+            </>
+          )}
+          empty={<p className="sortable__empty">No gallery images yet.</p>}
+        />
       </div>
 
+      </>)}
+
+      {section === "pages" && (<>
       <AdminAboutPanel notify={notify} />
       <AdminShowsPanel notify={notify} />
 
+      </>)}
+
+      {section === "audience" && (<>
       {/* ── Mailing list ───────────────────────────────────────────── */}
-      <div className="admin-page__toolbar" style={{ marginTop: "2.5rem" }}>
+      <div className="admin-page__toolbar">
         <div className="admin-page__toolbar-label">
           <p>.mailing list</p>
           <span className="admin-page__toolbar-line" aria-hidden />
@@ -2038,50 +1928,114 @@ export function AdminPage() {
         </div>
       </div>
 
-      {/* Subscribers table */}
-      <div className="admin-card">
-        <h2 className="admin-card__title">
-          subscribers{mlCount !== null ? ` — ${mlCount}` : ""}
-        </h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Joined</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {mlLoading ? (
-                <tr><td colSpan={4}>Loading…</td></tr>
-              ) : mlSubscribers.length === 0 ? (
-                <tr><td colSpan={4}>No subscribers yet.</td></tr>
-              ) : (
-                mlSubscribers.map((s) => (
-                  <tr key={s.id}>
-                    <td>{s.first_name} {s.last_name}</td>
-                    <td>{s.email}</td>
-                    <td>{new Date(s.subscribed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</td>
-                    <td className="admin-table__actions">
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--danger"
-                        aria-label={`Remove ${s.email}`}
-                        onClick={() => void handleDeleteSubscriber(s.id, s.email)}
-                      >
-                        <span className="admin-btn__icon"><TrashIcon /></span>
-                        <span className="admin-btn__label">Remove</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Subscribers: a short preview here, the full searchable list on its own view */}
+      {subsFullView ? (
+        <div className="admin-card">
+          <button type="button" className="admin-back" onClick={() => setSubsFullView(false)}>
+            <span aria-hidden>←</span> back to audience
+          </button>
+          <h2 className="admin-card__title">
+            all subscribers{mlCount !== null ? ` — ${mlCount}` : ""}
+          </h2>
+          <div className="admin-subs-tools">
+            <input
+              type="search"
+              className="admin-subs-search"
+              placeholder="Search name or email…"
+              value={subsQuery}
+              onChange={(e) => {
+                setSubsQuery(e.target.value);
+                setSubsPage(1);
+              }}
+              aria-label="Search subscribers"
+            />
+            <span className="admin-subs-tools__count">
+              {subsFiltered.length} {subsFiltered.length === 1 ? "result" : "results"}
+            </span>
+          </div>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Joined</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {mlLoading ? (
+                  <tr><td colSpan={4}>Loading…</td></tr>
+                ) : subsSlice.length === 0 ? (
+                  <tr><td colSpan={4}>{subsQ ? "No one matches that search." : "No subscribers yet."}</td></tr>
+                ) : (
+                  subsSlice.map(renderSubscriberRow)
+                )}
+              </tbody>
+            </table>
+          </div>
+          {subsPages > 1 ? (
+            <div className="admin-pager">
+              <button
+                type="button"
+                className="admin-btn"
+                disabled={subsPageSafe <= 1}
+                onClick={() => setSubsPage(subsPageSafe - 1)}
+              >
+                ← Prev
+              </button>
+              <span className="admin-pager__label">
+                Page {subsPageSafe} of {subsPages}
+              </span>
+              <button
+                type="button"
+                className="admin-btn"
+                disabled={subsPageSafe >= subsPages}
+                onClick={() => setSubsPage(subsPageSafe + 1)}
+              >
+                Next →
+              </button>
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : (
+        <div className="admin-card">
+          <h2 className="admin-card__title">
+            subscribers{mlCount !== null ? ` — ${mlCount}` : ""}
+          </h2>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Joined</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {mlLoading ? (
+                  <tr><td colSpan={4}>Loading…</td></tr>
+                ) : mlSubscribers.length === 0 ? (
+                  <tr><td colSpan={4}>No subscribers yet.</td></tr>
+                ) : (
+                  mlSubscribers.slice(0, SUBSCRIBER_PREVIEW).map(renderSubscriberRow)
+                )}
+              </tbody>
+            </table>
+          </div>
+          {mlSubscribers.length > SUBSCRIBER_PREVIEW ? (
+            <div className="admin-more">
+              <span>
+                Showing {SUBSCRIBER_PREVIEW} of {mlSubscribers.length}
+              </span>
+              <button type="button" className="admin-btn" onClick={() => setSubsFullView(true)}>
+                View all subscribers →
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Broadcast form */}
       <div className="admin-card">
@@ -2146,6 +2100,9 @@ export function AdminPage() {
             />
           </div>
         ) : null}
+      </div>
+      </>)}
+        </main>
       </div>
     </div>
     </>
