@@ -169,3 +169,15 @@
   .sortable__actions .admin-btn__icon { display: inline-flex; }
   .sortable__actions .admin-btn__label { display: none; }
 }
+
+.story-order__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}

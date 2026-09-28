@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  min-height: max(32rem, 100svh);
+  /* older phones lack dvh: --app-h (the real visible height, set in PublicShell) is the fallback */
+  min-height: max(32rem, var(--app-h, 100vh));
+  min-height: max(32rem, 100dvh);
   overflow: hidden;
   background: #050509;
   color: #fff;
@@ -275,4 +277,44 @@
   .hero__dot,
   .hero__scroll-line::after { animation: none; }
   .hero__scroll-line::after { top: 0; height: 100%; opacity: 0.4; }
+}
+
+/* ---------- with stories: the story wraps the normal hero as its first frame ---------- */
+.hero--stories .hero__scroll {
+  display: none;
+}
+.hero--stories .hero__inner {
+  align-items: stretch;
+  padding-block: 0;
+  padding-right: var(--gutter);
+  flex: 1;
+}
+.hero--stories .hero__story {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+/* the first frame keeps the normal hero's spacing, minus the bottom (the progress bars live there) */
+.hero--stories .hero__copy {
+  padding-bottom: 0;
+}
+@media (max-width: 800px) {
+  .hero--stories .hero__inner {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+  }
+  .hero--stories .hero__story {
+    position: absolute;
+    inset: 0;
+  }
+  .hero--stories .story { padding: 0 var(--gutter); }
+  .hero--stories .story__viewport { padding-top: 0; padding-bottom: 0; }
+  /* leave room under the first frame for the progress bars */
+  .hero--stories .hero__copy { padding-bottom: 2.5rem; }
+}
+
+/* a steadier scrim under the story so the progress labels and text always read */
+.hero--stories .hero__scrim {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 35%, rgba(0, 0, 0, 0.65) 100%);
 }

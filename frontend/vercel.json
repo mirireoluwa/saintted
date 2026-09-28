@@ -1,13 +1,43 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/images", "destination": "/media", "permanent": true }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    { "source": "/api/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/admin", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    {
+      "source": "/fonts/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/event", "destination": "/api/release-countdown?resource=event" },
     { "source": "/api/shows", "destination": "/api/release-countdown?resource=shows" },
     { "source": "/api/about", "destination": "/api/release-countdown?resource=about" },
+    { "source": "/api/story", "destination": "/api/release-countdown?resource=story" },
     { "source": "/api/admin/shows", "destination": "/api/admin/release-countdown?resource=shows" },
     { "source": "/api/admin/about", "destination": "/api/admin/release-countdown?resource=about" },
+    { "source": "/api/admin/story", "destination": "/api/admin/release-countdown?resource=story" },
     { "source": "/api/admin/insights", "destination": "/api/admin/release-countdown?resource=insights" },
+    { "source": "/music", "destination": "/api/tracks?resource=shell&path=/music" },
+    { "source": "/music/:slug", "destination": "/api/tracks?resource=shell&path=/music/:slug" },
+    { "source": "/media", "destination": "/api/tracks?resource=shell&path=/media" },
+    { "source": "/shows", "destination": "/api/tracks?resource=shell&path=/shows" },
+    { "source": "/about", "destination": "/api/tracks?resource=shell&path=/about" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

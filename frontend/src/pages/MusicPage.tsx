@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchTracks } from "../api/client";
+import { Helmet } from "react-helmet-async";
 import { SeoHead } from "../components/SeoHead";
+import { absoluteUrl } from "../utils/siteUrl";
 import { TrackCard } from "../components/TrackCard";
 import { UpcomingRelease } from "../components/UpcomingRelease";
 import type { Track } from "../types/track";
@@ -38,6 +40,22 @@ export function MusicPage() {
         description="Every release from Saintted, a Nigerian artist and producer. Stream singles and see what's next."
         canonicalPath="/music"
       />
+
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Saintted releases",
+            itemListElement: released.map(({ track }, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: absoluteUrl(`/music/${encodeURIComponent(track.slug)}`),
+              name: track.title,
+            })),
+          }).replace(/</g, "\\u003c")}
+        </script>
+      </Helmet>
 
       <header className="wrap page-head">
         <p className="eyebrow rise">music</p>

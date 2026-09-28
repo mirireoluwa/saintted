@@ -8,6 +8,7 @@ const GALLERY_KEY = "saintted:gallery-images";
 const COUNTDOWN_KEY = "saintted:release-countdown";
 const SHOWS_KEY = "saintted:shows";
 const ABOUT_KEY = "saintted:about";
+const STORY_KEY = "saintted:story";
 const SUBSCRIBERS_KEY = "saintted:subscribers";
 const PENDING_SUBSCRIBERS_KEY = "saintted:pending-subscribers";
 function ensureLocalEnvLoaded() {
@@ -48,6 +49,7 @@ export {
   GALLERY_KEY,
   PENDING_SUBSCRIBERS_KEY,
   SHOWS_KEY,
+  STORY_KEY,
   SUBSCRIBERS_KEY,
   TRACKS_KEY,
   VIDEOS_KEY,

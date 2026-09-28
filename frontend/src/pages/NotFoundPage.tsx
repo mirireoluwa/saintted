@@ -7,7 +7,7 @@ export function NotFoundPage() {
 
   return (
     <>
-      <SeoHead title="Page not found · saintted" description="love, saintted" canonicalPath={canonicalPath} />
+      <SeoHead title="Page not found · saintted" description="love, saintted" canonicalPath={canonicalPath} noindex />
       <header className="wrap page-head">
         <p className="eyebrow rise">404</p>
         <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>lost in the sound</h1>

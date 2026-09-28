@@ -86,7 +86,9 @@ export function HomePage() {
 
   const jsonLd = useMemo(() => {
     const site = getSiteUrl();
-    return JSON.stringify({
+    return JSON.stringify([
+      { "@context": "https://schema.org", "@type": "WebSite", name: "saintted", url: site },
+      {
       "@context": "https://schema.org",
       "@type": "MusicGroup",
       name: "Saintted",
@@ -99,9 +101,9 @@ export function HomePage() {
         "https://music.apple.com/ng/artist/saintted/1683622819",
         "https://open.spotify.com/artist/6y6qTKA4172ZvpCg8t6wE6",
         "https://www.youtube.com/@saintted",
-        "https://linktr.ee/saintted",
       ],
-    });
+    },
+    ]);
   }, []);
 
   useEffect(() => {
@@ -152,6 +154,7 @@ export function HomePage() {
         releaseLoaded={releaseLoaded}
         summaryText={HERO_TAGLINE}
         tracks={tracks}
+        tracksReady={!loading}
       />
       {releaseBarVisible(releaseConfig) ? <ReleaseCountdownBar config={releaseConfig} /> : null}
 

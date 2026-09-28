@@ -25,22 +25,25 @@ export function sortShows(shows: LiveShow[]): LiveShow[] {
 /** Validate a create body, or a partial update merged onto `existing`. */
 export function validateShow(body: Obj, existing?: LiveShow): Validated<Omit<LiveShow, "id" | "created_at">> {
   const has = (k: string) => k in body;
+  const title = has("title") ? str(body.title) : (existing?.title ?? "");
   const venue = has("venue") ? str(body.venue) : (existing?.venue ?? "");
   const city = has("city") ? str(body.city) : (existing?.city ?? "");
   const note = has("note") ? str(body.note) : (existing?.note ?? "");
   const ticket_url = has("ticket_url") ? str(body.ticket_url) : (existing?.ticket_url ?? "");
   const is_sold_out = has("is_sold_out") ? Boolean(body.is_sold_out) : (existing?.is_sold_out ?? false);
+  const flyer_url = has("flyer_url") ? str(body.flyer_url) : (existing?.flyer_url ?? "");
   const startsRaw = has("starts_at") ? str(body.starts_at) : (existing?.starts_at ?? "");
 
   if (!venue) return { ok: false, message: "venue is required" };
-  if (venue.length > 255 || city.length > 255 || note.length > 255) {
-    return { ok: false, message: "venue, city and note must be 255 characters or fewer" };
+  if (title.length > 255 || venue.length > 255 || city.length > 255 || note.length > 255) {
+    return { ok: false, message: "title, venue, city and note must be 255 characters or fewer" };
   }
   const t = new Date(startsRaw).getTime();
   if (!startsRaw || Number.isNaN(t)) return { ok: false, message: "starts_at must be a valid date/time" };
+  if (flyer_url && !isHttpUrl(flyer_url)) return { ok: false, message: "flyer_url must start with http:// or https://" };
   if (ticket_url && !isHttpUrl(ticket_url)) return { ok: false, message: "ticket_url must start with http:// or https://" };
 
-  return { ok: true, value: { starts_at: new Date(t).toISOString(), venue, city, ticket_url, note, is_sold_out } };
+  return { ok: true, value: { starts_at: new Date(t).toISOString(), title, venue, city, ticket_url, note, is_sold_out, flyer_url } };
 }
 
 /** Validate an About update (partial) merged onto `current`. */
@@ -67,4 +70,14 @@ export function aboutOrDefault(raw: unknown): AboutContent {
   if (!raw) return { ...DEFAULT_ABOUT };
   const v = (typeof raw === "string" ? JSON.parse(raw) : raw) as Partial<AboutContent>;
   return { ...DEFAULT_ABOUT, ...v, id: 1 };
+}
+
+/** Story order/visibility: two arrays of frame ids ("show-3", "soon-my-song", "new-my-song"). */
+export function cleanStory(raw: unknown): { order: string[]; hidden: string[] } {
+  const o = (raw && typeof raw === "object" ? raw : {}) as { order?: unknown; hidden?: unknown };
+  const ids = (v: unknown) =>
+    Array.isArray(v)
+      ? [...new Set(v.filter((x): x is string => typeof x === "string" && /^[a-z0-9-]{1,120}$/i.test(x)))].slice(0, 50)
+      : [];
+  return { order: ids(o.order), hidden: ids(o.hidden) };
 }

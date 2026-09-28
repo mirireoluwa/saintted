@@ -1,5 +1,7 @@
+# Everyone (Google, Bing, DuckDuckGo, Yandex, Baidu, social scrapers…) may crawl the public site.
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 
 Sitemap: https://saintted.com/sitemap.xml

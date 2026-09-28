@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { fetchShows } from "../api/client";
+import { absoluteUrl } from "../utils/siteUrl";
 import type { LiveShow } from "../types/liveShow";
 import "./Shows.css";
 
@@ -40,8 +42,34 @@ export function Shows() {
     .filter((s) => new Date(s.starts_at).getTime() >= Date.now() - 86400000)
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
 
+  const eventsLd = upcoming.map((s) => ({
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: s.title || `Saintted live at ${s.venue}`,
+    startDate: s.starts_at,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: { "@type": "Place", name: s.venue, address: s.city || s.venue },
+    performer: { "@type": "MusicGroup", name: "Saintted" },
+    ...(s.flyer_url ? { image: [absoluteUrl(s.flyer_url)] } : {}),
+    ...(s.ticket_url
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: s.ticket_url,
+            availability: s.is_sold_out ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  }));
+
   return (
     <section className="section section--tight shows" id="shows-section">
+      {eventsLd.length ? (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(eventsLd).replace(/</g, "\\u003c")}</script>
+        </Helmet>
+      ) : null}
       <div className="wrap">
       {loading ? (
         <ul className="shows__list" aria-hidden>
@@ -60,9 +88,9 @@ export function Shows() {
                   {p.month} {p.year}
                 </span>
                 <span className="shows__where">
-                  <span className="shows__venue">{s.venue}</span>
+                  <span className="shows__venue">{s.title || s.venue}</span>
                   <span className="shows__city">
-                    {[s.city, `${p.weekday} · ${p.time}`, s.note].filter(Boolean).join(" · ")}
+                    {[s.title ? s.venue : "", s.city, `${p.weekday} · ${p.time}`, s.note].filter(Boolean).join(" · ")}
                   </span>
                 </span>
                 {s.is_sold_out ? (

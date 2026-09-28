@@ -62,7 +62,7 @@ export function MailingForm({ idPrefix, onSuccess, firstFieldRef, actions }: Mai
 
   return (
     <form className="mform" onSubmit={handleSubmit} noValidate>
-      <div className="mform__row">
+      <div className="mform__names">
         <div className="mform__field">
           <label htmlFor={`${idPrefix}-first`}>first name</label>
           <input
@@ -71,7 +71,7 @@ export function MailingForm({ idPrefix, onSuccess, firstFieldRef, actions }: Mai
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            placeholder="first name"
+            placeholder="Ada"
             required
             disabled={disabled}
             autoComplete="given-name"
@@ -84,39 +84,43 @@ export function MailingForm({ idPrefix, onSuccess, firstFieldRef, actions }: Mai
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            placeholder="last name"
+            placeholder="Obi"
             required
             disabled={disabled}
             autoComplete="family-name"
           />
         </div>
-        <div className="mform__field mform__field--wide">
-          <label htmlFor={`${idPrefix}-email`}>email address</label>
+      </div>
+
+      <div className="mform__field">
+        <label htmlFor={`${idPrefix}-email`}>email address</label>
+        <div className="mform__join">
           <input
             id={`${idPrefix}-email`}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            placeholder="you@email.com"
             required
             disabled={disabled}
             autoComplete="email"
           />
-        </div>
-      </div>
-      <div className="mform__foot">
-        {formState === "error" && message ? (
-          <p className="mform__error" role="alert">{message}</p>
-        ) : (
-          <span />
-        )}
-        <div className="mform__actions">
-          <button type="submit" className="btn btn--primary" disabled={disabled}>
+          <button type="submit" className="mform__submit" disabled={disabled}>
             {disabled ? "subscribing…" : "subscribe"} <span className="arrow" aria-hidden>→</span>
           </button>
-          {actions}
         </div>
       </div>
+
+      {formState === "error" && message ? (
+        <p className="mform__error" role="alert">{message}</p>
+      ) : null}
+
+      {actions ? (
+        <div className="mform__alt">
+          <span>or, get updates on</span>
+          {actions}
+        </div>
+      ) : null}
     </form>
   );
 }

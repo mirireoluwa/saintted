@@ -1,8 +1,8 @@
 import { verifyAdminCookie } from "../_lib-js/adminAuth.js";
-import { getRedis, COUNTDOWN_KEY, SHOWS_KEY, ABOUT_KEY } from "../_lib-js/redis.js";
+import { getRedis, COUNTDOWN_KEY, SHOWS_KEY, ABOUT_KEY, STORY_KEY } from "../_lib-js/redis.js";
 import type { LiveShow, ReleaseCountdown } from "../_lib/types.js";
 import { DEFAULT_COUNTDOWN } from "../_lib/types.js";
-import { aboutOrDefault, parseList, sortShows, validateAbout, validateShow } from "../_lib/siteContent.js";
+import { aboutOrDefault, cleanStory, parseList, sortShows, validateAbout, validateShow } from "../_lib/siteContent.js";
 import { buildInsights, dayKey, visitorsKey } from "../_lib/analytics.js";
 
 /**
@@ -32,6 +32,25 @@ export default async function handler(req: Req, res: Res) {
   if (!redis) return res.status(503).json({ ok: false, message: "Redis not configured" });
 
   const resource = typeof req.query?.resource === "string" ? req.query.resource : "";
+
+  // ── Home story order ─────────────────────────────────────────────────────
+  if (resource === "story") {
+    try {
+      if (req.method === "GET") {
+        const raw = await redis.get<string>(STORY_KEY);
+        return res.status(200).json(cleanStory(raw ? (typeof raw === "string" ? JSON.parse(raw) : raw) : {}));
+      }
+      if (req.method === "PUT" || req.method === "PATCH" || req.method === "POST") {
+        const cfg = cleanStory(req.body);
+        await redis.set(STORY_KEY, JSON.stringify(cfg));
+        return res.status(200).json(cfg);
+      }
+      return res.status(405).json({ ok: false, message: "Method not allowed" });
+    } catch (e) {
+      console.error("admin story error:", e);
+      return res.status(500).json({ ok: false, message: "Story request failed" });
+    }
+  }
 
   // ── Insights (site analytics report) ─────────────────────────────────────
   if (resource === "insights") {

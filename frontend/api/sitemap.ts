@@ -25,10 +25,13 @@ export default async function handler(
   res.setHeader("Content-Type", "application/xml; charset=utf-8");
   res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
 
+  const today = new Date().toISOString().slice(0, 10);
   const urls: { loc: string; lastmod?: string; priority?: string }[] = [
-    { loc: `${SITE_URL}/`, priority: "1.0" },
+    { loc: `${SITE_URL}/`, lastmod: today, priority: "1.0" },
+    { loc: `${SITE_URL}/music`, lastmod: today, priority: "0.9" },
+    { loc: `${SITE_URL}/about`, priority: "0.6" },
     { loc: `${SITE_URL}/media`, priority: "0.6" },
-    { loc: `${SITE_URL}/shows`, priority: "0.6" },
+    { loc: `${SITE_URL}/shows`, lastmod: today, priority: "0.7" },
   ];
 
   try {

@@ -1,7 +1,8 @@
-import { getRedis, COUNTDOWN_KEY, SHOWS_KEY, ABOUT_KEY } from "./_lib-js/redis.js";
+import { getRedis, COUNTDOWN_KEY, SHOWS_KEY, ABOUT_KEY, STORY_KEY } from "./_lib-js/redis.js";
 import type { LiveShow, ReleaseCountdown } from "./_lib/types.js";
 import { DEFAULT_ABOUT, DEFAULT_COUNTDOWN } from "./_lib/types.js";
 import { aboutOrDefault, parseList, sortShows } from "./_lib/siteContent.js";
+import { cleanStory } from "./_lib/siteContent.js";
 import { dayKey, fieldsFor, parseEvent, visitorsKey } from "./_lib/analytics.js";
 
 /**
@@ -60,6 +61,18 @@ export default async function handler(
     } catch (e) {
       console.error("GET /api/shows error:", e);
       return res.status(200).json([]);
+    }
+  }
+
+  if (resource === "story") {
+    try {
+      const redis = getRedis();
+      const raw = redis ? await redis.get<string>(STORY_KEY) : null;
+      const cfg = raw ? (typeof raw === "string" ? JSON.parse(raw) : raw) : {};
+      return res.status(200).json(cleanStory(cfg));
+    } catch (e) {
+      console.error("GET /api/story error:", e);
+      return res.status(200).json({ order: [], hidden: [] });
     }
   }
 

@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -51,8 +52,9 @@ import {
 import { AdminSiteHeader } from "../components/AdminSiteHeader";
 import { AdminDropzone } from "../components/AdminDropzone";
 import { AdminSortableList } from "../components/AdminSortableList";
-import { AdminNotifications } from "../components/AdminNotifications";
+import { AdminBell } from "../components/AdminBell";
 import { AdminInsights } from "../components/AdminInsights";
+import { AdminStoryOrder } from "../components/AdminStoryOrder";
 import { buildNotices, type AdminNotice } from "../components/noticeRules";
 import { markAdminBrowser } from "../utils/analytics";
 import { getTrackArtUrl } from "../utils/trackArt";
@@ -236,10 +238,9 @@ const SUBSCRIBER_PAGE_SIZE = 20;
 
 const ACCENT_PRESETS = ["#87ceeb", "#f472b6", "#fbbf24", "#a3e635", "#a78bfa", "#fb7185", "#34d399", "#f97316"];
 
-type AdminSection = "notifications" | "home" | "music" | "media" | "pages" | "audience" | "insights";
+type AdminSection = "home" | "music" | "media" | "pages" | "audience" | "insights";
 
 const ADMIN_SECTIONS: { id: AdminSection; label: string; hint: string }[] = [
-  { id: "notifications", label: "Notifications", hint: "what needs you" },
   { id: "home", label: "Homepage", hint: "countdown + hero" },
   { id: "music", label: "Music", hint: "tracks" },
   { id: "media", label: "Media", hint: "videos + photos" },
@@ -269,11 +270,12 @@ function saveSet(key: string, v: Set<string>) {
 
 function sectionFromHash(): AdminSection {
   const h = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
-  return ADMIN_SECTIONS.some((x) => x.id === h) ? (h as AdminSection) : "notifications";
+  return ADMIN_SECTIONS.some((x) => x.id === h) ? (h as AdminSection) : "home";
 }
 
 export function AdminPage() {
   const [section, setSectionState] = useState<AdminSection>(sectionFromHash);
+  const [navOpen, setNavOpen] = useState(false);
   const [lastSeen, setLastSeen] = useState<number>(() => {
     try {
       return Number(localStorage.getItem(SEEN_KEY)) || 0;
@@ -284,6 +286,7 @@ export function AdminPage() {
   const [readIds, setReadIds] = useState<Set<string>>(() => loadSet(READ_KEY));
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => loadSet(DISMISSED_KEY));
   const setSection = (next: AdminSection) => {
+    setNavOpen(false);
     setSectionState(next);
     window.history.replaceState(null, "", `#${next}`);
     window.scrollTo({ top: 0 });
@@ -715,6 +718,21 @@ export function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trackDrawerOpen]);
 
+  // the phone menu closes on Escape or a tap outside it
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setNavOpen(false);
+    const onPointer = (e: PointerEvent) => {
+      if (!(e.target as Element).closest(".admin-side")) setNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [navOpen]);
+
   function startNewTrack() {
     setEditingSlug(null);
     // new items join the end of the list; reorder them from the list afterwards
@@ -1087,6 +1105,11 @@ export function AdminPage() {
     return (
       <>
         <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
+        <Helmet>
+          <title>admin · saintted</title>
+          <meta name="robots" content="noindex,nofollow" />
+        </Helmet>
+
         <div className="admin-page">
           <AdminSiteHeader />
           <AdminSubdomainCallout />
@@ -1132,8 +1155,22 @@ export function AdminPage() {
   return (
     <>
       <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
+      <Helmet>
+        <title>admin · saintted</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
     <div className="admin-page">
-      <AdminSiteHeader />
+      <AdminSiteHeader
+        actions={
+          <AdminBell
+            notices={notices}
+            unreadCount={unreadCount}
+            onOpen={openNotice}
+            onDismiss={dismissNotice}
+            onMarkAllRead={markAllNoticesRead}
+          />
+        }
+      />
       <AdminSubdomainCallout />
       {sessionHoursLeft !== null && (
         <div className="admin-callout admin-callout--warning" role="alert">
@@ -1144,37 +1181,52 @@ export function AdminPage() {
       )}
 
       <div className="admin-shell">
-        <aside className="admin-side">
-          <nav className="admin-side__nav" aria-label="Admin sections">
-            {ADMIN_SECTIONS.map((x) => {
-              const count =
-                x.id === "notifications" ? (unreadCount || null)
-                : x.id === "music" ? tracks.length
-                : x.id === "media" ? videos.length + galleryImages.length
-                : x.id === "audience" ? mlCount
-                : null;
-              return (
-                <button
-                  key={x.id}
-                  type="button"
-                  className="admin-side__link"
-                  aria-current={section === x.id ? "page" : undefined}
-                  onClick={() => setSection(x.id)}
-                >
-                  <span className="admin-side__label">{x.label}</span>
-                  <span className="admin-side__hint">{x.hint}</span>
-                  {count != null ? <span className={`admin-side__count${x.id === "notifications" ? " admin-side__count--alert" : ""}`}>{count}</span> : null}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="admin-side__foot">
-            <button type="button" className="admin-btn" onClick={() => void loadData()}>
-              Refresh
-            </button>
-            <button type="button" className="admin-btn admin-btn--danger" onClick={() => void logout()}>
-              Log out
-            </button>
+        <aside className={`admin-side${navOpen ? " admin-side--open" : ""}`}>
+          {/* phones + tablets: one menu button showing the current section, like the main site */}
+          <button
+            type="button"
+            className="admin-side__toggle"
+            aria-expanded={navOpen}
+            aria-controls="admin-side-panel"
+            onClick={() => setNavOpen((o) => !o)}
+          >
+            <span className="admin-side__toggle-label">
+              {ADMIN_SECTIONS.find((x) => x.id === section)?.label}
+            </span>
+            <span className="admin-side__burger" aria-hidden />
+            <span className="sr-only">{navOpen ? "Close menu" : "Open menu"}</span>
+          </button>
+          <div className="admin-side__panel" id="admin-side-panel">
+            <nav className="admin-side__nav" aria-label="Admin sections">
+              {ADMIN_SECTIONS.map((x) => {
+                const count =
+                  x.id === "music" ? tracks.length
+                  : x.id === "media" ? videos.length + galleryImages.length
+                  : x.id === "audience" ? mlCount
+                  : null;
+                return (
+                  <button
+                    key={x.id}
+                    type="button"
+                    className="admin-side__link"
+                    aria-current={section === x.id ? "page" : undefined}
+                    onClick={() => setSection(x.id)}
+                  >
+                    <span className="admin-side__label">{x.label}</span>
+                    <span className="admin-side__hint">{x.hint}</span>
+                    {count != null ? <span className={`admin-side__count`}>{count}</span> : null}
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="admin-side__foot">
+              <button type="button" className="admin-btn" onClick={() => void loadData()}>
+                Refresh
+              </button>
+              <button type="button" className="admin-btn admin-btn--danger" onClick={() => void logout()}>
+                Log out
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -1186,19 +1238,11 @@ export function AdminPage() {
           </header>
 
 
-      {section === "notifications" && (
-        <AdminNotifications
-          notices={notices}
-          onOpen={openNotice}
-          onDismiss={dismissNotice}
-          onMarkAllRead={markAllNoticesRead}
-          subscriberTotal={mlCount ?? (mlSubscribers.length || null)}
-        />
-      )}
-
       {section === "insights" && <AdminInsights trackTitles={trackTitles} />}
 
       {section === "home" && (<>
+      <AdminStoryOrder tracks={tracks} notify={notify} />
+
       <div className="admin-card">
         <h2 className="admin-card__title">Release countdown</h2>
         <p className="admin-card__lead">

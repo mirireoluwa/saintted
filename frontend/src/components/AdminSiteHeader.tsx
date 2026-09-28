@@ -3,7 +3,7 @@ import { isAdminHostname } from "../utils/adminHost";
 import { getSiteUrl } from "../utils/siteUrl";
 import "./AdminSiteHeader.css";
 
-export function AdminSiteHeader() {
+export function AdminSiteHeader({ actions }: { actions?: React.ReactNode }) {
   const onAdminHost =
     typeof window !== "undefined" && isAdminHostname(window.location.hostname);
   const viewSiteHref = onAdminHost ? `${getSiteUrl()}/` : "/";
@@ -15,6 +15,8 @@ export function AdminSiteHeader() {
           saintted<span className="seal" aria-hidden />
           <span className="admin-site-header__tag">admin</span>
         </p>
+        <div className="admin-site-header__actions">
+        {actions}
         {onAdminHost ? (
           <a href={viewSiteHref} className="admin-site-header__view-site" rel="noopener noreferrer">
             view site <span aria-hidden>↗</span>
@@ -24,6 +26,7 @@ export function AdminSiteHeader() {
             view site <span aria-hidden>↗</span>
           </Link>
         )}
+        </div>
       </div>
     </header>
   );

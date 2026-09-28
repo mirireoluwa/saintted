@@ -33,6 +33,10 @@ export function AdminInsights({ trackTitles }: { trackTitles: Record<string, str
 
   const title = (slug: string) => trackTitles[slug] || nice(slug);
   const empty = data && data.totals.pageviews === 0;
+  // tracking is new: until enough days have passed, longer ranges honestly show the same numbers
+  const firstDay = data?.series.find((d) => d.pageviews > 0 || d.visitors > 0)?.date;
+  const daysOfData = firstDay && data ? data.series.length - data.series.findIndex((d) => d.date === firstDay) : 0;
+  const shortHistory = Boolean(data && firstDay && daysOfData < data.days);
 
   return (
     <>
@@ -46,6 +50,16 @@ export function AdminInsights({ trackTitles }: { trackTitles: Record<string, str
         </div>
         <p className="insights__note">Anonymous counts only. Your own visits from this browser are not counted.</p>
       </div>
+
+      {loading && data ? <p className="admin-page__loading">Updating…</p> : null}
+
+      {shortHistory && data ? (
+        <p className="insights__note insights__note--info">
+          Counting started on {new Date(firstDay as string).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+          {" "}({daysOfData} {daysOfData === 1 ? "day" : "days"} of data so far), so the {data.days}-day view can only show what
+          exists. Ranges will start to differ as more days build up.
+        </p>
+      ) : null}
 
       {error ? <div className="admin-card"><p className="admin-form__hint admin-form__hint--error">{error}</p></div> : null}
       {loading && !data ? <p className="admin-page__loading">Loading…</p> : null}

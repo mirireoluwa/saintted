@@ -18,6 +18,26 @@ export function PublicShell() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname, location.hash]);
 
+  // Real visible height for browsers without svh (older iOS/Android): the hero fills the screen there too.
+  useEffect(() => {
+    const set = () => document.documentElement.style.setProperty("--app-h", `${window.innerHeight}px`);
+    set();
+    let lastW = window.innerWidth;
+    const onResize = () => {
+      // ignore the height-only resizes caused by the address bar collapsing while scrolling
+      if (window.innerWidth !== lastW) {
+        lastW = window.innerWidth;
+        set();
+      }
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", set);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", set);
+    };
+  }, []);
+
   // Discourage saving media: no right-click "save image", no drag-out, no long-press menu.
   // (Anything shown in a browser can still be screenshotted; this only stops casual saving.)
   useEffect(() => {

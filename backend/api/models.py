@@ -186,11 +186,13 @@ class LiveShow(models.Model):
     """A live show / event listed on the public Shows page."""
 
     starts_at = models.DateTimeField(help_text="Date and time the show starts")
+    title = models.CharField(max_length=255, blank=True, help_text="Optional show title, e.g. 'Album release party'")
     venue = models.CharField(max_length=255)
     city = models.CharField(max_length=255, blank=True, help_text="e.g. Lagos, Nigeria")
     ticket_url = models.URLField(blank=True, help_text="Optional tickets / RSVP link")
     note = models.CharField(max_length=255, blank=True, help_text="Optional short note, e.g. 'doors 7pm'")
     is_sold_out = models.BooleanField(default=False)
+    flyer_url = models.URLField(max_length=500, blank=True, help_text="Optional flyer / poster image (used as the home-page story background)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

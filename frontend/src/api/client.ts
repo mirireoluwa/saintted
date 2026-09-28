@@ -1,3 +1,4 @@
+import { EMPTY_STORY_CONFIG, type StoryConfig } from "../utils/storySlides";
 import type { Track } from "../types/track";
 import type { FeaturedVideo } from "../types/featuredVideo";
 import type { GalleryImage } from "../types/galleryImage";
@@ -41,6 +42,16 @@ export async function fetchShows(): Promise<LiveShow[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data) ? data : [];
+}
+
+export async function fetchStoryConfig(): Promise<StoryConfig> {
+  const res = await fetchLive("/api/story");
+  if (!res.ok) return EMPTY_STORY_CONFIG;
+  const d = (await res.json()) as Partial<StoryConfig>;
+  return {
+    order: Array.isArray(d.order) ? d.order.filter((x) => typeof x === "string") : [],
+    hidden: Array.isArray(d.hidden) ? d.hidden.filter((x) => typeof x === "string") : [],
+  };
 }
 
 export async function fetchAbout(): Promise<AboutContent | null> {

@@ -1,0 +1,357 @@
+/* ---------- the hero as a story: frame 0 is the normal hero, later frames slide in ---------- */
+.story {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: inherit;
+  color: #fff;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  cursor: pointer;
+}
+.story a { cursor: pointer; }
+
+.story__viewport {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  min-height: 0;
+  padding-top: 6.5rem; /* clears the floating site header */
+  padding-bottom: clamp(2rem, 4.5vw, 3.75rem); /* air between the content and the progress bars */
+}
+.story__main {
+  width: 100%;
+  animation: story-in 0.6s var(--ease) both;
+}
+
+/* progress along the bottom edge */
+.story__bars {
+  display: flex;
+  gap: 0.4rem;
+  padding: 1.25rem 0 clamp(1.25rem, 3vw, 2rem);
+}
+.story__bar {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+.story__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: #fff;
+  transform-origin: left center;
+}
+.story__fill--done { transform: none; }
+.story__fill--run {
+  transform: scaleX(0);
+  animation: story-fill linear forwards;
+}
+@keyframes story-fill { to { transform: scaleX(1); } }
+
+/* slide frames: text left, media right, both sitting on the bottom */
+.story__slide {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: end;
+  gap: clamp(2rem, 5vw, 5rem);
+  width: 100%;
+}
+/* only the text and card ease in; a full-screen backdrop never fades, so the video can't show through */
+.story__text,
+.story__media {
+  animation: story-in 0.6s var(--ease) both;
+}
+@keyframes story-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.story__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.story__kicker::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--accent);
+}
+.story__place {
+  margin: 0.9rem 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  letter-spacing: -0.01em;
+}
+/* with a flyer the date can't live on the media side: a calendar tile plus the full date, under the location */
+.story__when {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.4rem 0 0;
+}
+.story__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 4.6rem;
+  padding: 0.55rem 0 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  line-height: 1;
+}
+.story__tile em {
+  color: var(--accent);
+  font-style: normal;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.story__tile strong {
+  margin-top: 0.3rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 2.1rem;
+  letter-spacing: -0.04em;
+}
+.story__when-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  line-height: 1.2;
+}
+.story__when-text b {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+.story__when-text span {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  text-transform: lowercase;
+}
+
+.story__title {
+  margin: 0;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  font-size: clamp(2.8rem, 7.4vw, 7rem);
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
+}
+.story__sub {
+  margin: 1.25rem 0 1.5rem;
+  max-width: 34rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.5;
+}
+.story__count { font-variant-numeric: tabular-nums; font-weight: 500; color: #fff; }
+
+/* the only link on a frame: plain text, not a button */
+.story__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.story__cta:hover { color: #fff; border-color: #fff; }
+.story__soldout {
+  display: inline-block;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  font-size: 0.74rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.story__media {
+  position: relative;
+  justify-self: end;
+  /* never taller than the space under the header, whatever the screen */
+  width: min(100%, 30rem, 58svh);
+  aspect-ratio: 1 / 1;
+  border-radius: calc(var(--radius) * 1.75);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+.story__media--cover img,
+.story__cover-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.story__cover-empty { background: linear-gradient(160deg, #1a2333, #0a0b10); }
+/* no flyer: the date, set large straight on the hero (no card behind it) */
+.story__media--date {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  aspect-ratio: auto;
+  width: auto;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  text-align: right;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+}
+.story__media--date small {
+  margin-bottom: 0.4rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.story__media--date strong {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(7rem, 16vw, 13rem);
+  letter-spacing: -0.07em;
+  line-height: 0.82;
+}
+.story__media--date span {
+  margin-top: 1.1rem;
+  color: var(--accent);
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.story__media--date i {
+  display: block;
+  width: 4rem;
+  height: 3px;
+  margin: 1.1rem 0 0.9rem;
+  background: var(--accent);
+}
+.story__media--date b {
+  font-weight: 500;
+  font-size: clamp(0.95rem, 1.4vw, 1.2rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* a flyer keeps its own proportions and is never cropped */
+.story__media--flyer {
+  width: fit-content;
+  max-width: 100%;
+  aspect-ratio: auto;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.story__media--flyer img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(62svh, 42rem);
+  pointer-events: none;
+}
+
+/* ---------- phones: each frame is the whole screen ---------- */
+@media (max-width: 800px) {
+  /* frames anchor to the whole screen, not the gutter-padded column */
+  .story__viewport { position: static; padding-top: 0; padding-bottom: 0; }
+  .story__bars {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: 1rem;
+    padding: 0;
+    z-index: 3;
+  }
+  .story__slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    padding: 8rem var(--gutter) 3.25rem;
+  }
+  /* the cover / date card becomes the full-screen backdrop behind the text */
+  .story__media {
+    animation: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    aspect-ratio: auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .story__media--cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.3) 100%);
+  }
+  /* the bare date joins the details: it sits right above the title instead of floating at the top */
+  .story__media--date {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    order: -1;
+    align-self: flex-start;
+    width: auto;
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0;
+    margin-bottom: 1.6rem;
+  }
+  .story__media--date strong { font-size: clamp(6rem, 30vw, 8.5rem); }
+  .story__media--date i { margin-block: 0.9rem 0.7rem; }
+  /* a flyer stays a card, sitting above the text */
+  .story__media--flyer {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    order: -1;
+    align-self: flex-start;
+    width: fit-content;
+    margin-bottom: 1.5rem;
+    border-radius: calc(var(--radius) * 1.75);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  }
+  .story__media--flyer img { max-height: 40svh; }
+  .story__title { font-size: clamp(2.6rem, 13vw, 4rem); }
+  .story__sub { margin: 0.9rem 0 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__text, .story__media, .story__main { animation: none; }
+}

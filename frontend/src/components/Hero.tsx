@@ -5,6 +5,7 @@ import type { Track } from "../types/track";
 import { trackEvent } from "../utils/analytics";
 import { readHeroCache } from "../utils/heroCache";
 import { resolvePublicMediaUrl } from "../utils/mediaUrl";
+import { HeroStories, useStorySlides } from "./HeroStories";
 import "./Hero.css";
 
 type HeroProps = {
@@ -12,6 +13,8 @@ type HeroProps = {
   releaseLoaded: boolean;
   summaryText?: string;
   tracks?: Track[];
+  /** True once the track list has loaded (so the hero doesn't flip layouts mid-load). */
+  tracksReady?: boolean;
 };
 
 type Featured = { track: Track; kind: "presave" | "listen" };
@@ -36,8 +39,10 @@ function captionMeta(f: Featured): string {
   return [f.track.year, (f.track.meta || "").toLowerCase()].filter(Boolean).join(" · ");
 }
 
-export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }: HeroProps) {
+export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [], tracksReady = true }: HeroProps) {
   const featured = pickFeatured(tracks);
+  const { slides: storySlides, ready: storiesReady } = useStorySlides(tracks, tracksReady);
+  const hasStories = storySlides.length > 0;
   const [showAltTag, setShowAltTag] = useState(false);
   const [showDesc, setShowDesc] = useState(false);
 
@@ -140,39 +145,8 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
     };
   }, [activeVideoUrl]);
 
-  return (
-    <section className="hero" aria-labelledby="hero-title">
-      {headerImageUrl ? (
-        <div
-          className={`hero__photo${heroPhotoVisible ? " hero__photo--visible" : ""}`}
-          style={{
-            backgroundImage: `url(${headerImageUrl})`,
-            backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
-            transformOrigin: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
-          }}
-          aria-hidden
-        />
-      ) : null}
-      {activeVideoUrl && !heroVideoError ? (
-        <video
-          key={activeVideoUrl}
-          ref={heroVideoRef}
-          className={`hero__video${heroVideoReady ? " hero__video--visible" : ""}`}
-          src={activeVideoUrl}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          controlsList="nodownload noplaybackrate noremoteplayback"
-          disablePictureInPicture
-          disableRemotePlayback
-          aria-hidden
-        />
-      ) : null}
-      <div className="hero__scrim" aria-hidden />
-
-      <div className="wrap hero__inner">
+  const copy = (
+        <div className="hero__copy">
         <p className="eyebrow hero__eyebrow rise">
           artist +{" "}
           <span className={`hero-swap${showAltTag ? " hero-swap--alt" : ""}`}>
@@ -182,10 +156,9 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
         </p>
 
         {/* hover (or tap) the name to reveal the tagline */}
-        <h1
-          id="hero-title"
+        <div
           className="hero__name"
-          aria-label="saintted"
+          role="presentation"
           onMouseEnter={() => setShowDesc(true)}
           onMouseLeave={() => setShowDesc(false)}
           onClick={() => setShowDesc((v) => !v)}
@@ -193,7 +166,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
           <span className="hero__line" aria-hidden>
             <span>SAINTTED</span>
           </span>
-        </h1>
+        </div>
 
         {summaryText ? (
           <div className={`hero__lede${showDesc ? " hero__lede--visible" : ""}`}>
@@ -233,12 +206,59 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [] }:
           </Link>
         ) : null}
       </div>
+  );
+
+  return (
+    <section className={`hero${hasStories ? " hero--stories" : ""}`} aria-labelledby="hero-title">
+      {/* the page's one h1, present on every frame of the story */}
+      <h1 id="hero-title" className="sr-only">saintted, a Nigerian artist and producer</h1>
+      {headerImageUrl ? (
+        <div
+          className={`hero__photo${heroPhotoVisible ? " hero__photo--visible" : ""}`}
+          style={{
+            backgroundImage: `url(${headerImageUrl})`,
+            backgroundPosition: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
+            transformOrigin: `${headerImageFocus.x}% ${headerImageFocus.y}%`,
+          }}
+          aria-hidden
+        />
+      ) : null}
+      {activeVideoUrl && !heroVideoError ? (
+        <video
+          key={activeVideoUrl}
+          ref={heroVideoRef}
+          className={`hero__video${heroVideoReady ? " hero__video--visible" : ""}`}
+          src={activeVideoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          controlsList="nodownload noplaybackrate noremoteplayback"
+          disablePictureInPicture
+          disableRemotePlayback
+          aria-hidden
+        />
+      ) : null}
+      <div className="hero__scrim" aria-hidden />
+
+      <div className="wrap hero__inner">
+        {!storiesReady ? null : hasStories ? (
+          <div className="hero__story">
+            <HeroStories slides={storySlides} main={copy} />
+          </div>
+        ) : (
+          copy
+        )}
+      </div>
 
       {/* vertical rail on the right edge; the accent segment slides down it */}
+      {storiesReady && !hasStories ? (
       <a href="#latest" className="hero__scroll" aria-label="Scroll to the latest releases">
         <span className="hero__scroll-text">scroll</span>
         <span className="hero__scroll-line" aria-hidden />
       </a>
+      ) : null}
     </section>
   );
 }

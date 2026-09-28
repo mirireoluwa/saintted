@@ -250,7 +250,7 @@ export function TrackDetailPage() {
   if (showNotFound) {
     return (
       <>
-        <SeoHead title="Track not found · saintted" description="love, saintted" canonicalPath={canonicalPath} />
+        <SeoHead title="Track not found · saintted" description="love, saintted" canonicalPath={canonicalPath} noindex />
         <header className="wrap page-head">
           <p className="eyebrow">404</p>
           <h1>track not found</h1>
@@ -331,6 +331,17 @@ export function TrackDetailPage() {
       {resolved && trackJsonLd ? (
         <Helmet>
           <script type="application/ld+json">{trackJsonLd}</script>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "home", item: getSiteUrl() + "/" },
+                { "@type": "ListItem", position: 2, name: "music", item: getSiteUrl() + "/music" },
+                { "@type": "ListItem", position: 3, name: track?.title ?? slug, item: getSiteUrl() + canonicalPath },
+              ],
+            })}
+          </script>
         </Helmet>
       ) : null}
       <div className="track-page">

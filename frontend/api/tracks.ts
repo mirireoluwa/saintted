@@ -1,15 +1,76 @@
-import { getRedis, TRACKS_KEY } from "./_lib-js/redis.js";
+import { getRedis, TRACKS_KEY, SHOWS_KEY, ABOUT_KEY } from "./_lib-js/redis.js";
 import type { Track } from "./_lib/types.js";
+import { aboutOrDefault, parseList } from "./_lib/siteContent.js";
+import { renderShell } from "./_lib/seoShell.js";
+import type { LiveShow } from "./_lib/types.js";
 
 type Res = {
   setHeader: (name: string, value: string) => void;
-  status: (code: number) => { json: (body: unknown) => void };
+  status: (code: number) => { json: (body: unknown) => void; send: (body: string) => void };
 };
 
-export default async function handler(
-  req: { method?: string; query?: Record<string, string | string[]> },
+const SITE_URL = (process.env.VITE_SITE_URL?.trim() || "https://saintted.com").replace(/\/$/, "");
+
+/** Serve a public page as index.html with its own SEO metadata and content (see _lib/seoShell.ts). */
+async function serveShell(
+  req: { headers?: Record<string, string | string[] | undefined>; query?: Record<string, string | string[]> },
   res: Res
 ) {
+  const path = typeof req.query?.path === "string" ? req.query.path : "/";
+  const hdr = (k: string) => {
+    const v = req.headers?.[k];
+    return Array.isArray(v) ? v[0] : v;
+  };
+  const host = hdr("x-forwarded-host") || hdr("host") || "";
+  const origin = process.env.SHELL_ORIGIN || (host ? `${hdr("x-forwarded-proto") || "https"}://${host}` : SITE_URL);
+
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 4000);
+    const page = await fetch(`${origin}/index.html`, { signal: ctl.signal });
+    clearTimeout(timer);
+    const indexHtml = await page.text();
+
+    let tracks: Track[] = [];
+    let shows: LiveShow[] = [];
+    let about = null;
+    const redis = getRedis();
+    if (redis) {
+      const [t, sh, ab] = await Promise.all([
+        redis.get<string>(TRACKS_KEY),
+        redis.get<string>(SHOWS_KEY),
+        redis.get<string>(ABOUT_KEY),
+      ]);
+      tracks = parseList<Track>(t);
+      shows = parseList<LiveShow>(sh);
+      about = aboutOrDefault(ab);
+    }
+    const out = renderShell(path, { siteUrl: SITE_URL, indexHtml, tracks, shows, about });
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", out.status === 200 ? "public, s-maxage=300, stale-while-revalidate=86400" : "public, s-maxage=60");
+    return res.status(out.status).send(out.html);
+  } catch (e) {
+    // never take the site down: fall back to the plain app shell
+    console.error("shell error:", e);
+    try {
+      const fb = await fetch(`${origin}/index.html`);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).send(await fb.text());
+    } catch {
+      return res.status(500).send("Temporarily unavailable");
+    }
+  }
+}
+
+export default async function handler(
+  req: { method?: string; headers?: Record<string, string | string[] | undefined>; query?: Record<string, string | string[]> },
+  res: Res
+) {
+  if (req.query?.resource === "shell" && (req.method === "GET" || req.method === "HEAD")) {
+    return serveShell(req, res);
+  }
+
   res.setHeader("Content-Type", "application/json");
 
   if (req.method !== "GET") {

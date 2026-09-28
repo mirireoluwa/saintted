@@ -46,3 +46,9 @@
 .admin-site-header__view-site:hover {
   color: var(--accent);
 }
+
+.admin-site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}

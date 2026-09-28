@@ -311,9 +311,14 @@ export async function deleteGalleryImage(id: number): Promise<void> {
   if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
 }
 
+/** Upload an image or video to Cloudinary and return its public URL. */
+export async function uploadMedia(file: File): Promise<string> {
+  return uploadFile(file);
+}
+
 // ── Live shows ────────────────────────────────────────────────────────────────
 
-export type LiveShowPayload = Pick<LiveShow, "starts_at" | "venue" | "city" | "ticket_url" | "note" | "is_sold_out">;
+export type LiveShowPayload = Pick<LiveShow, "starts_at" | "title" | "venue" | "city" | "ticket_url" | "note" | "is_sold_out" | "flyer_url">;
 
 /** Prefer the server's { message } over a raw JSON dump. */
 async function failMessage(res: Response, fallback: string): Promise<Error> {
@@ -428,6 +433,26 @@ export async function deleteSubscriber(id: number): Promise<void> {
 }
 
 export async function fetchInsights(days: number): Promise<import("../types/insights").Insights> {
-  const res = await fetchLive(`/api/admin/insights?days=${days}`, ADMIN_FETCH);
+  const res = await fetchLive(`/api/admin/release-countdown?resource=insights&days=${days}&_=${Date.now()}`, { ...ADMIN_FETCH, cache: "no-store" });
   return guardJson(res, "insights");
+}
+
+// ── Home story order ─────────────────────────────────────────────────────────
+
+export async function fetchStoryConfigAuth(): Promise<import("../utils/storySlides").StoryConfig> {
+  const res = await fetchLive("/api/admin/story", ADMIN_FETCH);
+  return guardJson(res, "story order");
+}
+
+export async function saveStoryConfig(
+  cfg: import("../utils/storySlides").StoryConfig
+): Promise<import("../utils/storySlides").StoryConfig> {
+  const res = await fetchLive("/api/admin/story", {
+    ...ADMIN_FETCH,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cfg),
+  });
+  if (!res.ok) throw await failMessage(res, "Could not save story order");
+  return res.json();
 }

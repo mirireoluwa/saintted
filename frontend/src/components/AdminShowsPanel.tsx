@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createShow, deleteShow, fetchShowsAuth, updateShow } from "../api/adminApi";
+import { createShow, deleteShow, fetchShowsAuth, updateShow, uploadMedia } from "../api/adminApi";
+import { AdminDropzone } from "./AdminDropzone";
 import type { LiveShow } from "../types/liveShow";
 
 type Notify = (type: "ok" | "error", text: string) => void;
@@ -13,12 +14,14 @@ function isoToDatetimeLocal(iso: string | null | undefined): string {
 }
 
 const emptyForm = () => ({
+  title: "",
   venue: "",
   city: "",
   starts_at_local: "",
   ticket_url: "",
   note: "",
   is_sold_out: false,
+  flyer_url: "",
 });
 
 export function AdminShowsPanel({ notify }: { notify: Notify }) {
@@ -27,6 +30,8 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [flyerFile, setFlyerFile] = useState<File | null>(null);
+  const [clearFlyer, setClearFlyer] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,18 +56,24 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
   function reset() {
     setEditingId(null);
     setForm(emptyForm());
+    setFlyerFile(null);
+    setClearFlyer(false);
   }
 
   function startEdit(s: LiveShow) {
     setEditingId(s.id);
     setForm({
+      title: s.title ?? "",
       venue: s.venue,
       city: s.city,
       starts_at_local: isoToDatetimeLocal(s.starts_at),
       ticket_url: s.ticket_url,
       note: s.note,
       is_sold_out: s.is_sold_out,
+      flyer_url: s.flyer_url ?? "",
     });
+    setFlyerFile(null);
+    setClearFlyer(false);
     window.scrollTo({ top: document.getElementById("admin-shows-form")?.offsetTop ?? 0, behavior: "smooth" });
   }
 
@@ -73,7 +84,17 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
       return;
     }
     setSaving(true);
+    let flyer_url = clearFlyer ? "" : form.flyer_url;
+    try {
+      if (flyerFile) flyer_url = await uploadMedia(flyerFile);
+    } catch (err) {
+      setSaving(false);
+      notify("error", `Flyer upload failed: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
     const payload = {
+      flyer_url,
+      title: form.title.trim(),
       venue: form.venue.trim(),
       city: form.city.trim(),
       starts_at: new Date(form.starts_at_local).toISOString(),
@@ -125,6 +146,16 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
           Shows appear on the public <strong>/shows</strong> page. Past shows hide themselves automatically.
         </p>
         <form className="admin-form" onSubmit={save}>
+          <div className="admin-form__row">
+            <label htmlFor="show-title">Show title</label>
+            <input
+              id="show-title"
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              placeholder="e.g. Album release party (optional)"
+            />
+            <p className="admin-form__hint">Leave empty and the venue becomes the headline.</p>
+          </div>
           <div className="admin-form__row admin-form__row--2">
             <div className="admin-form__row">
               <label htmlFor="show-venue">Venue *</label>
@@ -177,6 +208,28 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
             />
           </div>
           <div className="admin-form__row">
+            <label htmlFor="show-flyer">Flyer (optional)</label>
+            <AdminDropzone
+              id="show-flyer"
+              kind="image"
+              accept="image/*"
+              file={flyerFile}
+              currentUrl={clearFlyer ? null : form.flyer_url || null}
+              hint="portrait poster works best"
+              onFile={(f) => {
+                setFlyerFile(f);
+                if (f) setClearFlyer(false);
+              }}
+            />
+            {form.flyer_url ? (
+              <label className="admin-form__check">
+                <input type="checkbox" checked={clearFlyer} onChange={(e) => setClearFlyer(e.target.checked)} />
+                <span>Remove the current flyer</span>
+              </label>
+            ) : null}
+            <p className="admin-form__hint">Shown as the background when this show appears in the home-page story.</p>
+          </div>
+          <div className="admin-form__row">
             <label className="admin-form__check">
               <input
                 type="checkbox"
@@ -222,7 +275,7 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
                       {new Date(s.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                       {past ? " (past)" : ""}
                     </td>
-                    <td>{s.venue}</td>
+                    <td>{s.title ? `${s.title} — ${s.venue}` : s.venue}</td>
                     <td>{s.city || "—"}</td>
                     <td>
                       {s.is_sold_out ? (

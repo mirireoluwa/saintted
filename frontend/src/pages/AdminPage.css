@@ -29,6 +29,12 @@
   flex-direction: column;
   gap: 1.5rem;
 }
+.admin-side__toggle { display: none; }
+.admin-side__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 .admin-side__nav {
   display: flex;
   flex-direction: column;
@@ -734,40 +740,111 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
+  /* phones + tablets: the sections fold into one menu button, like the main site */
   .admin-side {
-    position: static;
-    flex-direction: row;
+    position: relative;
+    top: auto;
+    z-index: 40;
+    gap: 0;
+  }
+  .admin-side__toggle {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--field);
+    color: var(--ink);
+    transition: border-color 0.25s var(--ease);
+  }
+  .admin-side--open .admin-side__toggle,
+  .admin-side__toggle:hover { border-color: var(--accent); }
+  .admin-side__toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .admin-side__dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  /* two-line icon that turns into an ✕ when open */
+  .admin-side__burger,
+  .admin-side__burger::before {
+    display: block;
+    width: 1.4rem;
+    height: 2px;
+    background: currentColor;
+    transition: transform 0.35s var(--ease), top 0.35s var(--ease);
+  }
+  .admin-side__burger { position: relative; top: -3px; }
+  .admin-side__burger::before { content: ""; position: absolute; top: 7px; left: 0; }
+  .admin-side--open .admin-side__burger { top: 0; transform: rotate(45deg); }
+  .admin-side--open .admin-side__burger::before { top: 0; transform: rotate(-90deg); }
+
+  .admin-side__panel {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    right: 0;
+    display: block;
+    padding: 0.4rem 0.4rem 0.75rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.25s var(--ease), transform 0.35s var(--ease), visibility 0s linear 0.35s;
+  }
+  .admin-side--open .admin-side__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
   }
   .admin-side__nav {
-    flex-direction: row;
-    gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    overflow-x: auto;
     border-top: 0;
-    padding-bottom: 0.25rem;
-    scrollbar-width: none;
   }
-  .admin-side__nav::-webkit-scrollbar { display: none; }
   .admin-side__link {
-    flex: none;
-    grid-template-columns: auto auto;
+    grid-template-columns: 1fr auto;
     grid-template-areas: "label count";
-    padding: 0.6rem 0.95rem;
-    border: 1px solid var(--line);
-    border-radius: 99px;
+    align-items: center;
+    min-height: 3.2rem;
+    padding: 0 0.8rem;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
   }
+  .admin-side__link:last-child { border-bottom: 0; }
   .admin-side__link::before { display: none; }
-  .admin-side__link[aria-current="page"] {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-  }
+  .admin-side__link[aria-current="page"] { background: color-mix(in srgb, var(--accent) 10%, transparent); }
   .admin-side__hint { display: none; }
-  .admin-side__label { font-size: 0.95rem; }
-  .admin-side__foot { width: 100%; }
+  .admin-side__label { font-size: 1.05rem; }
+  .admin-side__foot {
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.75rem 0.4rem 0;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .admin-side__foot .admin-btn { width: 100%; min-height: 3rem; }
   .admin-hero-media-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {

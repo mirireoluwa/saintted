@@ -1,0 +1,10 @@
+{
+  "name": "saintted",
+  "short_name": "saintted",
+  "description": "A Nigerian artist and producer creating experimental alternative and afrobeats songs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b0f",
+  "theme_color": "#0d0e11",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

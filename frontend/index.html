@@ -23,21 +23,26 @@
       content="A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="%SITE_URL%/" />
     <meta property="og:image" content="%SITE_URL%/og-image.png" />
     <meta property="og:image:width" content="1024" />
     <meta property="og:image:height" content="768" />
     <meta property="og:image:alt" content="saintted black and white portrait with love, saintted lettering" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@beingsaintted" />
     <meta name="twitter:title" content="saintted" />
     <meta
       name="twitter:description"
       content="A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
     />
     <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!-- self-hosted fonts, preloaded so text paints in the right face straight away (better LCP, no layout shift) -->
+    <link rel="preload" href="/fonts/ApfelGrotezk-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ApfelGrotezk-Mittel.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <meta name="author" content="Saintted" />
     <title>saintted</title>
   </head>
   <body>

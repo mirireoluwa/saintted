@@ -270,7 +270,7 @@ class MailingListSubscriberSerializer(serializers.ModelSerializer):
 class LiveShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = LiveShow
-        fields = ["id", "starts_at", "venue", "city", "ticket_url", "note", "is_sold_out", "created_at"]
+        fields = ["id", "starts_at", "title", "venue", "city", "ticket_url", "note", "is_sold_out", "flyer_url", "created_at"]
         read_only_fields = ["created_at"]
 
 
