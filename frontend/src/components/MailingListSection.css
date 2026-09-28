@@ -31,13 +31,15 @@
   grid-column: 7 / span 6;
   align-self: end;
 }
-.cta .btn--primary {
+.cta .mform__submit {
   background: var(--on-accent);
   border-color: var(--on-accent);
   color: var(--accent);
 }
-.cta .btn--primary:hover:not(:disabled) {
-  background: transparent;
+.cta .mform__submit:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--on-accent) 85%, #fff);
+}
+.cta .mform input {
   color: var(--on-accent);
 }
 .cta .mform__tick {

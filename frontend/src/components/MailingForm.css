@@ -1,65 +1,117 @@
-.mform__row {
+/* Signup form. Colours come from currentColor so it works on the dark popup and on the sky panel. */
+.mform {
+  display: grid;
+  gap: 1.1rem;
+}
+.mform__names {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem 1.5rem;
+  gap: 1.1rem;
 }
 .mform__field {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
   min-width: 0;
 }
-.mform__field--wide {
-  grid-column: 1 / -1;
-}
 .mform label {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.mform input {
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.mform input::placeholder {
+  color: inherit;
+  opacity: 0.4;
+}
+.mform input:focus {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 11%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 16%, transparent);
+}
+.mform input:disabled {
+  opacity: 0.55;
+}
+
+/* email + subscribe read as one control */
+.mform__join {
+  display: flex;
+  gap: 0.6rem;
+}
+.mform__join input {
+  flex: 1;
+}
+.mform__submit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  min-height: 3.4rem;
+  padding: 0 1.6rem;
+  border-radius: var(--radius);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--on-accent);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.mform__submit:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 82%, #fff);
+  transform: translateY(-1px);
+}
+.mform__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.mform__error {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* "or, get updates on" + WhatsApp */
+.mform__alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+.mform__alt > span {
+  font-size: 0.66rem;
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   opacity: 0.75;
 }
-.mform input {
-  width: 100%;
-  padding: 0.7rem 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 45%, transparent);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 1.05rem;
-  outline: none;
-  transition: border-color 0.3s var(--ease);
-}
-.mform input::placeholder {
-  color: inherit;
-  opacity: 0.45;
-}
-.mform input:focus {
-  border-bottom-color: currentColor;
-  box-shadow: 0 1px 0 currentColor;
-}
-.mform input:disabled {
-  opacity: 0.55;
-}
-.mform__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.75rem;
-}
-.mform__error {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
+
 .mform__success {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 .mform__success p {
+  margin: 0;
   font-family: var(--font-display);
   font-size: 1.3rem;
   letter-spacing: -0.02em;
@@ -70,44 +122,31 @@
   flex: none;
   width: 2.5rem;
   height: 2.5rem;
+  border-radius: var(--radius);
   background: var(--accent);
   color: var(--on-accent);
 }
+
 @media (max-width: 560px) {
-  .mform__row {
-    grid-template-columns: 1fr;
+  .mform__names {
+    gap: 0.75rem;
+  }
+  .mform__join {
+    flex-direction: column;
+  }
+  .mform__submit {
+    width: 100%;
+  }
+  .mform__alt .btn {
+    width: 100%;
   }
 }
 
-/* "or join the whatsapp channel" under the form */
-.mform-alt {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.25rem;
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-}
-.mform-alt > span {
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  opacity: 0.75;
+.whatsapp-btn {
+  min-height: 3rem;
 }
 .whatsapp-btn img {
   width: 1.1rem;
   height: 1.1rem;
   filter: none;
-}
-
-.mform__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-@media (max-width: 560px) {
-  .mform__actions { width: 100%; }
-  .mform__actions .btn { flex: 1 1 100%; }
 }

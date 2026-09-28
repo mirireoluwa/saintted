@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  /* older phones lack svh: --app-h (the real visible height, set in PublicShell) is the fallback */
+  min-height: max(32rem, var(--app-h, 100vh));
   min-height: max(32rem, 100svh);
   overflow: hidden;
   background: #050509;
