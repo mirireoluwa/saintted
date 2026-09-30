@@ -23,8 +23,11 @@ async function guardJson<T>(res: Response, resource: string): Promise<T> {
   throw new Error(`Failed to load ${resource} (HTTP ${res.status}): ${detail || res.statusText}`);
 }
 
-/** Upload a File directly to Cloudinary. Returns the public secure URL. */
-async function uploadFile(file: File): Promise<string> {
+/**
+ * Upload a File directly to Cloudinary. Returns the public secure URL.
+ * Uses XHR (not fetch) so real upload progress (0-100) can be reported as the bytes go out.
+ */
+async function uploadFile(file: File, onProgress?: (pct: number) => void): Promise<string> {
   const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined)?.trim();
   const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined)?.trim();
 
@@ -39,17 +42,31 @@ async function uploadFile(file: File): Promise<string> {
   form.append("file", file);
   form.append("upload_preset", uploadPreset);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-    { method: "POST", body: form }
-  );
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
-    throw new Error(err.error?.message ?? `Upload failed (HTTP ${res.status})`);
-  }
-  const data = await res.json() as { secure_url: string };
-  return data.secure_url;
+  return new Promise<string>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`);
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+    }
+    xhr.onerror = () => reject(new Error("Upload failed — check your connection and try again."));
+    xhr.onload = () => {
+      let data: { secure_url?: string; error?: { message?: string } } = {};
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        /* fall through to the generic error below */
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+        onProgress?.(100);
+        resolve(data.secure_url);
+      } else {
+        reject(new Error(data.error?.message ?? `Upload failed (HTTP ${xhr.status})`));
+      }
+    };
+    xhr.send(form);
+  });
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -115,8 +132,8 @@ export async function updateTrack(slug: string, body: Partial<Track>): Promise<T
   return res.json();
 }
 
-export async function patchTrackCoverArt(slug: string, file: File): Promise<Track> {
-  const url = await uploadFile(file);
+export async function patchTrackCoverArt(slug: string, file: File, onProgress?: (pct: number) => void): Promise<Track> {
+  const url = await uploadFile(file, onProgress);
   return updateTrack(slug, { art_url: url });
 }
 
@@ -225,6 +242,7 @@ export async function updateHeroHeader(payload: {
   header_video_url?: string;
   header_video_file?: File | null;
   clear_header_video_file?: boolean;
+  onProgress?: (pct: number) => void;
 }): Promise<ReleaseCountdown> {
   const patch: Record<string, unknown> = {};
 
@@ -238,10 +256,10 @@ export async function updateHeroHeader(payload: {
   if (payload.clear_header_video_file) patch.header_video_file_url = "";
 
   if (payload.header_image_file) {
-    patch.header_image_file_url = await uploadFile(payload.header_image_file);
+    patch.header_image_file_url = await uploadFile(payload.header_image_file, payload.onProgress);
   }
   if (payload.header_video_file) {
-    patch.header_video_file_url = await uploadFile(payload.header_video_file);
+    patch.header_video_file_url = await uploadFile(payload.header_video_file, payload.onProgress);
   }
 
   const res = await fetchLive("/api/admin/release-countdown", {
@@ -265,9 +283,9 @@ export async function fetchGalleryImagesAuth(req?: RequestInit): Promise<Gallery
 }
 
 export async function createGalleryImage(
-  payload: { image: File; caption?: string; order?: number }
+  payload: { image: File; caption?: string; order?: number; onProgress?: (pct: number) => void }
 ): Promise<GalleryImage> {
-  const image_url = await uploadFile(payload.image);
+  const image_url = await uploadFile(payload.image, payload.onProgress);
   const res = await fetchLive("/api/admin/gallery-images", {
     ...ADMIN_FETCH,
     method: "POST",
@@ -283,10 +301,10 @@ export async function createGalleryImage(
 
 export async function updateGalleryImage(
   id: number,
-  payload: { image?: File | null; caption?: string; order?: number }
+  payload: { image?: File | null; caption?: string; order?: number; onProgress?: (pct: number) => void }
 ): Promise<GalleryImage> {
   const body: Record<string, unknown> = {};
-  if (payload.image) body.image_url = await uploadFile(payload.image);
+  if (payload.image) body.image_url = await uploadFile(payload.image, payload.onProgress);
   if (payload.caption !== undefined) body.caption = payload.caption;
   if (payload.order !== undefined) body.order = payload.order;
 
@@ -312,8 +330,8 @@ export async function deleteGalleryImage(id: number): Promise<void> {
 }
 
 /** Upload an image or video to Cloudinary and return its public URL. */
-export async function uploadMedia(file: File): Promise<string> {
-  return uploadFile(file);
+export async function uploadMedia(file: File, onProgress?: (pct: number) => void): Promise<string> {
+  return uploadFile(file, onProgress);
 }
 
 // ── Live shows ────────────────────────────────────────────────────────────────
@@ -371,13 +389,14 @@ export async function updateAbout(payload: {
   booking_email: string;
   portrait?: File | null;
   removePortrait?: boolean;
+  onProgress?: (pct: number) => void;
 }): Promise<AboutContent> {
   const body: Record<string, unknown> = {
     heading: payload.heading,
     body: payload.body,
     booking_email: payload.booking_email,
   };
-  if (payload.portrait) body.portrait_url = await uploadFile(payload.portrait);
+  if (payload.portrait) body.portrait_url = await uploadFile(payload.portrait, payload.onProgress);
   else if (payload.removePortrait) body.portrait_url = "";
 
   const res = await fetchLive("/api/admin/about", {

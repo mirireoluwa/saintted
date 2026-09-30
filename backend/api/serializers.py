@@ -29,7 +29,7 @@ class TrackSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "slug", "meta", "art_url", "art_file", "clear_art_file", "link_url", "order",
             "description", "year", "youtube_url", "apple_music_url", "spotify_url",
-            "is_published", "is_highlighted",
+            "is_published", "is_archived", "is_highlighted",
             "is_unreleased", "release_at", "presave_url", "accent_color",
         ]
 
@@ -131,7 +131,7 @@ class TrackDetailSerializer(TrackSerializer):
         user = getattr(request, "user", None) if request else None
         if user and user.is_authenticated:
             return qs
-        return qs.filter(is_published=True)
+        return qs.filter(is_published=True, is_archived=False)
 
     def get_previous_slug(self, obj):
         # For an unreleased detail page, navigation should move through released tracks.

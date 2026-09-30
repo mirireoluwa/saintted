@@ -42,6 +42,10 @@ class Track(models.Model):
         default=True,
         help_text="When off, track is hidden from public API and site (draft).",
     )
+    is_archived = models.BooleanField(
+        default=False,
+        help_text="Archived tracks are hidden everywhere on the public site but kept here for later.",
+    )
     is_unreleased = models.BooleanField(
         default=False,
         help_text="When on, track appears as upcoming on the site; detail page shows countdown + pre-save.",

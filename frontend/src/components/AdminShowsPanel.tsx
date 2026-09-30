@@ -30,6 +30,7 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
   const [clearFlyer, setClearFlyer] = useState(false);
 
@@ -84,11 +85,13 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
       return;
     }
     setSaving(true);
+    setUploadPct(flyerFile ? 0 : null);
     let flyer_url = clearFlyer ? "" : form.flyer_url;
     try {
-      if (flyerFile) flyer_url = await uploadMedia(flyerFile);
+      if (flyerFile) flyer_url = await uploadMedia(flyerFile, setUploadPct);
     } catch (err) {
       setSaving(false);
+      setUploadPct(null);
       notify("error", `Flyer upload failed: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
@@ -116,6 +119,7 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
       notify("error", `Could not save show: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSaving(false);
+      setUploadPct(null);
     }
   }
 
@@ -216,6 +220,8 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
               file={flyerFile}
               currentUrl={clearFlyer ? null : form.flyer_url || null}
               hint="portrait poster works best"
+              busy={saving}
+              progress={uploadPct}
               onFile={(f) => {
                 setFlyerFile(f);
                 if (f) setClearFlyer(false);
@@ -241,7 +247,8 @@ export function AdminShowsPanel({ notify }: { notify: Notify }) {
           </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
-              {saving ? "Saving…" : editingId != null ? "Save show" : "Add show"}
+              {saving ? <span className="spinner" aria-hidden /> : null}
+              {saving ? (flyerFile ? "Uploading…" : "Saving…") : editingId != null ? "Save show" : "Add show"}
             </button>
             {editingId != null && (
               <button type="button" className="admin-btn" onClick={reset}>

@@ -12,10 +12,14 @@ type AdminDropzoneProps = {
   currentUrl?: string | null;
   label?: string;
   hint?: string;
+  /** Uploading right now: shows a progress overlay and locks the controls. */
+  busy?: boolean;
+  /** 0-100 while `busy`; omit for an indeterminate spinner. */
+  progress?: number | null;
 };
 
 /** Drop a file here or click to browse. Shows a live preview of the chosen (or current) file. */
-export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, label, hint }: AdminDropzoneProps) {
+export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, label, hint, busy = false, progress = null }: AdminDropzoneProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [over, setOver] = useState(false);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -34,6 +38,7 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
   const matches = (f: File) => f.type.startsWith(kind + "/");
 
   const take = (f: File | undefined | null) => {
+    if (busy) return;
     if (f && matches(f)) onFile(f);
   };
 
@@ -47,7 +52,7 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
         </label>
       ) : null}
       <div
-        className={`dz__zone${over ? " dz__zone--over" : ""}${previewUrl ? " dz__zone--has" : ""}`}
+        className={`dz__zone${over ? " dz__zone--over" : ""}${previewUrl ? " dz__zone--has" : ""}${busy ? " dz__zone--busy" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setOver(true);
@@ -62,6 +67,7 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
         <button
           type="button"
           className="dz__thumb"
+          disabled={busy}
           onClick={() => inputRef.current?.click()}
           aria-label={previewUrl ? `Replace ${kind}` : `Choose ${kind}`}
         >
@@ -73,6 +79,21 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
                 <video src={previewUrl} muted loop playsInline autoPlay />
               )}
               {file ? <span className="dz__badge">new</span> : <span className="dz__badge dz__badge--live">live</span>}
+              {busy ? (
+                <span className="dz__progress" role="status" aria-live="polite">
+                  <span className="spinner" aria-hidden />
+                  {typeof progress === "number" ? (
+                    <>
+                      <span>{Math.round(progress)}%</span>
+                      <span className="dz__progress-track">
+                        <span className="dz__progress-fill" style={{ width: `${Math.max(4, progress)}%` }} />
+                      </span>
+                    </>
+                  ) : (
+                    <span>uploading…</span>
+                  )}
+                </span>
+              ) : null}
             </span>
           ) : (
             <span className="dz__empty" aria-hidden>
@@ -82,20 +103,33 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
         </button>
         <div className="dz__body">
           <p className="dz__title">
-            {file ? file.name : previewUrl ? `Current ${kind}` : `Drop ${kind === "image" ? "an image" : "a video"} here`}
+            {busy
+              ? "Uploading…"
+              : file
+              ? file.name
+              : previewUrl
+              ? `Current ${kind}`
+              : `Drop ${kind === "image" ? "an image" : "a video"} here`}
           </p>
           <p className="dz__sub">
-            {file ? sizeLabel : "or click to browse"}
-            {hint && !file ? ` · ${hint}` : ""}
+            {busy
+              ? typeof progress === "number"
+                ? `${Math.round(progress)}% done`
+                : "hang tight…"
+              : file
+              ? sizeLabel
+              : "or click to browse"}
+            {hint && !file && !busy ? ` · ${hint}` : ""}
           </p>
           <div className="dz__actions">
-            <button type="button" className="admin-btn" onClick={() => inputRef.current?.click()}>
+            <button type="button" className="admin-btn" disabled={busy} onClick={() => inputRef.current?.click()}>
               {previewUrl ? "Replace" : "Choose file"}
             </button>
             {file ? (
               <button
                 type="button"
                 className="admin-btn"
+                disabled={busy}
                 onClick={() => {
                   onFile(null);
                   if (inputRef.current) inputRef.current.value = "";
@@ -112,6 +146,7 @@ export function AdminDropzone({ id, accept, kind, file, onFile, currentUrl, labe
           className="dz__input"
           type="file"
           accept={accept}
+          disabled={busy}
           onChange={(e) => take(e.target.files?.[0])}
         />
       </div>

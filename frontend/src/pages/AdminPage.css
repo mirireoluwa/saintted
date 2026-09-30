@@ -673,65 +673,115 @@
   background: #000;
 }
 
-/* ---------- toasts ---------- */
+/* ---------- toasts: the same square-marker, hairline-card language as the rest of the admin ---------- */
 .admin-toast-stack {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: 1.25rem;
+  right: 1.25rem;
   z-index: 10050;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.5rem;
-  max-width: min(24rem, calc(100vw - 1.5rem));
+  gap: 0.6rem;
+  max-width: min(23rem, calc(100vw - 1.5rem));
   pointer-events: none;
 }
 .admin-toast-stack .admin-toast {
   pointer-events: auto;
 }
 .admin-toast {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 0.7rem;
+  gap: 0.85rem;
   width: 100%;
-  padding: 0.85rem 0.9rem 0.85rem 1.1rem;
+  padding: 1rem 1.1rem 1.15rem;
+  overflow: hidden;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--paper-deep);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-  font-size: 0.88rem;
-  line-height: 1.45;
-  animation: admin-toast-in 0.32s var(--ease);
+  border-radius: calc(var(--radius) * 1.5);
+  background: var(--field);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  animation: admin-toast-in 0.4s var(--ease);
 }
 @keyframes admin-toast-in {
-  from { opacity: 0; transform: translateX(100%); }
+  from { opacity: 0; transform: translateX(1.5rem); }
   to { opacity: 1; transform: none; }
 }
-.admin-toast__text {
+/* the small square marker used everywhere else for an eyebrow / status */
+.admin-toast__mark {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.35rem;
+  background: var(--accent);
+}
+.admin-toast--error .admin-toast__mark { background: var(--danger); }
+.admin-toast__body {
   flex: 1;
   min-width: 0;
+}
+.admin-toast__kind {
+  margin: 0 0 0.25rem;
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.admin-toast--error .admin-toast__kind { color: var(--danger); }
+.admin-toast__text {
   margin: 0;
   color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
   word-break: break-word;
 }
-.admin-toast--ok { border-left-color: rgb(74, 222, 128); }
-.admin-toast--error { border-left-color: var(--danger); }
 .admin-toast__close {
   flex: none;
-  padding: 0 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
   color: var(--ink-soft);
-  font-size: 1.15rem;
-  line-height: 1;
-  opacity: 0.75;
-  transition: opacity 0.2s, color 0.2s;
+  font-size: 0.7rem;
+  transition: background 0.2s, color 0.2s;
 }
 .admin-toast__close:hover {
-  opacity: 1;
   color: var(--ink);
+  background: var(--paper-deep);
+}
+/* a thin bar along the bottom edge that drains as the toast counts down to auto-dismiss */
+.admin-toast__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.admin-toast__bar > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  animation-name: admin-toast-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.admin-toast--error .admin-toast__bar > span { background: var(--danger); }
+@keyframes admin-toast-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-toast { animation: none; }
+  .admin-toast__bar > span { animation: none; }
 }
 
 /* ---------- tablet + phone: the sidebar becomes a scrolling tab strip ---------- */

@@ -235,6 +235,7 @@ export default async function handler(req: Req, res: Res) {
         apple_music_url: typeof body.apple_music_url === "string" ? body.apple_music_url.trim() : "",
         spotify_url: typeof body.spotify_url === "string" ? body.spotify_url.trim() : "",
         is_published: body.is_published !== false,
+        is_archived: body.is_archived === true,
         is_highlighted: body.is_highlighted === true,
         is_unreleased: isUnreleased,
         release_at: releaseAt,

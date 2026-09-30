@@ -13,6 +13,8 @@ export interface Track {
   spotify_url?: string;
   /** Public API omits unpublished tracks; admin returns all. */
   is_published?: boolean;
+  /** Archived: hidden everywhere on the public site, kept in the admin for later. */
+  is_archived?: boolean;
   /** Manually highlight this track on the home page as a featured/new release. */
   is_highlighted?: boolean;
   /** Upcoming track: shown separately in music section; detail page is full-screen countdown. */

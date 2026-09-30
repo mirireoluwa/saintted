@@ -14,6 +14,7 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
   const [removePortrait, setRemovePortrait] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
 
   const apply = useCallback((a: AboutContent) => {
     setAbout(a);
@@ -49,6 +50,7 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
       return;
     }
     setSaving(true);
+    setUploadPct(file ? 0 : null);
     try {
       const updated = await updateAbout({
         heading: heading.trim(),
@@ -56,6 +58,7 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
         booking_email: email.trim(),
         portrait: file,
         removePortrait,
+        onProgress: setUploadPct,
       });
       apply(updated);
       notify("ok", "About section saved.");
@@ -63,6 +66,7 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
       notify("error", `Could not save: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSaving(false);
+      setUploadPct(null);
     }
   }
 
@@ -118,6 +122,8 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
               file={file}
               currentUrl={removePortrait ? null : currentPortrait}
               hint="portrait, 4:5 works best"
+              busy={saving}
+              progress={uploadPct}
               onFile={(f) => {
                 setFile(f);
                 if (f) setRemovePortrait(false);
@@ -139,7 +145,8 @@ export function AdminAboutPanel({ notify }: { notify: Notify }) {
           </div>
           <div className="admin-page__actions">
             <button type="submit" className="admin-btn admin-btn--primary" disabled={saving || loading}>
-              {saving ? "Saving…" : "Save About section"}
+              {saving ? <span className="spinner" aria-hidden /> : null}
+              {saving ? (file ? "Uploading…" : "Saving…") : "Save About section"}
             </button>
           </div>
         </form>

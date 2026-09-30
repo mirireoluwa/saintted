@@ -52,7 +52,7 @@ const jsonLd = (o: unknown) =>
 const abs = (siteUrl: string, p: string) => (/^https?:\/\//i.test(p) ? p : `${siteUrl}${p.startsWith("/") ? p : `/${p}`}`);
 
 function visibleTracks(tracks: Track[]): Track[] {
-  return tracks.filter((t) => t.is_published !== false).sort((a, b) => a.order - b.order || a.id - b.id);
+  return tracks.filter((t) => t.is_published !== false && !t.is_archived).sort((a, b) => a.order - b.order || a.id - b.id);
 }
 
 interface Built {

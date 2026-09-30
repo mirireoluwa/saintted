@@ -10,6 +10,16 @@ function PencilIcon() {
   );
 }
 
+function ArchiveIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <path d="M10 13h4" />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -106,6 +116,7 @@ function emptyTrackForm(): Record<string, string | number> {
     apple_music_url: "",
     spotify_url: "",
     is_published: 1,
+    is_archived: 0,
     is_highlighted: 0,
     is_unreleased: 0,
     release_at_local: "",
@@ -130,6 +141,7 @@ function trackToForm(t: Track): Record<string, string | number> {
     apple_music_url: t.apple_music_url || "",
     spotify_url: t.spotify_url || "",
     is_published: t.is_published === false ? 0 : 1,
+    is_archived: t.is_archived ? 1 : 0,
     is_highlighted: t.is_highlighted ? 1 : 0,
     is_unreleased: t.is_unreleased ? 1 : 0,
     release_at_local: isoToDatetimeLocal(t.release_at),
@@ -209,6 +221,9 @@ const REORDER_SUCCESS_TOAST_QUIET_MS = 2500;
 
 type AdminToast = { id: number; type: "ok" | "error"; text: string };
 
+const TOAST_KIND: Record<AdminToast["type"], string> = { ok: "saved", error: "error" };
+const TOAST_LIFE_MS = 5200;
+
 function AdminToastStack({ toasts, onDismiss }: { toasts: AdminToast[]; onDismiss: (id: number) => void }) {
   if (toasts.length === 0) return null;
   return (
@@ -219,10 +234,17 @@ function AdminToastStack({ toasts, onDismiss }: { toasts: AdminToast[]; onDismis
           className={`admin-toast admin-toast--${t.type}`}
           role={t.type === "error" ? "alert" : "status"}
         >
-          <p className="admin-toast__text">{t.text}</p>
+          <span className="admin-toast__mark" aria-hidden />
+          <div className="admin-toast__body">
+            <p className="admin-toast__kind">{TOAST_KIND[t.type]}</p>
+            <p className="admin-toast__text">{t.text}</p>
+          </div>
           <button type="button" className="admin-toast__close" onClick={() => onDismiss(t.id)} aria-label="Dismiss">
-            ×
+            ✕
           </button>
+          <span className="admin-toast__bar" aria-hidden>
+            <span style={{ animationDuration: `${TOAST_LIFE_MS}ms` }} />
+          </span>
         </div>
       ))}
     </div>
@@ -323,6 +345,16 @@ export function AdminPage() {
   const [trackForm, setTrackForm] = useState(emptyTrackForm);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [trackDrawerOpen, setTrackDrawerOpen] = useState(false);
+  const [showArchivedTracks, setShowArchivedTracks] = useState(false);
+  const [trackSaving, setTrackSaving] = useState(false);
+  const [trackUploadPct, setTrackUploadPct] = useState<number | null>(null);
+  const [heroImageSaving, setHeroImageSaving] = useState(false);
+  const [heroImageUploadPct, setHeroImageUploadPct] = useState<number | null>(null);
+  const [heroVideoSaving, setHeroVideoSaving] = useState(false);
+  const [heroVideoUploadPct, setHeroVideoUploadPct] = useState<number | null>(null);
+  const [videoSaving, setVideoSaving] = useState(false);
+  const [gallerySaving, setGallerySaving] = useState(false);
+  const [galleryUploadPct, setGalleryUploadPct] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoggedIn) markAdminBrowser();
@@ -409,6 +441,11 @@ export function AdminPage() {
     () => [...tracks].sort((a, b) => a.order - b.order || a.id - b.id),
     [tracks],
   );
+  const archivedTrackCount = useMemo(() => tracks.filter((t) => t.is_archived).length, [tracks]);
+  const visibleTracks = useMemo(
+    () => (showArchivedTracks ? sortedTracks : sortedTracks.filter((t) => !t.is_archived)),
+    [sortedTracks, showArchivedTracks],
+  );
   const sortedVideos = useMemo(
     () => [...videos].sort((a, b) => a.order - b.order || a.id - b.id),
     [videos],
@@ -427,7 +464,7 @@ export function AdminPage() {
     setToasts((prev) => [...prev.slice(-4), { id, type, text }]);
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5200);
+    }, TOAST_LIFE_MS);
   }, []);
 
   const reorderSuccessTimersRef = useRef<{
@@ -668,6 +705,8 @@ export function AdminPage() {
 
   async function saveHeroImageSettings(e: React.FormEvent) {
     e.preventDefault();
+    setHeroImageSaving(true);
+    setHeroImageUploadPct(heroImageFile ? 0 : null);
     try {
       const updated = await updateHeroHeader({
         header_image_url: heroImageForm.header_image_url.trim(),
@@ -676,6 +715,7 @@ export function AdminPage() {
         header_image_focus_y: heroImageForm.header_image_focus_y,
         header_image_file: heroImageFile,
         clear_header_image_file: clearHeroImageUpload,
+        onProgress: setHeroImageUploadPct,
       });
       setHeroImageForm(heroImageFormFromApi(updated));
       setHeroImageFile(null);
@@ -683,16 +723,22 @@ export function AdminPage() {
       notify("ok", "Hero image settings saved.");
     } catch (err) {
       notify("error", String(err));
+    } finally {
+      setHeroImageSaving(false);
+      setHeroImageUploadPct(null);
     }
   }
 
   async function saveHeroVideoSettings(e: React.FormEvent) {
     e.preventDefault();
+    setHeroVideoSaving(true);
+    setHeroVideoUploadPct(heroVideoFile ? 0 : null);
     try {
       const updated = await updateHeroHeader({
         header_video_url: heroImageForm.header_video_url.trim(),
         header_video_file: heroVideoFile,
         clear_header_video_file: clearHeroVideoUpload,
+        onProgress: setHeroVideoUploadPct,
       });
       setHeroImageForm(heroImageFormFromApi(updated));
       setHeroVideoFile(null);
@@ -700,6 +746,9 @@ export function AdminPage() {
       notify("ok", "Hero video settings saved.");
     } catch (err) {
       notify("error", String(err));
+    } finally {
+      setHeroVideoSaving(false);
+      setHeroVideoUploadPct(null);
     }
   }
 
@@ -787,6 +836,7 @@ export function AdminPage() {
       apple_music_url: String(trackForm.apple_music_url).trim(),
       spotify_url: String(trackForm.spotify_url).trim(),
       is_published: Number(trackForm.is_published) !== 0,
+      is_archived: Number(trackForm.is_archived) !== 0,
       is_highlighted: Number(trackForm.is_highlighted) !== 0,
       is_unreleased: isUnreleased,
       release_at,
@@ -806,13 +856,15 @@ export function AdminPage() {
     const coverFile = trackCoverFile;
     const shouldClearCover = clearTrackCover && !coverFile;
 
+    setTrackSaving(true);
+    setTrackUploadPct(coverFile ? 0 : null);
     try {
       if (editingSlug) {
         const body = { ...payload };
         if (!body.slug) delete body.slug;
         await updateTrack(editingSlug, body as Partial<Track>);
         if (coverFile) {
-          await patchTrackCoverArt(editingSlug, coverFile);
+          await patchTrackCoverArt(editingSlug, coverFile, setTrackUploadPct);
         } else if (shouldClearCover) {
           await clearTrackCoverArt(editingSlug);
         }
@@ -822,7 +874,7 @@ export function AdminPage() {
         if (!body.slug) delete body.slug;
         const created = await createTrack(body as Partial<Track>);
         if (coverFile) {
-          await patchTrackCoverArt(created.slug, coverFile);
+          await patchTrackCoverArt(created.slug, coverFile, setTrackUploadPct);
         }
         notify("ok", "Track created.");
       }
@@ -830,6 +882,20 @@ export function AdminPage() {
       closeTrackDrawer();
     } catch (err) {
       notify("error", String(err));
+    } finally {
+      setTrackSaving(false);
+      setTrackUploadPct(null);
+    }
+  }
+
+  async function toggleTrackArchived(t: Track) {
+    const next = !t.is_archived;
+    try {
+      await updateTrack(t.slug, { is_archived: next });
+      notify("ok", next ? `"${t.title}" archived.` : `"${t.title}" restored.`);
+      await loadData();
+    } catch (err) {
+      notify("error", err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -894,6 +960,7 @@ export function AdminPage() {
       notify("error", "YouTube video ID is required.");
       return;
     }
+    setVideoSaving(true);
     try {
       if (editingVideoId != null) {
         await updateFeaturedVideo(editingVideoId, {
@@ -914,6 +981,8 @@ export function AdminPage() {
       startNewVideo();
     } catch (err) {
       notify("error", String(err));
+    } finally {
+      setVideoSaving(false);
     }
   }
 
@@ -971,23 +1040,27 @@ export function AdminPage() {
 
   async function saveGalleryImage(e: React.FormEvent) {
     e.preventDefault();
+    if (editingGalleryId == null && !galleryFile) {
+      notify("error", "Select an image file to upload.");
+      return;
+    }
+    setGallerySaving(true);
+    setGalleryUploadPct(galleryFile ? 0 : null);
     try {
       if (editingGalleryId != null) {
         await updateGalleryImage(editingGalleryId, {
           caption: galleryForm.caption.trim(),
           order: Number(galleryForm.order) || 0,
           image: galleryFile,
+          onProgress: setGalleryUploadPct,
         });
         notify("ok", "Image updated.");
       } else {
-        if (!galleryFile) {
-          notify("error", "Select an image file to upload.");
-          return;
-        }
         await createGalleryImage({
-          image: galleryFile,
+          image: galleryFile as File,
           caption: galleryForm.caption.trim(),
           order: Number(galleryForm.order) || 0,
+          onProgress: setGalleryUploadPct,
         });
         notify("ok", "Image uploaded.");
       }
@@ -995,6 +1068,9 @@ export function AdminPage() {
       startNewGalleryImage();
     } catch (err) {
       notify("error", String(err));
+    } finally {
+      setGallerySaving(false);
+      setGalleryUploadPct(null);
     }
   }
 
@@ -1320,6 +1396,8 @@ export function AdminPage() {
               file={heroImageFile}
               currentUrl={clearHeroImageUpload ? null : heroImagePreviewUrl}
               hint="landscape, at least 1920px wide"
+              busy={heroImageSaving}
+              progress={heroImageUploadPct}
               onFile={(f) => {
                 setHeroImageFile(f);
                 if (f) setClearHeroImageUpload(false);
@@ -1364,8 +1442,10 @@ export function AdminPage() {
               <button
                 type="submit"
                 className="admin-btn admin-btn--primary admin-hero-media-col__save-btn"
+                disabled={heroImageSaving}
               >
-                Save image
+                {heroImageSaving ? <span className="spinner" aria-hidden /> : null}
+                {heroImageSaving ? (heroImageFile ? "Uploading…" : "Saving…") : "Save image"}
               </button>
             </div>
           </form>
@@ -1379,6 +1459,8 @@ export function AdminPage() {
               file={heroVideoFile}
               currentUrl={clearHeroVideoUpload ? null : heroVideoPreviewUrl}
               hint="short, muted loop, MP4"
+              busy={heroVideoSaving}
+              progress={heroVideoUploadPct}
               onFile={(f) => {
                 setHeroVideoFile(f);
                 if (f) setClearHeroVideoUpload(false);
@@ -1413,8 +1495,10 @@ export function AdminPage() {
               <button
                 type="submit"
                 className="admin-btn admin-btn--primary admin-hero-media-col__save-btn"
+                disabled={heroVideoSaving}
               >
-                Save video
+                {heroVideoSaving ? <span className="spinner" aria-hidden /> : null}
+                {heroVideoSaving ? (heroVideoFile ? "Uploading…" : "Saving…") : "Save video"}
               </button>
             </div>
           </form>
@@ -1502,6 +1586,8 @@ export function AdminPage() {
                     file={trackCoverFile}
                     currentUrl={clearTrackCover ? null : trackCoverPreviewUrl}
                     hint="square works best"
+                    busy={trackSaving}
+                    progress={trackUploadPct}
                     onFile={(f) => {
                       setTrackCoverFile(f);
                       if (f) setClearTrackCover(false);
@@ -1588,6 +1674,17 @@ export function AdminPage() {
                       }
                     />
                     <span>Published (visible on the public site)</span>
+                  </label>
+                  <label className="admin-form__checkbox-label">
+                    <input
+                      id="t-archived"
+                      type="checkbox"
+                      checked={Number(trackForm.is_archived) !== 0}
+                      onChange={(e) =>
+                        setTrackForm((f) => ({ ...f, is_archived: e.target.checked ? 1 : 0 }))
+                      }
+                    />
+                    <span>Archived (hidden everywhere on the site, kept here for later)</span>
                   </label>
                   <label className="admin-form__checkbox-label">
                     <input
@@ -1708,10 +1805,17 @@ export function AdminPage() {
               </div>
 
               <div className="drawer__foot">
-                <button type="submit" className="admin-btn admin-btn--primary">
-                  {editingSlug ? "Save changes" : "Create track"}
+                <button type="submit" className="admin-btn admin-btn--primary" disabled={trackSaving}>
+                  {trackSaving ? <span className="spinner" aria-hidden /> : null}
+                  {trackSaving
+                    ? trackCoverFile
+                      ? "Uploading…"
+                      : "Saving…"
+                    : editingSlug
+                    ? "Save changes"
+                    : "Create track"}
                 </button>
-                <button type="button" className="admin-btn" onClick={closeTrackDrawer}>
+                <button type="button" className="admin-btn" disabled={trackSaving} onClick={closeTrackDrawer}>
                   Cancel
                 </button>
               </div>
@@ -1723,9 +1827,21 @@ export function AdminPage() {
       <div className="admin-card">
         <div className="admin-tracks-head">
           <h2 className="admin-card__title">tracks</h2>
-          <button type="button" className="admin-btn admin-btn--primary" onClick={openNewTrack}>
-            + Add track
-          </button>
+          <div className="admin-page__actions">
+            {archivedTrackCount > 0 ? (
+              <button
+                type="button"
+                className="admin-btn"
+                aria-pressed={showArchivedTracks}
+                onClick={() => setShowArchivedTracks((v) => !v)}
+              >
+                {showArchivedTracks ? "Hide archived" : `Show archived (${archivedTrackCount})`}
+              </button>
+            ) : null}
+            <button type="button" className="admin-btn admin-btn--primary" onClick={openNewTrack}>
+              + Add track
+            </button>
+          </div>
         </div>
         <div style={{ marginBottom: "1rem" }}>
           <button
@@ -1748,20 +1864,21 @@ export function AdminPage() {
               }
             }}
           >
+            {seedingTracks ? <span className="spinner" aria-hidden /> : null}
             {seedingTracks ? "Loading…" : "Restore original track details"}
           </button>
         </div>
         <AdminSortableList
-          items={sortedTracks}
+          items={visibleTracks}
           getKey={(t) => t.id}
           getLabel={(t) => t.title}
-          onMove={(from, to) => void reorderTrackRowsBySlug(sortedTracks[from].slug, sortedTracks[to].slug)}
+          onMove={(from, to) => void reorderTrackRowsBySlug(visibleTracks[from].slug, visibleTracks[to].slug)}
           renderItem={(t) => {
             const art = getTrackArtUrl(t);
             return (
               <>
                 {art ? <img className="sortable__thumb" src={art} alt="" loading="lazy" /> : <span className="sortable__thumb" />}
-                <div className="sortable__text">
+                <div className="sortable__text" style={t.is_archived ? { opacity: 0.55 } : undefined}>
                   <Link draggable={false} to={`/music/${t.slug}`} className="sortable__title">
                     {t.title}
                   </Link>
@@ -1770,6 +1887,7 @@ export function AdminPage() {
                     <span className={`sortable__chip${t.is_published === false ? " sortable__chip--warn" : ""}`}>
                       {t.is_published === false ? "draft" : "live"}
                     </span>
+                    {t.is_archived ? <span className="sortable__chip sortable__chip--warn">archived</span> : null}
                     {t.is_unreleased ? <span className="sortable__chip sortable__chip--accent">upcoming</span> : null}
                     {t.is_highlighted ? <span className="sortable__chip sortable__chip--accent">featured</span> : null}
                   </div>
@@ -1782,6 +1900,15 @@ export function AdminPage() {
               <button type="button" className="admin-btn" aria-label={`Edit ${t.title}`} onClick={() => startEditTrack(t)}>
                 <span className="admin-btn__icon"><PencilIcon /></span>
                 <span className="admin-btn__label">Edit</span>
+              </button>
+              <button
+                type="button"
+                className="admin-btn"
+                aria-label={t.is_archived ? `Restore ${t.title}` : `Archive ${t.title}`}
+                onClick={() => void toggleTrackArchived(t)}
+              >
+                <span className="admin-btn__icon"><ArchiveIcon /></span>
+                <span className="admin-btn__label">{t.is_archived ? "Restore" : "Archive"}</span>
               </button>
               <button type="button" className="admin-btn admin-btn--danger" aria-label={`Delete ${t.title}`} onClick={() => void handleDeleteTrack(t.slug)}>
                 <span className="admin-btn__icon"><TrashIcon /></span>
@@ -1819,11 +1946,12 @@ export function AdminPage() {
             </div>
           </div>
           <div className="admin-page__actions">
-            <button type="submit" className="admin-btn admin-btn--primary">
-              {editingVideoId != null ? "Save video" : "Add video"}
+            <button type="submit" className="admin-btn admin-btn--primary" disabled={videoSaving}>
+              {videoSaving ? <span className="spinner" aria-hidden /> : null}
+              {videoSaving ? "Saving…" : editingVideoId != null ? "Save video" : "Add video"}
             </button>
             {editingVideoId != null && (
-              <button type="button" className="admin-btn" onClick={startNewVideo}>
+              <button type="button" className="admin-btn" disabled={videoSaving} onClick={startNewVideo}>
                 Cancel
               </button>
             )}
@@ -1878,6 +2006,8 @@ export function AdminPage() {
               kind="image"
               accept="image/*"
               file={galleryFile}
+              busy={gallerySaving}
+              progress={galleryUploadPct}
               onFile={setGalleryFile}
             />
           </div>
@@ -1892,11 +2022,18 @@ export function AdminPage() {
             </div>
           </div>
           <div className="admin-page__actions">
-            <button type="submit" className="admin-btn admin-btn--primary">
-              {editingGalleryId != null ? "Save image" : "Upload image"}
+            <button type="submit" className="admin-btn admin-btn--primary" disabled={gallerySaving}>
+              {gallerySaving ? <span className="spinner" aria-hidden /> : null}
+              {gallerySaving
+                ? galleryFile
+                  ? "Uploading…"
+                  : "Saving…"
+                : editingGalleryId != null
+                ? "Save image"
+                : "Upload image"}
             </button>
             {editingGalleryId != null && (
-              <button type="button" className="admin-btn" onClick={startNewGalleryImage}>
+              <button type="button" className="admin-btn" disabled={gallerySaving} onClick={startNewGalleryImage}>
                 Cancel
               </button>
             )}
@@ -1967,6 +2104,7 @@ export function AdminPage() {
             onClick={() => void loadMailingList()}
             disabled={mlLoading}
           >
+            {mlLoading ? <span className="spinner" aria-hidden /> : null}
             {mlLoading ? "Loading…" : "Refresh"}
           </button>
         </div>
@@ -2117,6 +2255,7 @@ export function AdminPage() {
               className="admin-btn admin-btn--primary"
               disabled={broadcastSending || !broadcastSubject.trim() || !broadcastBody.trim()}
             >
+              {broadcastSending ? <span className="spinner" aria-hidden /> : null}
               {broadcastSending
                 ? "Sending…"
                 : `Send to ${mlCount ?? "…"} subscriber${mlCount === 1 ? "" : "s"}`}

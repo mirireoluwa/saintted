@@ -12,6 +12,8 @@ export interface Track {
   apple_music_url?: string;
   spotify_url?: string;
   is_published: boolean;
+  /** Archived tracks are hidden everywhere on the public site but kept in the admin. */
+  is_archived?: boolean;
   is_highlighted: boolean;
   is_unreleased: boolean;
   release_at?: string | null;

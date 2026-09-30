@@ -277,7 +277,7 @@ class TrackViewSet(viewsets.ModelViewSet):
         user = getattr(self.request, "user", None)
         if user and user.is_authenticated:
             return qs
-        return qs.filter(is_published=True)
+        return qs.filter(is_published=True, is_archived=False)
 
 
 class FeaturedVideoViewSet(viewsets.ModelViewSet):

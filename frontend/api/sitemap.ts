@@ -44,7 +44,7 @@ export default async function handler(
 
         tracks
           .filter((t) => {
-            if (t.is_published === false) return false;
+            if (t.is_published === false || t.is_archived) return false;
             // Auto-publish check
             if (!t.is_published && t.publish_at) {
               return new Date(t.publish_at).getTime() <= now;

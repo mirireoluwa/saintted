@@ -296,6 +296,53 @@
   }
 }
 @media (max-width: 560px) {
+  /* a compact, rounded card on phones: a small cover beside the details, no blurb */
+  .feature {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1.1rem;
+    padding: 1rem;
+    border-radius: calc(var(--radius) * 1.5);
+  }
+  .feature__cover {
+    /* a fixed square sized to roughly match the height of the text column beside it */
+    align-self: stretch;
+    width: 7.5rem;
+    height: 7.5rem;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius);
+  }
+  .feature__cover .card__tag {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+  }
+  .feature__body {
+    padding: 0;
+    min-width: 0;
+  }
+  .feature__body .eyebrow {
+    margin-bottom: 0.4rem;
+  }
+  .feature__title {
+    font-size: 1.3rem;
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .feature__meta {
+    margin-bottom: 0.65rem;
+  }
+  .feature__blurb {
+    display: none;
+  }
+  .feature__body .btn-row .btn {
+    min-height: 2.5rem;
+    padding-inline: 1rem;
+    font-size: 0.68rem;
+  }
   .card-grid--4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;

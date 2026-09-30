@@ -60,9 +60,9 @@ class GalleryImageAdmin(admin.ModelAdmin):
 
 @admin.register(Track)
 class TrackAdmin(admin.ModelAdmin):
-    list_display = ["title", "meta", "year", "order", "is_published", "is_unreleased", "is_highlighted"]
-    list_editable = ["order", "is_published", "is_unreleased", "is_highlighted"]
-    list_filter = ["year", "is_published", "is_unreleased", "is_highlighted"]
+    list_display = ["title", "meta", "year", "order", "is_published", "is_archived", "is_unreleased", "is_highlighted"]
+    list_editable = ["order", "is_published", "is_archived", "is_unreleased", "is_highlighted"]
+    list_filter = ["year", "is_published", "is_archived", "is_unreleased", "is_highlighted"]
     prepopulated_fields = {"slug": ("title",)}
     fieldsets = (
         (
@@ -74,6 +74,7 @@ class TrackAdmin(admin.ModelAdmin):
                     "meta",
                     "order",
                     "is_published",
+                    "is_archived",
                     "is_highlighted",
                     "art_url",
                     "art_file",

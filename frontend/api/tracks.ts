@@ -95,7 +95,7 @@ export default async function handler(
       if (!track) return res.status(404).json({ ok: false, message: "Track not found" });
 
       const visible = tracks
-        .filter((t) => t.is_published !== false)
+        .filter((t) => t.is_published !== false && !t.is_archived)
         .sort((a, b) => a.order - b.order || a.id - b.id);
 
       let previous_slug: string | null = null;
@@ -160,7 +160,7 @@ export default async function handler(
     }
 
     const published = processed
-      .filter((t) => t.is_published !== false)
+      .filter((t) => t.is_published !== false && !t.is_archived)
       .sort((a, b) => a.order - b.order || a.id - b.id);
 
     return res.status(200).json(published);
