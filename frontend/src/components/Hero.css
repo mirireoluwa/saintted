@@ -83,9 +83,13 @@
 }
 .hero__line {
   display: block;
-  overflow: hidden; /* masks the reveal */
+  overflow: hidden; /* masks the vertical reveal */
   padding-block: 0.06em;
+  /* a sliver of right-hand padding so the overflow box doesn't shave the ink
+     overhang off the last letter (the "D" was visibly cut off without this) */
+  padding-right: 0.08em;
   margin-block: -0.06em;
+  margin-right: -0.08em;
 }
 .hero__line > span {
   display: block;

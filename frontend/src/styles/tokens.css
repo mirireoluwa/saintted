@@ -16,7 +16,9 @@
        url("/fonts/ApfelGrotezk-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  /* the file is preloaded in index.html, so a short block beats a flash of a wider
+     fallback face (that flash is what clipped the hero title on some loads) */
+  font-display: block;
 }
 @font-face {
   /* Mittel covers medium → bold (no separate Fett file self-hosted) */
@@ -25,7 +27,7 @@
        url("/fonts/ApfelGrotezk-Mittel.woff2") format("woff2");
   font-weight: 500 700;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 :root {
