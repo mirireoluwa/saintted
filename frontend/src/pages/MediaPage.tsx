@@ -18,11 +18,7 @@ export function MediaPage() {
         canonicalPath="/media"
       />
       <header className="wrap page-head">
-        <p className="eyebrow rise">media</p>
-        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>watch + look</h1>
-        <p className="page-head__sub rise" style={{ "--i": 2 } as React.CSSProperties}>
-          videos, photos and visuals. click any photo to view it larger.
-        </p>
+        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>media</h1>
       </header>
 
       <Featured onCount={setVideoCount} />

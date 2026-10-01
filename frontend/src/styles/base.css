@@ -122,22 +122,14 @@ p {
 }
 
 .eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  /* plain text, no marker: a bigger, quieter line above the headline */
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ink-soft);
   font-weight: 500;
   margin: 0 0 1.5rem;
   line-height: 1.4;
-}
-.eyebrow::before {
-  content: "";
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  margin-right: 0.8rem;
-  background: var(--accent);
-  vertical-align: 0.05em;
 }
 
 .lede {
@@ -210,13 +202,19 @@ p {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 2rem;
+  row-gap: 0.75rem;
+  column-gap: 2rem;
   flex-wrap: wrap;
-  margin-bottom: clamp(2rem, 4vw, 3.25rem);
+  margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
 }
 .page-head .eyebrow {
   width: 100%;
   margin-bottom: 1.5rem;
+}
+.page-head__back {
+  width: 100%;
+  padding-top: 0;
+  margin-bottom: 0;
 }
 .page-head h1 {
   flex: 1 1 auto;

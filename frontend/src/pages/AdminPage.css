@@ -107,21 +107,13 @@
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 .admin-main__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  /* plain text, matching the public site's sub-headers: no marker, bigger type */
   margin: 0 0 0.9rem;
   color: var(--ink-soft);
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-.admin-main__eyebrow::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  background: var(--accent);
 }
 .admin-main__title {
   margin: 0;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { fetchTracks } from "../api/client";
 import { Helmet } from "react-helmet-async";
 import { SeoHead } from "../components/SeoHead";
@@ -58,19 +59,15 @@ export function MusicPage() {
       </Helmet>
 
       <header className="wrap page-head">
-        <p className="eyebrow rise">music</p>
-        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>everything so far</h1>
-        <p className="page-head__sub rise" style={{ "--i": 2 } as React.CSSProperties}>
-          singles, sounds and what's coming next.
-        </p>
+        <Link to="/" className="back-link page-head__back rise">
+          <span className="arrow" aria-hidden>←</span> home
+        </Link>
+        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>music</h1>
       </header>
 
       {!loading && upcoming.length > 0 ? (
         <section className="section section--tight">
           <div className="wrap">
-            <div className="section-head">
-              <h2>upcoming</h2>
-            </div>
             <div className="upcoming-list">
               {upcoming.map((t) => (
                 <UpcomingRelease key={t.id} track={t} now={now} />

@@ -56,7 +56,6 @@ export function About({ teaser = false }: AboutProps) {
         </figure>
 
         <div className="about__body">
-          <p className="eyebrow">about</p>
           <Heading className="about__heading">{about.heading}</Heading>
 
           {shown.length > 0 ? (

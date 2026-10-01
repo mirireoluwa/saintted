@@ -10,11 +10,7 @@ export function ShowsPage() {
         canonicalPath="/shows"
       />
       <header className="wrap page-head">
-        <p className="eyebrow rise">shows</p>
-        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>live dates</h1>
-        <p className="page-head__sub rise" style={{ "--i": 2 } as React.CSSProperties}>
-          upcoming shows. tap tickets to grab yours.
-        </p>
+        <h1 className="rise" style={{ "--i": 1 } as React.CSSProperties}>shows</h1>
       </header>
       <Shows />
     </>

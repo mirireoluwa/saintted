@@ -28,7 +28,6 @@ export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) 
         </Link>
 
         <div className="feature__body">
-          <p className="eyebrow">latest release</p>
           <h3 className="feature__title">
             <Link to={detail} onClick={open}>{track.title}</Link>
           </h3>

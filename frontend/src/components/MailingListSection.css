@@ -14,9 +14,6 @@
 .cta .eyebrow {
   color: var(--on-accent);
 }
-.cta .eyebrow::before {
-  background: var(--on-accent);
-}
 .cta h2 {
   margin-block: 1.25rem 1rem;
   font-size: clamp(2.4rem, 5vw, 4rem);

@@ -251,9 +251,6 @@
   justify-content: center;
   padding: clamp(1.75rem, 4.5vw, 4rem);
 }
-.feature__body .eyebrow {
-  margin-bottom: 1.1rem;
-}
 .feature__title {
   font-size: clamp(2.4rem, 4.6vw, 4.5rem);
   letter-spacing: -0.05em;
@@ -320,9 +317,6 @@
   .feature__body {
     padding: 0;
     min-width: 0;
-  }
-  .feature__body .eyebrow {
-    margin-bottom: 0.4rem;
   }
   .feature__title {
     font-size: 1.3rem;

@@ -35,7 +35,6 @@ export function SiteHeader() {
       <div className="wrap">
         <Link to="/" className="brand" aria-label="saintted — home">
           saintted
-          <span className="seal" aria-hidden />
         </Link>
 
         <button
