@@ -29,6 +29,22 @@
 .about__body {
   grid-column: 7 / span 6;
 }
+.about__banner {
+  aspect-ratio: 3 / 1;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  overflow: hidden;
+  border-radius: calc(var(--radius) * 1.75);
+  background: var(--grey);
+}
+.about__banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+}
+.about__grid--page .about__body {
+  grid-column: 1 / span 8;
+}
 .about__body .eyebrow {
   margin-bottom: 1.25rem;
 }
@@ -84,11 +100,13 @@
   .about__frame {
     grid-column: 1 / span 8;
   }
-  .about__body {
+  .about__body,
+  .about__grid--page .about__body {
     grid-column: 1 / -1;
   }
 }
 @media (max-width: 560px) {
+  .about__banner { aspect-ratio: 2 / 1; }
   .about__frame {
     grid-column: 1 / -1;
   }

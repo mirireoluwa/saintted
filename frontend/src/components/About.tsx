@@ -5,6 +5,7 @@ import { DEFAULT_ABOUT, type AboutContent } from "../types/aboutContent";
 import "./About.css";
 
 const DEFAULT_PORTRAIT = "/about-portrait.jpg";
+const HEADER_IMAGE = "/about-header.jpg";
 
 const CONTACT_LINKS = [
   { label: "instagram", href: "https://instagram.com/beingsaintted" },
@@ -43,17 +44,26 @@ export function About({ teaser = false }: AboutProps) {
 
   return (
     <section className={`section about${teaser ? " about--teaser" : ""}`} id="about-section">
-      <div className="wrap about__grid">
-        <figure className="about__frame">
-          <span className="about__art">
-            <img
-              src={about.portrait_url || DEFAULT_PORTRAIT}
-              alt="Saintted, portrait"
-              loading={teaser ? "lazy" : "eager"}
-              decoding="async"
-            />
-          </span>
-        </figure>
+      {teaser ? null : (
+        <div className="wrap">
+          <div className="about__banner">
+            <img src={HEADER_IMAGE} alt="Saintted looking out over the sea" decoding="async" />
+          </div>
+        </div>
+      )}
+      <div className={`wrap about__grid${teaser ? "" : " about__grid--page"}`}>
+        {teaser ? (
+          <figure className="about__frame">
+            <span className="about__art">
+              <img
+                src={about.portrait_url || DEFAULT_PORTRAIT}
+                alt="Saintted, portrait"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+          </figure>
+        ) : null}
 
         <div className="about__body">
           <Heading className="about__heading">{about.heading}</Heading>
