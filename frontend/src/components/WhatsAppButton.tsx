@@ -1,7 +1,7 @@
 import { trackEvent } from "../utils/analytics";
 import whatsappIcon from "../assets/whatsapp.svg";
 
-/** The community link also used in the footer's "elsewhere" list. */
+/** The community link also used in the footer's "socials" list. */
 export const WHATSAPP_URL = "https://chat.whatsapp.com/FXNIdq5z0r92PaMzEXQkkF";
 
 /** Outline button that opens the WhatsApp channel. Sits beside the email signup. */

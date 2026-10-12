@@ -45,8 +45,8 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div className="footer__col">
-            <p className="eyebrow">elsewhere</p>
+          <div className="footer__col footer__social-col">
+            <p className="eyebrow">socials</p>
             <SocialLinks className="footer__list" linkClassName="footer__social" showLabels />
           </div>
         </div>

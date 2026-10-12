@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchAbout } from "../api/client";
+import instagramIcon from "../assets/instagram.svg";
+import xIcon from "../assets/x.svg";
 import { DEFAULT_ABOUT, type AboutContent } from "../types/aboutContent";
 import "./About.css";
 
@@ -8,9 +10,9 @@ const DEFAULT_PORTRAIT = "/about-portrait.jpg";
 const HEADER_IMAGE = "/about-header.jpg";
 
 const CONTACT_LINKS = [
-  { label: "instagram", href: "https://instagram.com/beingsaintted" },
-  { label: "linktree", href: "https://linktr.ee/saintted" },
-  { label: "x", href: "https://x.com/beingsaintted" },
+  { label: "instagram", href: "https://instagram.com/beingsaintted", icon: instagramIcon },
+  { label: "linktree", href: "https://linktr.ee/saintted", icon: null },
+  { label: "x", href: "https://x.com/beingsaintted", icon: xIcon },
 ];
 
 type AboutProps = {
@@ -93,11 +95,23 @@ export function About({ teaser = false }: AboutProps) {
                 </div>
               ) : null}
               <div>
-                <dt>elsewhere</dt>
+                <dt>socials</dt>
                 <dd className="about__links">
                   {CONTACT_LINKS.map((l) => (
-                    <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer">
-                      {l.label} <span aria-hidden>↗</span>
+                    <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" aria-label={l.label}>
+                      <span className="about__link-text">
+                        {l.label} <span aria-hidden>↗</span>
+                      </span>
+                      <span className="about__link-icon" aria-hidden>
+                        {l.icon ? (
+                          <img src={l.icon} alt="" width={22} height={22} />
+                        ) : (
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1" />
+                            <path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" />
+                          </svg>
+                        )}
+                      </span>
                     </a>
                   ))}
                 </dd>

@@ -95,6 +95,9 @@
   flex-wrap: wrap;
   gap: 0.4rem 1.5rem;
 }
+.about__link-icon {
+  display: none;
+}
 
 @media (max-width: 1000px) {
   .about__frame {
@@ -106,6 +109,18 @@
   }
 }
 @media (max-width: 560px) {
+  .about__link-text { display: none; }
+  .about__link-icon {
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+  }
+  .about__link-icon img { filter: var(--icon-filter); }
+  .about__links { gap: 0.6rem; }
   .about__banner { aspect-ratio: 2 / 1; }
   .about__frame {
     grid-column: 1 / -1;
@@ -114,4 +129,9 @@
     grid-template-columns: 1fr;
     gap: 0.35rem;
   }
+}
+
+/* on the about page the banner is the first thing under the nav, so sit it at page-head distance */
+.about:not(.about--teaser) {
+  padding-top: clamp(2.5rem, 6vw, 5rem);
 }

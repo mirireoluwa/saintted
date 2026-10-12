@@ -337,9 +337,24 @@
     padding-inline: 1rem;
     font-size: 0.68rem;
   }
+  /* more-releases rows swipe sideways on phones instead of stacking down the page */
   .card-grid--4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
     gap: 1rem;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .card-grid--4::-webkit-scrollbar { display: none; }
+  .card-grid--4 > .card {
+    flex: 0 0 62%;
+    scroll-snap-align: start;
   }
   .card__go { display: none; }
   .card-grid {
