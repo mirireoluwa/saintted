@@ -553,3 +553,37 @@ p {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
+
+/* phones: give small text links a 44px-tall tap area without changing how they look */
+@media (max-width: 800px) {
+  .textlink,
+  .footer__legal a,
+  .about__specs dd > a,
+  .page-head__back {
+    position: relative;
+  }
+  .textlink::after,
+  .footer__legal a::after,
+  .about__specs dd > a::after,
+  .page-head__back::after {
+    content: "";
+    position: absolute;
+    inset-inline: -0.35rem;
+    inset-block: 50% auto;
+    height: max(100%, 2.75rem);
+    transform: translateY(-50%);
+  }
+}
+@media (max-width: 800px) {
+  .footer__list {
+    gap: 0;
+  }
+  .footer__list a,
+  .footer__legal a {
+    min-height: 2.75rem;
+  }
+  .footer__legal a {
+    display: inline-flex;
+    align-items: center;
+  }
+}
