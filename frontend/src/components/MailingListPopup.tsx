@@ -25,6 +25,8 @@ function markSeen() {
 
 export function MailingListPopup() {
   const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const reduceMotion = useReducedMotion() ?? false;
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
@@ -43,8 +45,27 @@ export function MailingListPopup() {
   // Escape to close, lock body scroll, focus the first field.
   useEffect(() => {
     if (!open) return;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!nodes || nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !dialogRef.current?.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !dialogRef.current?.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
@@ -54,6 +75,7 @@ export function MailingListPopup() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
       window.clearTimeout(focusT);
+      returnFocusRef.current?.focus?.();
     };
   }, [open]);
 
@@ -69,6 +91,7 @@ export function MailingListPopup() {
           onClick={close}
         >
           <motion.div
+            ref={dialogRef}
             className="ml-popup"
             role="dialog"
             aria-modal="true"
