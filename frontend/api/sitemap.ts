@@ -29,8 +29,8 @@ export default async function handler(
   const urls: { loc: string; lastmod?: string; priority?: string }[] = [
     { loc: `${SITE_URL}/`, lastmod: today, priority: "1.0" },
     { loc: `${SITE_URL}/music`, lastmod: today, priority: "0.9" },
-    { loc: `${SITE_URL}/about`, priority: "0.6" },
-    { loc: `${SITE_URL}/media`, priority: "0.6" },
+    { loc: `${SITE_URL}/about`, lastmod: today, priority: "0.6" },
+    { loc: `${SITE_URL}/media`, lastmod: today, priority: "0.6" },
     { loc: `${SITE_URL}/shows`, lastmod: today, priority: "0.7" },
   ];
 

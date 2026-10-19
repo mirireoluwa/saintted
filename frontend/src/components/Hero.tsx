@@ -211,7 +211,7 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [], t
   return (
     <section className={`hero${hasStories ? " hero--stories" : ""}`} aria-labelledby="hero-title">
       {/* the page's one h1, present on every frame of the story */}
-      <h1 id="hero-title" className="sr-only">saintted, a Nigerian artist and producer</h1>
+      <h1 id="hero-title" className="sr-only">SAINTTED, a Nigerian alternative artist and producer from Lagos</h1>
       {headerImageUrl ? (
         <div
           className={`hero__photo${heroPhotoVisible ? " hero__photo--visible" : ""}`}

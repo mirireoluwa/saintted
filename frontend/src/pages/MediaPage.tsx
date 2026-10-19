@@ -13,8 +13,8 @@ export function MediaPage() {
   return (
     <>
       <SeoHead
-        title="media · saintted"
-        description="Videos, photos and visuals from Saintted, a Nigerian artist and producer."
+        title="media · SAINTTED"
+        description="Videos, photos and visuals from SAINTTED, a Nigerian artist and producer."
         canonicalPath="/media"
       />
       <header className="wrap page-head">

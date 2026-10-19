@@ -234,14 +234,14 @@ export function TrackDetailPage() {
       url: `${site}${canonicalPath}`,
       ...(cover ? { image: absoluteUrl(cover) } : {}),
       ...(track.year ? { datePublished: `${track.year}` } : {}),
-      byArtist: { "@type": "MusicGroup", name: "Saintted", url: site },
+      byArtist: { "@type": "MusicGroup", name: "SAINTTED", url: site },
     });
   }, [track, resolved, canonicalPath]);
 
   if (showSkeleton) {
     return (
       <>
-        <SeoHead title={`${slug} · saintted`} description="love, saintted" canonicalPath={canonicalPath} />
+        <SeoHead title={`${slug} · SAINTTED`} description="love, SAINTTED" canonicalPath={canonicalPath} />
         <TrackDetailSkeleton />
       </>
     );
@@ -250,7 +250,7 @@ export function TrackDetailPage() {
   if (showNotFound) {
     return (
       <>
-        <SeoHead title="Track not found · saintted" description="love, saintted" canonicalPath={canonicalPath} noindex />
+        <SeoHead title="Track not found · SAINTTED" description="love, SAINTTED" canonicalPath={canonicalPath} noindex />
         <header className="wrap page-head">
           <p className="eyebrow">404</p>
           <h1>track not found</h1>
@@ -283,8 +283,8 @@ export function TrackDetailPage() {
     return (
       <>
         <SeoHead
-          title={`${uTrack.title} · unreleased · saintted`}
-          description={`${uTrack.meta} · coming soon · love, saintted`}
+          title={`${uTrack.title} · unreleased · SAINTTED`}
+          description={`${uTrack.meta} · coming soon · love, SAINTTED`}
           canonicalPath={canonicalPath}
           ogImage={ogU ? absoluteUrl(ogU) : undefined}
           ogType="music.song"
@@ -296,8 +296,8 @@ export function TrackDetailPage() {
 
   const desc =
     displayTrack != null
-      ? (displayTrack.description || "").trim().slice(0, 160) || `${displayTrack.meta} · love, saintted`
-      : "love, saintted";
+      ? (displayTrack.description || "").trim().slice(0, 160) || `${displayTrack.meta} · love, SAINTTED`
+      : "love, SAINTTED";
   const coverUrl = displayTrack != null ? getTrackArtUrl(displayTrack) : undefined;
   const ogImage = coverUrl ? absoluteUrl(coverUrl) : undefined;
 
@@ -321,7 +321,7 @@ export function TrackDetailPage() {
     <>
       <SeoHead
         title={
-          showInterstitial ? `${slug} · saintted` : `${displayTrack!.title} · saintted`
+          showInterstitial ? `${slug} · SAINTTED` : `${displayTrack!.title} · SAINTTED`
         }
         description={desc}
         canonicalPath={canonicalPath}
@@ -461,7 +461,7 @@ export function TrackDetailPage() {
                         <img
                           src={coverUrl}
                           srcSet={coverSrcSet}
-                          alt={`${displayTrack!.title} cover art`}
+                          alt={`${displayTrack!.title} cover art by SAINTTED`}
                           decoding="async"
                           fetchPriority="high"
                           sizes="(max-width: 1000px) 92vw, 640px"

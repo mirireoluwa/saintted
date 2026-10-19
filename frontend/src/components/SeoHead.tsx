@@ -13,7 +13,7 @@ type SeoHeadProps = {
 
 export function SeoHead({
   title,
-  description = "love, saintted",
+  description = "love, SAINTTED",
   canonicalPath,
   ogImage,
   ogType = "website",
@@ -33,7 +33,7 @@ export function SeoHead({
         content={noindex ? "noindex,follow" : "index,follow,max-snippet:220,max-image-preview:large"}
       />
       <link rel="canonical" href={canonical} />
-      <meta property="og:site_name" content="saintted" />
+      <meta property="og:site_name" content="SAINTTED" />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />

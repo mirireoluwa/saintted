@@ -32,7 +32,7 @@ export function TrackCard({ track, isNew = false, index = 0 }: TrackCardProps) {
             src={art}
             srcSet={srcSet}
             sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 25vw"
-            alt={`${track.title} cover art`}
+            alt={`${track.title} cover art by SAINTTED`}
             loading="lazy"
             decoding="async"
           />

@@ -37,8 +37,8 @@ export function MusicPage() {
   return (
     <>
       <SeoHead
-        title="music · saintted"
-        description="Every release from Saintted, a Nigerian artist and producer. Stream singles and see what's next."
+        title="music · SAINTTED"
+        description="Every release from SAINTTED, a Nigerian artist and producer. Stream singles and see what's next."
         canonicalPath="/music"
       />
 
@@ -47,7 +47,7 @@ export function MusicPage() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
-            name: "Saintted releases",
+            name: "SAINTTED releases",
             itemListElement: released.map(({ track }, i) => ({
               "@type": "ListItem",
               position: i + 1,

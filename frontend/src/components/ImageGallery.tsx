@@ -112,7 +112,7 @@ export function ImageGallery({ emptyMessage = null, onCount }: ImageGalleryProps
             >
               <img
                 src={resolvePublicMediaUrl(img.image_url || img.image || "")}
-                alt={img.caption || "Saintted gallery image"}
+                alt={img.caption || "SAINTTED gallery image"}
                 className="image-gallery__img"
                 loading="lazy"
                 decoding="async"
@@ -167,7 +167,7 @@ export function ImageGallery({ emptyMessage = null, onCount }: ImageGalleryProps
               <motion.img
                 key={lightboxIndex}
                 src={resolvePublicMediaUrl(activeImage.image_url || activeImage.image || "")}
-                alt={activeImage.caption || "Saintted gallery image"}
+                alt={activeImage.caption || "SAINTTED gallery image"}
                 className="lightbox__img"
                 initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}

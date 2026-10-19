@@ -1,3 +1,4 @@
+import { HOME_BIO } from "../../api/_lib/seoData";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchAbout } from "../api/client";
@@ -40,7 +41,8 @@ export function About({ teaser = false }: AboutProps) {
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
-  const shown = teaser ? paragraphs.slice(0, 1) : paragraphs;
+  // the home teaser always carries the artist bio (SAINTTED / Nigerian / alternative / Lagos); /about shows the editable one
+  const shown = teaser ? [HOME_BIO] : paragraphs;
   const email = (about.booking_email || "").trim();
   const Heading = teaser ? "h2" : "h1";
 
@@ -49,7 +51,7 @@ export function About({ teaser = false }: AboutProps) {
       {teaser ? null : (
         <div className="wrap">
           <div className="about__banner">
-            <img src={HEADER_IMAGE} alt="Saintted looking out over the sea" decoding="async" />
+            <img src={HEADER_IMAGE} alt="SAINTTED looking out over the sea" decoding="async" />
           </div>
         </div>
       )}
@@ -59,7 +61,7 @@ export function About({ teaser = false }: AboutProps) {
             <span className="about__art">
               <img
                 src={about.portrait_url || DEFAULT_PORTRAIT}
-                alt="Saintted, portrait"
+                alt="SAINTTED, portrait"
                 loading="lazy"
                 decoding="async"
               />

@@ -33,7 +33,7 @@ export function UpcomingRelease({ track, now }: UpcomingReleaseProps) {
     <article className="upcoming" style={accentVars(track.accent_color)}>
       <Link to={detail} className="upcoming__frame" aria-label={`${track.title}, upcoming release`}>
         <span className="upcoming__art">
-          {art ? <img src={art} alt={`${track.title} cover art`} loading="lazy" decoding="async" /> : <TrackCoverPlaceholder variant="card" />}
+          {art ? <img src={art} alt={`${track.title} cover art by SAINTTED`} loading="lazy" decoding="async" /> : <TrackCoverPlaceholder variant="card" />}
         </span>
       </Link>
 

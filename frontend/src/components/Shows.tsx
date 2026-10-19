@@ -45,12 +45,12 @@ export function Shows() {
   const eventsLd = upcoming.map((s) => ({
     "@context": "https://schema.org",
     "@type": "MusicEvent",
-    name: s.title || `Saintted live at ${s.venue}`,
+    name: s.title || `SAINTTED live at ${s.venue}`,
     startDate: s.starts_at,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     location: { "@type": "Place", name: s.venue, address: s.city || s.venue },
-    performer: { "@type": "MusicGroup", name: "Saintted" },
+    performer: { "@type": "MusicGroup", name: "SAINTTED" },
     ...(s.flyer_url ? { image: [absoluteUrl(s.flyer_url)] } : {}),
     ...(s.ticket_url
       ? {

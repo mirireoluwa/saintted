@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { homeBodyHtml, homeJsonLd, jsonLdScript } from "./api/_lib/seoData";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -15,7 +16,13 @@ export default defineConfig(({ mode }) => {
       {
         name: "html-site-url",
         transformIndexHtml(html) {
-          let out = html.replaceAll("%SITE_URL%", siteUrl);
+          let out = html
+            .replaceAll("%SITE_URL%", siteUrl)
+            .replace("%HOME_LD%", homeJsonLd(siteUrl).map(jsonLdScript).join("\n    "))
+            .replace(
+              "%HOME_BODY%",
+              `<div style="padding:2rem;font-family:system-ui,sans-serif;color:#ecebe6">${homeBodyHtml()}</div>`,
+            );
           let apiBase = (env.VITE_API_URL || "").trim().replace(/\/+$/, "");
           if (apiBase && !/^https?:\/\//i.test(apiBase)) {
             apiBase = `https://${apiBase.replace(/^\/+/, "")}`;

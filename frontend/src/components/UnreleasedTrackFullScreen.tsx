@@ -94,7 +94,7 @@ export function UnreleasedTrackFullScreen({ track }: Props) {
       <footer className="uf__foot rise" style={{ "--i": 4 } as React.CSSProperties}>
         <div className="uf__release">
           <span className="uf__thumb">
-            {coverUrl ? <img src={coverUrl} alt={`${track.title} cover art`} /> : <TrackCoverPlaceholder variant="card" />}
+            {coverUrl ? <img src={coverUrl} alt={`${track.title} cover art by SAINTTED`} /> : <TrackCoverPlaceholder variant="card" />}
           </span>
           <span className="uf__release-text">
             <strong>{track.title}</strong>

@@ -6,6 +6,7 @@
  * (React replaces it the moment the app loads). Unknown track URLs answer with a real 404.
  */
 import type { AboutContent, LiveShow, Track } from "./types.js";
+import { HOME_DESC, HOME_TITLE, OG_IMAGE_ALT, homeBodyHtml, homeJsonLd, jsonLdScript } from "./seoData.js";
 
 export interface ShellData {
   siteUrl: string;
@@ -15,24 +16,21 @@ export interface ShellData {
   about: AboutContent | null;
 }
 
-const HOME_DESC =
-  "A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
-
 const PAGES: Record<string, { title: string; description: string }> = {
-  "/": { title: "saintted", description: HOME_DESC },
+  "/": { title: HOME_TITLE, description: HOME_DESC },
   "/music": {
-    title: "music · saintted",
-    description: "Every release from Saintted, a Nigerian artist and producer. Stream singles and see what's next.",
+    title: "music · SAINTTED",
+    description: "Every release from SAINTTED, a Nigerian artist and producer. Stream singles and see what's next.",
   },
   "/media": {
-    title: "media · saintted",
-    description: "Videos, photos and visuals from Saintted, a Nigerian artist and producer.",
+    title: "media · SAINTTED",
+    description: "Videos, photos and visuals from SAINTTED, a Nigerian artist and producer.",
   },
-  "/shows": { title: "shows · saintted", description: "Upcoming live shows and events from Saintted." },
+  "/shows": { title: "shows · SAINTTED", description: "Upcoming live shows and events from SAINTTED." },
   "/about": {
-    title: "about · saintted",
+    title: "about · SAINTTED",
     description:
-      "About Saintted, a Nigerian artist and producer communicating the human experience through his perspective.",
+      "About SAINTTED, a Nigerian artist and producer communicating the human experience through his perspective.",
   },
 };
 
@@ -46,8 +44,7 @@ const LOCAL_COVERS: Record<string, string> = {
 export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const jsonLd = (o: unknown) =>
-  `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`;
+const jsonLd = jsonLdScript;
 
 const abs = (siteUrl: string, p: string) => (/^https?:\/\//i.test(p) ? p : `${siteUrl}${p.startsWith("/") ? p : `/${p}`}`);
 
@@ -62,6 +59,7 @@ interface Built {
   canonicalPath: string;
   ogType: "website" | "music.song";
   image?: string;
+  imageAlt?: string;
   noindex?: boolean;
   ld: unknown[];
   body: string;
@@ -90,7 +88,7 @@ export function buildPage(path: string, d: ShellData): Built {
     if (!t) {
       return {
         status: 404,
-        title: "Page not found · saintted",
+        title: "Page not found · SAINTTED",
         description: "This page doesn't exist.",
         canonicalPath: clean,
         ogType: "website",
@@ -100,7 +98,7 @@ export function buildPage(path: string, d: ShellData): Built {
       };
     }
     const upcoming = Boolean(t.is_unreleased) && t.release_at && new Date(t.release_at).getTime() > Date.now();
-    const desc = ((t.description || "").trim().replace(/\s+/g, " ").slice(0, 160)) || `${t.meta || "Single"} by Saintted`;
+    const desc = ((t.description || "").trim().replace(/\s+/g, " ").slice(0, 160)) || `${t.meta || "Single"} by SAINTTED`;
     const cover = t.art_url?.trim() || LOCAL_COVERS[t.slug] || "";
     const links = [
       t.spotify_url && `<a href="${esc(t.spotify_url)}">Spotify</a>`,
@@ -118,19 +116,20 @@ export function buildPage(path: string, d: ShellData): Built {
         url: abs(site, `/music/${encodeURIComponent(t.slug)}`),
         ...(cover ? { image: abs(site, cover) } : {}),
         ...(t.year ? { datePublished: String(t.year) } : {}),
-        byArtist: { "@type": "MusicGroup", name: "Saintted", url: site },
+        byArtist: { "@type": "MusicGroup", name: "SAINTTED", url: site },
         ...(t.spotify_url || t.apple_music_url ? { sameAs: [t.spotify_url, t.apple_music_url].filter(Boolean) } : {}),
       });
     }
     return {
       status: 200,
-      title: upcoming ? `${t.title} · unreleased · saintted` : `${t.title} · saintted`,
-      description: upcoming ? `${t.meta || "Single"} · coming soon · love, saintted` : desc,
+      title: upcoming ? `${t.title} · unreleased · SAINTTED` : `${t.title} · SAINTTED`,
+      description: upcoming ? `${t.meta || "Single"} · coming soon · love, SAINTTED` : desc,
       canonicalPath: `/music/${encodeURIComponent(t.slug)}`,
       ogType: "music.song",
       image: cover ? abs(site, cover) : undefined,
+      imageAlt: `${t.title} cover art by SAINTTED`,
       ld,
-      body: `<main><h1>${esc(t.title)}</h1><p>${esc(t.meta || "Single")}${t.year ? ` · ${t.year}` : ""} by Saintted</p>${
+      body: `<main><h1>${esc(t.title)}</h1><p>${esc(t.meta || "Single")}${t.year ? ` · ${t.year}` : ""} by SAINTTED</p>${
         (t.description || "").trim() ? `<p>${esc((t.description || "").trim())}</p>` : ""
       }${links.length ? `<p>Listen on ${links.join(" · ")}</p>` : ""}${nav}</main>`,
     };
@@ -140,7 +139,7 @@ export function buildPage(path: string, d: ShellData): Built {
   if (!page) {
     return {
       status: 404,
-      title: "Page not found · saintted",
+      title: "Page not found · SAINTTED",
       description: "This page doesn't exist.",
       canonicalPath: clean,
       ogType: "website",
@@ -153,32 +152,15 @@ export function buildPage(path: string, d: ShellData): Built {
   const ld: unknown[] = [];
   let body = "";
   if (clean === "/") {
-    ld.push(
-      {
-        "@context": "https://schema.org",
-        "@type": "MusicGroup",
-        name: "Saintted",
-        url: site,
-        description: HOME_DESC,
-        genre: ["Alternative", "Afrobeats"],
-        sameAs: [
-          "https://instagram.com/beingsaintted",
-          "https://x.com/beingsaintted",
-          "https://music.apple.com/ng/artist/saintted/1683622819",
-          "https://open.spotify.com/artist/6y6qTKA4172ZvpCg8t6wE6",
-          "https://www.youtube.com/@saintted",
-        ],
-      },
-      { "@context": "https://schema.org", "@type": "WebSite", name: "saintted", url: site }
-    );
-    body = `<main><h1>saintted</h1><p>a Nigerian artist + producer communicating the human experience through his perspective.</p>${trackLinks}${nav}</main>`;
+    ld.push(...homeJsonLd(site));
+    body = homeBodyHtml(trackLinks);
   } else if (clean === "/music") {
     ld.push(
       breadcrumb([["home", "/"], ["music", "/music"]]),
       {
         "@context": "https://schema.org",
         "@type": "ItemList",
-        name: "Saintted releases",
+        name: "SAINTTED releases",
         itemListElement: tracks.map((t, i) => ({
           "@type": "ListItem",
           position: i + 1,
@@ -197,12 +179,12 @@ export function buildPage(path: string, d: ShellData): Built {
       ld.push({
         "@context": "https://schema.org",
         "@type": "MusicEvent",
-        name: s.title || `Saintted live at ${s.venue}`,
+        name: s.title || `SAINTTED live at ${s.venue}`,
         startDate: s.starts_at,
         eventStatus: "https://schema.org/EventScheduled",
         eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
         location: { "@type": "Place", name: s.venue, address: s.city || s.venue },
-        performer: { "@type": "MusicGroup", name: "Saintted" },
+        performer: { "@type": "MusicGroup", name: "SAINTTED" },
         ...(s.flyer_url ? { image: [abs(site, s.flyer_url)] } : {}),
         ...(s.ticket_url
           ? { offers: { "@type": "Offer", url: s.ticket_url, availability: s.is_sold_out ? "https://schema.org/SoldOut" : "https://schema.org/InStock" } }
@@ -238,6 +220,8 @@ export function renderShell(path: string, d: ShellData): { status: number; html:
     .replace(/<meta[^>]*name=["']description["'][^>]*>/gi, "")
     .replace(/<meta[^>]*name=["']robots["'][^>]*>/gi, "")
     .replace(/<link[^>]*rel=["']canonical["'][^>]*>/gi, "")
+    // the home page's JSON-LD ships in index.html; every other URL gets its own
+    .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<meta[^>]*property=["']og:(title|description|url|type|image|image:alt)["'][^>]*>/gi, "")
     .replace(/<meta[^>]*name=["']twitter:(title|description|image)["'][^>]*>/gi, "");
 
@@ -251,6 +235,7 @@ export function renderShell(path: string, d: ShellData): { status: number; html:
     `<meta property="og:type" content="${p.ogType}" />`,
     `<meta property="og:url" content="${esc(canonical)}" />`,
     `<meta property="og:image" content="${esc(image)}" />`,
+    `<meta property="og:image:alt" content="${esc(p.imageAlt || OG_IMAGE_ALT)}" />`,
     `<meta name="twitter:title" content="${esc(p.title)}" />`,
     `<meta name="twitter:description" content="${esc(p.description)}" />`,
     `<meta name="twitter:image" content="${esc(image)}" />`,
@@ -258,9 +243,9 @@ export function renderShell(path: string, d: ShellData): { status: number; html:
   ].join("\n    ");
 
   html = html.replace("</head>", `    ${head}\n  </head>`);
-  html = html.replace(
-    /<div id="root"><\/div>/,
-    `<div id="root"><div style="padding:2rem;font-family:system-ui,sans-serif;color:#ecebe6">${p.body}</div></div>`
-  );
+  const rootBody = `<div style="padding:2rem;font-family:system-ui,sans-serif;color:#ecebe6">${p.body}</div>`;
+  html = /<!--seo-body-->[\s\S]*?<!--\/seo-body-->/.test(html)
+    ? html.replace(/<!--seo-body-->[\s\S]*?<!--\/seo-body-->/, () => `<!--seo-body-->${rootBody}<!--/seo-body-->`)
+    : html.replace(/<div id="root"><\/div>/, () => `<div id="root">${rootBody}</div>`);
   return { status: p.status, html };
 }

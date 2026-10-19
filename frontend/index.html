@@ -11,16 +11,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
+      content="SAINTTED is a Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
     />
     <meta name="robots" content="index,follow,max-snippet:220,max-image-preview:large" />
     <!-- Link preview (og:image needs absolute URL — set VITE_SITE_URL in .env for your domain) -->
     <link rel="canonical" href="%SITE_URL%/" />
-    <meta property="og:site_name" content="saintted" />
-    <meta property="og:title" content="saintted" />
+    <meta property="og:site_name" content="SAINTTED" />
+    <meta property="og:title" content="SAINTTED | Nigerian Alternative &amp; Afrobeats Artist" />
     <meta
       property="og:description"
-      content="A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
+      content="SAINTTED is a Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
     />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_US" />
@@ -28,13 +28,13 @@
     <meta property="og:image" content="%SITE_URL%/og-image.png" />
     <meta property="og:image:width" content="1024" />
     <meta property="og:image:height" content="768" />
-    <meta property="og:image:alt" content="saintted black and white portrait with love, saintted lettering" />
+    <meta property="og:image:alt" content="SAINTTED black and white portrait with love, SAINTTED lettering" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@beingsaintted" />
-    <meta name="twitter:title" content="saintted" />
+    <meta name="twitter:title" content="SAINTTED | Nigerian Alternative &amp; Afrobeats Artist" />
     <meta
       name="twitter:description"
-      content="A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
+      content="SAINTTED is a Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases."
     />
     <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
     <!-- self-hosted fonts, preloaded so text paints in the right face straight away (better LCP, no layout shift) -->
@@ -42,11 +42,16 @@
     <link rel="preload" href="/fonts/ApfelGrotezk-Mittel.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <meta name="author" content="Saintted" />
-    <title>saintted</title>
+    <meta name="author" content="SAINTTED" />
+    <title>SAINTTED | Nigerian Alternative &amp; Afrobeats Artist</title>
+    <!-- Google Search Console: paste your verification tag here, e.g.
+    <meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE" />
+    -->
+    <!-- JSON-LD (SAINTTED artist entity + WebSite), baked in at build time by vite.config.ts from api/_lib/seoData.ts -->
+    %HOME_LD%
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--seo-body-->%HOME_BODY%<!--/seo-body--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

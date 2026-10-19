@@ -20,7 +20,7 @@ export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) 
       <article className="feature">
         <Link to={detail} onClick={open} className="feature__cover" aria-label={`${track.title}, latest release`}>
           {art ? (
-            <img src={art} srcSet={getTrackArtSrcSet(track)} sizes="(max-width: 900px) 92vw, 640px" alt={`${track.title} cover art`} decoding="async" />
+            <img src={art} srcSet={getTrackArtSrcSet(track)} sizes="(max-width: 900px) 92vw, 640px" alt={`${track.title} cover art by SAINTTED`} decoding="async" />
           ) : (
             <TrackCoverPlaceholder variant="detail" />
           )}

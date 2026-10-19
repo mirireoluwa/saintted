@@ -2,6 +2,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /api/
 
 Sitemap: https://saintted.com/sitemap.xml

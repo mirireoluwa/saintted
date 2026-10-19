@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { HOME_DESC, HOME_TITLE } from "../../api/_lib/seoData";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Hero } from "../components/Hero";
 import { ReleaseCountdownBar } from "../components/ReleaseCountdownBar";
@@ -14,17 +14,14 @@ import { About } from "../components/About";
 import { SeoHead } from "../components/SeoHead";
 import { fetchTracks } from "../api/client";
 import type { Track } from "../types/track";
-import { getSiteUrl } from "../utils/siteUrl";
 import { useReleaseGroups } from "../utils/releaseGroups";
 
-const HOMEPAGE_DESCRIPTION =
-  "A Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
-
+const HOMEPAGE_DESCRIPTION = HOME_DESC;
 /** Hero tagline (shown on hover of the wordmark). SEO copy stays in HOMEPAGE_DESCRIPTION above. */
 const HERO_TAGLINE =
   "a Nigerian artist + producer communicating the human experience through his perspective.";
 
-const _q = (t: string) => encodeURIComponent(`Saintted ${t}`);
+const _q = (t: string) => encodeURIComponent(`SAINTTED ${t}`);
 export const FALLBACK_TRACKS: Track[] = [
   {
     id: 1, title: "one chance", slug: "one-chance", meta: "Single", art_url: "", link_url: "", order: 0,
@@ -84,28 +81,6 @@ export function HomePage() {
   const [newest, ...others] = released;
   const more = others.slice(0, 4);
 
-  const jsonLd = useMemo(() => {
-    const site = getSiteUrl();
-    return JSON.stringify([
-      { "@context": "https://schema.org", "@type": "WebSite", name: "saintted", url: site },
-      {
-      "@context": "https://schema.org",
-      "@type": "MusicGroup",
-      name: "Saintted",
-      url: site,
-      description: HOMEPAGE_DESCRIPTION,
-      genre: ["Alternative", "Afrobeats"],
-      sameAs: [
-        "https://instagram.com/beingsaintted",
-        "https://x.com/beingsaintted",
-        "https://music.apple.com/ng/artist/saintted/1683622819",
-        "https://open.spotify.com/artist/6y6qTKA4172ZvpCg8t6wE6",
-        "https://www.youtube.com/@saintted",
-      ],
-    },
-    ]);
-  }, []);
-
   useEffect(() => {
     fetchTracks()
       .then(setTracks)
@@ -145,10 +120,7 @@ export function HomePage() {
 
   return (
     <>
-      <SeoHead title="saintted" description={HOMEPAGE_DESCRIPTION} canonicalPath="/" />
-      <Helmet>
-        <script type="application/ld+json">{jsonLd}</script>
-      </Helmet>
+      <SeoHead title={HOME_TITLE} description={HOMEPAGE_DESCRIPTION} canonicalPath="/" />
       <Hero
         releaseConfig={releaseConfig}
         releaseLoaded={releaseLoaded}

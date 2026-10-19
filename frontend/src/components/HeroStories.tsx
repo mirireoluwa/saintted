@@ -102,7 +102,7 @@ function SlideBody({ slide }: { slide: Slide }) {
         </div>
         {sh.flyer_url ? (
           <div className="story__media story__media--flyer" aria-hidden>
-            <img src={sh.flyer_url} alt="" draggable={false} />
+            <img src={sh.flyer_url} alt={`${sh.title || sh.venue} live show flyer, SAINTTED`} draggable={false} />
           </div>
         ) : (
           <div className="story__media story__media--date" aria-hidden>
@@ -151,7 +151,7 @@ function SlideBody({ slide }: { slide: Slide }) {
         )}
       </div>
       <div className="story__media story__media--cover" aria-hidden>
-        {art ? <img src={art} alt="" draggable={false} /> : <span className="story__cover-empty" />}
+        {art ? <img src={art} alt={`${t.title} cover art by SAINTTED`} draggable={false} /> : <span className="story__cover-empty" />}
       </div>
     </div>
   );

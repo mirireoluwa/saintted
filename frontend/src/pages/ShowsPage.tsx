@@ -5,8 +5,8 @@ export function ShowsPage() {
   return (
     <>
       <SeoHead
-        title="shows · saintted"
-        description="Upcoming live shows and events from Saintted."
+        title="shows · SAINTTED"
+        description="Upcoming live shows and events from SAINTTED."
         canonicalPath="/shows"
       />
       <header className="wrap page-head">

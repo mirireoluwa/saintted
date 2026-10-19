@@ -6,8 +6,8 @@ export function AboutPage() {
   return (
     <>
       <SeoHead
-        title="about · saintted"
-        description="About Saintted, a Nigerian artist and producer communicating the human experience through his perspective."
+        title="about · SAINTTED"
+        description="About SAINTTED, a Nigerian artist and producer communicating the human experience through his perspective."
         canonicalPath="/about"
       />
       <About />
