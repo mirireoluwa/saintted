@@ -587,3 +587,10 @@ p {
     align-items: center;
   }
 }
+
+@media (max-width: 800px) {
+  .back-link,
+  .track__crumb {
+    min-height: 2.75rem;
+  }
+}

@@ -110,6 +110,7 @@
   border-bottom: 1px solid var(--line);
 }
 .filters button {
+  min-height: 2.75rem;
   font-size: 0.74rem;
   font-weight: 500;
   letter-spacing: 0.18em;

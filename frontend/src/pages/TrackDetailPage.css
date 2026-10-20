@@ -250,8 +250,8 @@
   transform: translate(3px, -3px);
 }
 .listen a.listen__spotify { --brand: #1db954; --on-brand: #06120a; --brand-icon: none; }
-.listen a.listen__apple { --brand: #fa243c; }
-.listen a.listen__youtube { --brand: #ff0000; }
+.listen a.listen__apple { --brand: #d4192f; }
+.listen a.listen__youtube { --brand: #d00000; }
 .track-more {
   padding-top: clamp(4rem, 8vw, 7rem);
 }
