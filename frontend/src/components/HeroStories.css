@@ -155,7 +155,7 @@
   margin: 0;
   text-wrap: balance;
   overflow-wrap: anywhere;
-  font-size: clamp(2.8rem, 7.4vw, 7rem);
+  font-size: clamp(1.8rem, 4.6vw, 4.2rem);
   letter-spacing: -0.055em;
   line-height: 0.95;
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
@@ -348,7 +348,7 @@
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   }
   .story__media--flyer img { max-height: 40svh; }
-  .story__title { font-size: clamp(2.6rem, 13vw, 4rem); }
+  .story__title { font-size: clamp(1.7rem, 8vw, 2.4rem); }
   .story__sub { margin: 0.9rem 0 1.2rem; }
 }
 

@@ -9,6 +9,15 @@
    Every control has square corners. No exceptions.
    ========================================================================== */
 
+/* Sequel 100 Wide — headings only (see base.css) */
+@font-face {
+  font-family: "Sequel";
+  src: url("/fonts/Sequel-100-Wide-75.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Apfel Grotezk — self-hosted; falls back to a locally installed copy first. */
 @font-face {
   font-family: "Apfel Grotezk";
@@ -57,6 +66,7 @@
 
   --font-ui: "Apfel Grotezk", "Space Grotesk", system-ui, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-ui);
+  --font-heading: "Sequel", var(--font-ui);
 
   --gutter: clamp(1.25rem, 5vw, 4.5rem);
   --max: 1360px;

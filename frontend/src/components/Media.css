@@ -20,7 +20,7 @@
   margin: 0.9rem 0 0;
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   letter-spacing: -0.02em;
 }
 .featured-video--skeleton .featured-video__embed-wrap,

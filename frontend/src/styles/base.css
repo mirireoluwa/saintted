@@ -109,16 +109,29 @@ h4 {
   margin: 0;
 }
 h1 {
-  font-size: clamp(2.6rem, 6vw, 5.25rem);
+  font-size: clamp(1.7rem, 3.6vw, 3rem);
 }
 h2 {
-  font-size: clamp(1.75rem, 3.1vw, 2.6rem);
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
 }
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.05rem;
 }
 p {
   margin: 0 0 1.25em;
+}
+
+/* public headings: Sequel with a worn, grungy edge (a speckle mask tiled over the glyphs) */
+.public-shell__page :is(h1, h2, h3, h4),
+.ml-popup__title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-mask-image: url("/grunge-mask.png");
+  mask-image: url("/grunge-mask.png");
+  -webkit-mask-size: 360px 360px;
+  mask-size: 360px 360px;
 }
 
 .eyebrow {

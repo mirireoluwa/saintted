@@ -6,7 +6,7 @@
  * (React replaces it the moment the app loads). Unknown track URLs answer with a real 404.
  */
 import type { AboutContent, LiveShow, Track } from "./types.js";
-import { HOME_DESC, HOME_TITLE, OG_IMAGE_ALT, homeBodyHtml, homeJsonLd, jsonLdScript } from "./seoData.js";
+import { HOME_DESC, HOME_TITLE, OG_IMAGE_ALT, homeBodyHtml, homeJsonLd, jsonLdScript, seoBodyWrap } from "./seoData.js";
 
 export interface ShellData {
   siteUrl: string;
@@ -243,7 +243,7 @@ export function renderShell(path: string, d: ShellData): { status: number; html:
   ].join("\n    ");
 
   html = html.replace("</head>", `    ${head}\n  </head>`);
-  const rootBody = `<div style="padding:2rem;font-family:system-ui,sans-serif;color:#ecebe6">${p.body}</div>`;
+  const rootBody = seoBodyWrap(p.body);
   html = /<!--seo-body-->[\s\S]*?<!--\/seo-body-->/.test(html)
     ? html.replace(/<!--seo-body-->[\s\S]*?<!--\/seo-body-->/, () => `<!--seo-body-->${rootBody}<!--/seo-body-->`)
     : html.replace(/<div id="root"><\/div>/, () => `<div id="root">${rootBody}</div>`);

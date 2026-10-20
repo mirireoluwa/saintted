@@ -18,9 +18,8 @@ export function Footer() {
       <div className="wrap">
         <div className="grid-12 footer__grid">
           <div className="footer__brand">
-            <Link to="/" className="footer__wordmark" aria-label="saintted — home">
-              saintted
-              <span className="seal" aria-hidden />
+            <Link to="/" className="footer__wordmark" aria-label="SAINTTED — home">
+              <img src="/saintted-logo.webp" alt="" width={1938} height={212} loading="lazy" />
             </Link>
             <p className="footer__tagline">
               a Nigerian artist + producer communicating the human experience through his perspective.

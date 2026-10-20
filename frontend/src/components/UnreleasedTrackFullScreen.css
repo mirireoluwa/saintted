@@ -46,7 +46,7 @@
   padding-block: clamp(2rem, 5vw, 4rem);
 }
 .uf__title {
-  font-size: clamp(2.6rem, 8vw, 7rem);
+  font-size: clamp(1.8rem, 5vw, 4.2rem);
   letter-spacing: -0.055em;
   line-height: 0.95;
   margin: 0;

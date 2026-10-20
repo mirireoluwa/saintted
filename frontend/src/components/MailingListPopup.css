@@ -42,8 +42,8 @@
 }
 .ml-popup__title {
   margin-bottom: 0.75rem;
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  letter-spacing: -0.045em;
+  font-size: clamp(1.4rem, 3.2vw, 1.75rem);
+  letter-spacing: 0.02em;
 }
 .ml-popup__sub {
   margin-bottom: 2rem;

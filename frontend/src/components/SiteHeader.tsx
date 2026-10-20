@@ -33,8 +33,8 @@ export function SiteHeader() {
   return (
     <header ref={headerRef} className={`site-header${pathname === "/" ? " site-header--overlay" : ""}${open ? " site-header--open" : ""}`} id="top">
       <div className="wrap">
-        <Link to="/" className="brand" aria-label="saintted — home">
-          saintted
+        <Link to="/" className="brand" aria-label="SAINTTED — home">
+          <img src="/saintted-logo.webp" alt="" width={1938} height={212} />
         </Link>
 
         <button

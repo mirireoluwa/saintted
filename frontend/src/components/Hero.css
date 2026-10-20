@@ -95,6 +95,13 @@
   display: block;
   animation: line-up 1.2s var(--ease) 0.12s both;
 }
+.hero__logo {
+  display: block;
+  width: clamp(15rem, 62vw, 46rem);
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 28px rgba(0, 0, 0, 0.55));
+}
 
 /* tagline: revealed on hover/tap of the name, with the accent rule */
 .hero__lede {

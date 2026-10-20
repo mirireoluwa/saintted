@@ -21,8 +21,14 @@
   color: var(--ink);
   transition: color 0.35s var(--ease);
 }
-.brand:hover {
-  color: var(--accent-text);
+.brand img {
+  display: block;
+  height: 1.05rem;
+  width: auto;
+  transition: opacity 0.35s var(--ease);
+}
+.brand:hover img {
+  opacity: 0.7;
 }
 .brand .seal {
   margin-bottom: 0.12rem;

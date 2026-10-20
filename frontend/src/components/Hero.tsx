@@ -164,7 +164,9 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [], t
           onClick={() => setShowDesc((v) => !v)}
         >
           <span className="hero__line" aria-hidden>
-            <span>SAINTTED</span>
+            <span>
+              <img className="hero__logo" src="/saintted-logo.webp" alt="" width={1938} height={212} decoding="async" fetchPriority="high" />
+            </span>
           </span>
         </div>
 

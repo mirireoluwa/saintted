@@ -61,6 +61,10 @@ export function homeJsonLd(siteUrl: string): unknown[] {
 export const jsonLdScript = (o: unknown) =>
   `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`;
 
+/** Wraps the plain-HTML copy of a page. Visually hidden (still in the HTML for crawlers) so visitors never see it flash before React mounts. */
+export const seoBodyWrap = (inner: string) =>
+  `<div style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">${inner}</div>`;
+
 const NAV =
   '<nav><a href="/">home</a> <a href="/music">music</a> <a href="/media">media</a> <a href="/shows">shows</a> <a href="/about">about</a></nav>';
 

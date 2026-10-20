@@ -29,13 +29,15 @@
   color: var(--ink);
   transition: color 0.35s var(--ease);
 }
-.footer__wordmark:hover {
-  color: var(--accent-text);
+.footer__wordmark img {
+  display: block;
+  width: clamp(14rem, 38vw, 26rem);
+  max-width: 100%;
+  height: auto;
+  transition: opacity 0.35s var(--ease);
 }
-.footer__wordmark .seal {
-  width: 0.7rem;
-  height: 0.7rem;
-  margin-bottom: 0.2rem;
+.footer__wordmark:hover img {
+  opacity: 0.7;
 }
 
 .footer__tagline {
