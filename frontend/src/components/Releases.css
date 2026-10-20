@@ -219,42 +219,97 @@
   color: var(--accent-text);
 }
 
-/* --- featured (latest) release: one solid card, cover flush with its left edge --- */
+/* --- featured (latest) release: the cover's own colours glow behind the card --- */
 .feature {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: clamp(1.75rem, 5vw, 4.5rem);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
   margin-bottom: clamp(3rem, 6vw, 5rem);
   background: var(--field);
   border: 1px solid var(--line);
   border-radius: calc(var(--radius) * 1.75);
   overflow: hidden;
 }
+.feature__ambient {
+  position: absolute;
+  inset: -20%;
+  width: 140%;
+  height: 140%;
+  z-index: -2;
+  object-fit: cover;
+  filter: blur(70px) saturate(1.5);
+  opacity: 0.42;
+  pointer-events: none;
+}
+.feature::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, rgba(10, 11, 15, 0.2) 0%, rgba(10, 11, 15, 0.7) 100%);
+  pointer-events: none;
+}
 .feature__cover {
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
-  background: var(--grey);
   overflow: hidden;
+  background: var(--grey);
+  border-radius: calc(var(--radius) * 1.25);
+  box-shadow: 0 32px 60px -22px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  transition: transform 0.7s var(--ease), box-shadow 0.7s var(--ease);
 }
 .feature__cover img:not(.track-cover-placeholder__disc) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.9s var(--ease);
 }
-.feature__cover:hover img:not(.track-cover-placeholder__disc) {
-  transform: scale(1.03);
+.feature__cover:hover {
+  transform: translateY(-6px) rotate(-0.6deg);
+  box-shadow: 0 40px 70px -22px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 .feature__body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(1.75rem, 4.5vw, 4rem);
+  min-width: 0;
+}
+.feature__kicker {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 1.4rem;
+  padding: 0.45rem 0.95rem 0.45rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.feature__pulse {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: feature-pulse 2s ease-out infinite;
+}
+@keyframes feature-pulse {
+  70% { box-shadow: 0 0 0 0.55rem transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
 .feature__title {
-  font-size: clamp(2.4rem, 4.6vw, 4.5rem);
+  font-size: clamp(2.6rem, 5.2vw, 5rem);
   letter-spacing: -0.05em;
-  line-height: 0.98;
+  line-height: 0.96;
   margin-bottom: 0.9rem;
 }
 .feature__title a:hover {
@@ -276,6 +331,35 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.feature__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+.feature__plat {
+  display: flex;
+  gap: 0.5rem;
+}
+.feature__plat a {
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.feature__plat a:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+.feature__plat img {
+  filter: var(--icon-filter);
+}
 
 @media (max-width: 1000px) {
   .feature { grid-template-columns: minmax(0, 1fr); }
@@ -293,51 +377,60 @@
   }
 }
 @media (max-width: 560px) {
-  /* a compact, rounded card on phones: a small cover beside the details, no blurb */
+  /* phones: a poster card, the cover full width on top and the details stacked underneath */
   .feature {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: stretch;
-    gap: 1.1rem;
-    padding: 1rem;
-    border-radius: calc(var(--radius) * 1.5);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.4rem;
+    padding: 0.75rem 0.75rem 1.4rem;
+    border-radius: calc(var(--radius) * 2);
   }
   .feature__cover {
-    /* a fixed square sized to roughly match the height of the text column beside it */
-    align-self: stretch;
-    width: 7.5rem;
-    height: 7.5rem;
+    width: 100%;
+    height: auto;
     aspect-ratio: 1 / 1;
-    border-radius: var(--radius);
+    border-radius: calc(var(--radius) * 1.5);
   }
-  .feature__cover .card__tag {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.52rem;
-    letter-spacing: 0.1em;
-  }
+  .feature__cover:hover { transform: none; }
   .feature__body {
-    padding: 0;
+    padding: 0 0.5rem;
     min-width: 0;
   }
+  .feature__kicker {
+    margin-bottom: 1rem;
+    padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+    font-size: 0.64rem;
+  }
   .feature__title {
-    font-size: 1.3rem;
-    line-height: 1.1;
-    margin-bottom: 0.3rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: clamp(2.2rem, 11vw, 2.8rem);
+    line-height: 0.98;
+    margin-bottom: 0.6rem;
   }
   .feature__meta {
-    margin-bottom: 0.65rem;
+    margin-bottom: 1rem;
   }
   .feature__blurb {
-    display: none;
+    -webkit-line-clamp: 2;
+    margin-bottom: 1.4rem;
+    font-size: 0.95rem;
   }
-  .feature__body .btn-row .btn {
-    min-height: 2.5rem;
-    padding-inline: 1rem;
-    font-size: 0.68rem;
+  .feature__actions {
+    flex-wrap: nowrap;
+    gap: 0.6rem;
   }
-  /* more-releases rows swipe sideways on phones instead of stacking down the page */
+  .feature__actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 3rem;
+  }
+  .feature__plat {
+    flex: 0 0 auto;
+    gap: 0.4rem;
+  }
+  .feature__plat a {
+    width: 3rem;
+    height: 3rem;
+  }
   .card-grid--4 {
     display: flex;
     gap: 1rem;
