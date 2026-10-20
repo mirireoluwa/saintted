@@ -50,7 +50,7 @@
 }
 .about__heading {
   margin-bottom: 1.75rem;
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-size: clamp(2.4rem, 5vw, 4.25rem);
   letter-spacing: -0.045em;
 }
 .about__copy {
