@@ -30,6 +30,10 @@
 .brand:hover img {
   opacity: 0.7;
 }
+/* the hero already shows the big logo, so the header one is dropped there and the nav sits on the left */
+.site-header--overlay .brand {
+  display: none;
+}
 .brand .seal {
   margin-bottom: 0.12rem;
 }

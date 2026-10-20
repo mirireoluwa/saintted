@@ -177,21 +177,6 @@ export function Hero({ releaseConfig, releaseLoaded, summaryText, tracks = [], t
           </div>
         ) : null}
 
-        <div className="hero__cta rise" style={{ "--i": 3 } as React.CSSProperties}>
-          <div className="btn-row">
-            {featured ? (
-              <Link
-                to={`/music/${featured.track.slug}`}
-                className="btn btn--primary"
-                onClick={() => trackEvent(featured.kind === "presave" ? "presave" : "track_click", { slug: featured.track.slug })}
-              >
-                {featured.kind === "presave" ? <span className="hero__dot" aria-hidden /> : null}
-                {featured.kind === "presave" ? "pre-save" : "listen now"} <span className="arrow" aria-hidden>↗</span>
-              </Link>
-            ) : null}
-            <Link to="/music" className="btn">all music</Link>
-          </div>
-        </div>
 
         {featured ? (
           <Link

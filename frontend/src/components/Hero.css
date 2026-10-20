@@ -97,7 +97,7 @@
 }
 .hero__logo {
   display: block;
-  width: clamp(15rem, 62vw, 46rem);
+  width: clamp(17rem, 80vw, 64rem);
   max-width: 100%;
   height: auto;
   filter: drop-shadow(0 2px 28px rgba(0, 0, 0, 0.55));
