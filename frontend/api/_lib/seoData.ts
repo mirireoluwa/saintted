@@ -5,7 +5,7 @@
  */
 
 export const SITE_NAME = "SAINTTED";
-export const HOME_TITLE = "SAINTTED | Nigerian Alternative & Afrobeats Artist";
+export const HOME_TITLE = "SAINTTED | Nigerian Artist + Producer";
 export const HOME_DESC =
   "SAINTTED is a Nigerian artist and producer creating experimental alternative and afrobeats songs. Stream singles, watch official videos, and explore the latest releases.";
 export const HOME_H1 = "SAINTTED, a Nigerian alternative artist and producer from Lagos";
