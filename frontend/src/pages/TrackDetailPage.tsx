@@ -27,13 +27,6 @@ function pickUrl(stored: string | undefined | null, fallback: string): string {
   return t || fallback;
 }
 
-/** Extract the Spotify track ID from a direct track URL, or null for search/artist links. */
-function spotifyTrackId(url: string | undefined | null): string | null {
-  if (!url) return null;
-  const m = url.match(/open\.spotify\.com\/track\/([A-Za-z0-9]+)/);
-  return m ? m[1] : null;
-}
-
 function neighborSlugsFromList(list: Track[], currentSlug: string, isUnreleased: boolean) {
   const released = list.filter((t) => !t.is_unreleased);
   if (released.length === 0) return { prev: undefined, next: undefined };
@@ -311,7 +304,6 @@ export function TrackDetailPage() {
     displayTrack != null
       ? pickUrl(displayTrack.spotify_url, spotifySearchUrl(displayTrack.title))
       : "#";
-  const spotifyEmbedId = displayTrack != null ? spotifyTrackId(displayTrack.spotify_url) : null;
   const coverSrcSet = displayTrack != null ? getTrackArtSrcSet(displayTrack) : undefined;
 
   const meta = (displayTrack?.meta || "single").toLowerCase();
@@ -513,20 +505,6 @@ export function TrackDetailPage() {
                   </ul>
                 </div>
               </div>
-
-              {spotifyEmbedId && (
-                <div className="track__embed">
-                  <iframe
-                    title={`Listen to ${displayTrack!.title} on Spotify`}
-                    src={`https://open.spotify.com/embed/track/${spotifyEmbedId}?utm_source=generator&theme=0`}
-                    width="100%"
-                    height="152"
-                    frameBorder="0"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                  />
-                </div>
-              )}
             </>
           )}
           {showSlowLoadingUi ? (

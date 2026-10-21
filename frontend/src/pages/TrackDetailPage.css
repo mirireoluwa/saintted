@@ -135,16 +135,6 @@
 .track__listen-label {
   margin-bottom: 1rem !important;
 }
-.track__embed {
-  grid-column: 1 / -1;
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  padding-top: 2rem;
-  border-top: 1px solid var(--line);
-}
-.track__embed iframe {
-  display: block;
-  border: 0;
-}
 
 /* --- loading --- */
 .track__skeleton {

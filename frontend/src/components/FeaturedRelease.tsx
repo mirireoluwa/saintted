@@ -10,7 +10,7 @@ import "./Releases.css";
 
 type FeaturedReleaseProps = { track: Track; isNew?: boolean };
 
-/** The newest release: its own cover art glows behind the card, the cover floats on the left, the story and listen links sit beside it. */
+/** The newest release: the cover floats on the left, the story and listen links sit beside it. */
 export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) {
   const art = getTrackArtUrl(track);
   const detail = `/music/${track.slug}`;
@@ -26,8 +26,6 @@ export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) 
   return (
     <div className="wrap">
       <article className="feature">
-        {art ? <img className="feature__ambient" src={art} alt="" aria-hidden decoding="async" /> : null}
-
         <Link to={detail} onClick={open} className="feature__cover" aria-label={`${track.title}, latest release`}>
           {art ? (
             <img src={art} srcSet={getTrackArtSrcSet(track)} sizes="(max-width: 900px) 92vw, 560px" alt={`${track.title} cover art by SAINTTED`} decoding="async" />
