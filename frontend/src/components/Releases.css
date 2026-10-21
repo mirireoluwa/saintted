@@ -259,33 +259,50 @@
   justify-content: center;
   min-width: 0;
 }
+/* the neon "new" pill: a green tag whose glow flickers */
+@keyframes feature-kicker-flicker {
+  0%,
+  100% {
+    color: #4e9f5f;
+    text-shadow: 0 0 6px rgba(78, 159, 95, 0.35);
+  }
+  20% {
+    color: #6ee7b7;
+    text-shadow: 0 0 10px rgba(110, 231, 183, 0.55);
+  }
+  40% {
+    color: #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.45);
+  }
+  60% {
+    color: #22c55e;
+    text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+  }
+  80% {
+    color: #86efac;
+    text-shadow: 0 0 9px rgba(134, 239, 172, 0.5);
+  }
+}
 .feature__kicker {
-  display: inline-flex;
-  align-items: center;
   align-self: flex-start;
-  gap: 0.6rem;
   margin: 0 0 1.4rem;
-  padding: 0.45rem 0.95rem 0.45rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(8px);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(44, 122, 68, 0.9);
+  border-radius: 6px;
+  background: rgba(35, 96, 52, 0.2);
   font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.2em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
   text-transform: uppercase;
+  color: #4e9f5f;
+  animation: feature-kicker-flicker 1.35s ease-in-out infinite;
 }
-.feature__pulse {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
-  animation: feature-pulse 2s ease-out infinite;
-}
-@keyframes feature-pulse {
-  70% { box-shadow: 0 0 0 0.55rem transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .feature__kicker {
+    animation: none;
+    text-shadow: none;
+  }
 }
 .feature__title {
   font-size: clamp(2.6rem, 5.2vw, 5rem);
@@ -379,7 +396,7 @@
   }
   .feature__kicker {
     margin-bottom: 1rem;
-    padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+    padding: 0.45rem 0.65rem;
     font-size: 0.64rem;
   }
   .feature__title {

@@ -35,10 +35,7 @@ export function FeaturedRelease({ track, isNew = false }: FeaturedReleaseProps) 
         </Link>
 
         <div className="feature__body">
-          <p className="feature__kicker">
-            <span className="feature__pulse" aria-hidden />
-            {isNew ? "new release" : "out now"}
-          </p>
+          <p className="feature__kicker">{isNew ? "new release" : "out now"}</p>
           <h3 className="feature__title">
             <Link to={detail} onClick={open}>{track.title}</Link>
           </h3>
